@@ -8,5 +8,6 @@ use aoc_runner_derive::aoc_lib;
 mod common;
 mod day_01;
 mod day_02;
+mod day_03;
 
 aoc_lib! { year = 2020 }
