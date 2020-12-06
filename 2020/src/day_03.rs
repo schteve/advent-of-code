@@ -150,9 +150,7 @@ pub fn part2(input: &Map) -> usize {
 mod test {
     use super::*;
 
-    #[test]
-    fn test_ride_toboggan() {
-        let input = "\
+    static EXAMPLE_INPUT: &str = "\
 ..##.......
 #...#...#..
 .#....#..#.
@@ -164,26 +162,17 @@ mod test {
 #.##...#...
 #...##....#
 .#..#...#.#";
-        let map = Map::from_string(input);
+
+    #[test]
+    fn test_ride_toboggan() {
+        let map = Map::from_string(EXAMPLE_INPUT);
         let tree_count = map.ride_toboggan(3, 1);
         assert_eq!(tree_count, 7);
     }
 
     #[test]
     fn test_ride_toboggan_many() {
-        let input = "\
-..##.......
-#...#...#..
-.#....#..#.
-..#.#...#.#
-.#...##..#.
-..#.##.....
-.#.#.#....#
-.#........#
-#.##...#...
-#...##....#
-.#..#...#.#";
-        let map = Map::from_string(input);
+        let map = Map::from_string(EXAMPLE_INPUT);
 
         let tree_count = map.ride_toboggan(1, 1);
         assert_eq!(tree_count, 2);

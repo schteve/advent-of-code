@@ -164,46 +164,35 @@ pub fn part2(input: &[Entry]) -> usize {
 mod test {
     use super::*;
 
-    #[test]
-    fn test_is_password_valid_1() {
-        let input = "\
+    static EXAMPLE_INPUT: &str = "\
 1-3 a: abcde
 1-3 b: cdefg
 2-9 c: ccccccccc";
-        let entries = input_generator(input);
+
+    #[test]
+    fn test_is_password_valid_1() {
+        let entries = input_generator(EXAMPLE_INPUT);
         let valid: Vec<bool> = entries.iter().map(Entry::is_password_valid1).collect();
         assert_eq!(valid, [true, false, true]);
     }
 
     #[test]
     fn test_count_valid_passwords1() {
-        let input = "\
-1-3 a: abcde
-1-3 b: cdefg
-2-9 c: ccccccccc";
-        let entries = input_generator(input);
+        let entries = input_generator(EXAMPLE_INPUT);
         let valid_count = count_valid_passwords1(&entries);
         assert_eq!(valid_count, 2);
     }
 
     #[test]
     fn test_is_password_valid_2() {
-        let input = "\
-1-3 a: abcde
-1-3 b: cdefg
-2-9 c: ccccccccc";
-        let entries = input_generator(input);
+        let entries = input_generator(EXAMPLE_INPUT);
         let valid: Vec<bool> = entries.iter().map(Entry::is_password_valid2).collect();
         assert_eq!(valid, [true, false, false]);
     }
 
     #[test]
     fn test_count_valid_passwords2() {
-        let input = "\
-1-3 a: abcde
-1-3 b: cdefg
-2-9 c: ccccccccc";
-        let entries = input_generator(input);
+        let entries = input_generator(EXAMPLE_INPUT);
         let valid_count = count_valid_passwords2(&entries);
         assert_eq!(valid_count, 1);
     }

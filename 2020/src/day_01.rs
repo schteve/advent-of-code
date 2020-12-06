@@ -86,16 +86,17 @@ pub fn part2(input: &[u32]) -> u32 {
 mod test {
     use super::*;
 
-    #[test]
-    fn test_find_sum2_2020() {
-        let input = "\
+    static EXAMPLE_INPUT: &str = "\
 1721
 979
 366
 299
 675
 1456";
-        let expenses = input_generator(input);
+
+    #[test]
+    fn test_find_sum2_2020() {
+        let expenses = input_generator(EXAMPLE_INPUT);
         let (a, b) = find_sum2_2020(&expenses);
         assert_eq!(a, 1721);
         assert_eq!(b, 299);
@@ -105,14 +106,7 @@ mod test {
 
     #[test]
     fn test_find_sum3_2020() {
-        let input = "\
-1721
-979
-366
-299
-675
-1456";
-        let expenses = input_generator(input);
+        let expenses = input_generator(EXAMPLE_INPUT);
         let (a, b, c) = find_sum3_2020(&expenses);
         assert_eq!(a, 979);
         assert_eq!(b, 366);

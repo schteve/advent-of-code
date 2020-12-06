@@ -131,9 +131,11 @@ pub fn part2(input: &[BoardingPass]) -> u32 {
 mod test {
     use super::*;
 
+    static EXAMPLE_INPUT: &str = "FBFBBFFRLR";
+
     #[test]
     fn test_pass() {
-        let pass = BoardingPass::from_string("FBFBBFFRLR");
+        let pass = BoardingPass::from_string(EXAMPLE_INPUT);
         assert_eq!(pass.row(), 44);
         assert_eq!(pass.col(), 5);
         assert_eq!(pass.seat_id(), 357);
