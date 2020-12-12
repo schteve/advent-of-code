@@ -138,6 +138,17 @@ impl ops::Add<Self> for Point {
     }
 }
 
+impl ops::Add<&Self> for Point {
+    type Output = Self;
+
+    fn add(self, rhs: &Self) -> Self {
+        Self {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+        }
+    }
+}
+
 impl ops::Add<(i32, i32)> for Point {
     type Output = Self;
 
@@ -151,6 +162,12 @@ impl ops::Add<(i32, i32)> for Point {
 
 impl ops::AddAssign<Self> for Point {
     fn add_assign(&mut self, rhs: Self) {
+        *self = *self + rhs;
+    }
+}
+
+impl ops::AddAssign<&Self> for Point {
+    fn add_assign(&mut self, rhs: &Self) {
         *self = *self + rhs;
     }
 }
