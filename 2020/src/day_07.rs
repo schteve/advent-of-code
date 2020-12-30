@@ -143,7 +143,7 @@ impl BagCookBook {
         }
 
         // Sort the vectors so it's easy to check later
-        for (_s, v) in reverse_lookup.iter_mut() {
+        for v in reverse_lookup.values_mut() {
             v.sort_unstable();
         }
 
@@ -171,19 +171,17 @@ impl BagCookBook {
 
     fn count_bags_in_gold(&self) -> u32 {
         let mut totals: HashMap<String, u32> = HashMap::new();
-        let mut frontier: Vec<(String, u32)> = vec![("shiny gold".into(), 1)];
-        while let Some((bag, count)) = frontier.pop() {
-            if let Some(bag_contents) = self.recipes_map.get(&bag) {
-                for ingredient in bag_contents {
-                    if let Some(pos) = frontier.iter_mut().position(|x| x.0 == ingredient.color) {
-                        frontier[pos] = (
-                            frontier[pos].0.clone(),
-                            frontier[pos].1 + count * ingredient.num,
-                        );
-                    } else {
-                        frontier.push((ingredient.color.clone(), count * ingredient.num));
-                    }
-                }
+        let mut frontier: HashMap<String, u32> = HashMap::new();
+        frontier.insert("shiny gold".into(), 1);
+        while frontier.is_empty() == false {
+            // Get an arbitrary bag from the frontier. This is an ugly hack since HashMap doesn't provide any type of pop() functionality.
+            let next = frontier.keys().next().unwrap().clone();
+            let (bag, count) = frontier.remove_entry(&next).unwrap();
+
+            let bag_contents = self.recipes_map.get(&bag).unwrap();
+            for ingredient in bag_contents {
+                let entry = frontier.entry(ingredient.color.clone()).or_insert(0);
+                *entry += count * ingredient.num;
             }
 
             let total_count = totals.entry(bag).or_insert(0);
