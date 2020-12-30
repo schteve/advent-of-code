@@ -167,15 +167,10 @@ fn count_arrangements(values: &[u32]) -> usize {
     // Process each node in order. This acts identically to a priority queue since the nodes only connect forward.
     // Skip the last index since there's nothing following it, so no point checking it.
     for i in 0..sorted_values.len() - 1 {
-        if i + 1 < sorted_values.len() {
-            // Next node is always an option
-            paths[i + 1] += paths[i];
-        }
-        if i + 2 < sorted_values.len() && sorted_values[i + 2] - sorted_values[i] <= 3 {
-            paths[i + 2] += paths[i];
-        }
-        if i + 3 < sorted_values.len() && sorted_values[i + 3] - sorted_values[i] <= 3 {
-            paths[i + 3] += paths[i];
+        for j in 1..=3 {
+            if i + j < sorted_values.len() && sorted_values[i + j] - sorted_values[i] <= 3 {
+                paths[i + j] += paths[i];
+            }
         }
         paths[i] = 0;
     }
