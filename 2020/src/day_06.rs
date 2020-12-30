@@ -98,9 +98,9 @@ impl Group {
 
     fn answers1(&self) -> String {
         let mut answers = String::new();
-        for c in b'a'..=b'z' {
-            if self.people.iter().any(|person| person.contains(c as char)) == true {
-                answers.push(c as char);
+        for c in 'a'..='z' {
+            if self.people.iter().any(|person| person.contains(c)) == true {
+                answers.push(c);
             }
         }
         answers
@@ -108,9 +108,9 @@ impl Group {
 
     fn answers2(&self) -> String {
         let mut answers = String::new();
-        for c in b'a'..=b'z' {
-            if self.people.iter().all(|person| person.contains(c as char)) == true {
-                answers.push(c as char);
+        for c in 'a'..='z' {
+            if self.people.iter().all(|person| person.contains(c)) == true {
+                answers.push(c);
             }
         }
         answers
