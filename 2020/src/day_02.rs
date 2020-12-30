@@ -36,16 +36,19 @@
 
 use nom::{
     bytes::complete::tag,
-    character::complete::{char, digit1, satisfy, space1},
+    character::{
+        complete::{alpha1, char, digit1, multispace0, satisfy, space1},
+        is_alphabetic,
+    },
     combinator::{map, map_res},
     multi::many1,
-    sequence::separated_pair,
+    sequence::{preceded, separated_pair},
     IResult,
 };
 
 #[derive(Debug)]
 pub struct Policy {
-    range: (u32, u32),
+    range: (usize, usize),
     letter: char,
 }
 
@@ -53,12 +56,12 @@ impl Policy {
     fn parser(input: &str) -> IResult<&str, Self> {
         let (input, (range, letter)) = separated_pair(
             separated_pair(
-                map_res(digit1, |min: &str| min.parse::<u32>()),
+                map_res(digit1, |min: &str| min.parse::<usize>()),
                 char('-'),
-                map_res(digit1, |max: &str| max.parse::<u32>()),
+                map_res(digit1, |max: &str| max.parse::<usize>()),
             ),
             space1,
-            satisfy(|c| 'a' <= c && c <= 'z'),
+            satisfy(|c| is_alphabetic(c as u8)),
         )(input)?;
 
         Ok((input, Self { range, letter }))
@@ -72,17 +75,14 @@ pub struct Entry {
 }
 
 impl Entry {
-    fn from_string(input: &str) -> Self {
-        Self::parser(input).unwrap().1
-    }
-
     fn parser(input: &str) -> IResult<&str, Self> {
-        let (input, (policy, password)) = separated_pair(
-            Policy::parser,
-            tag(": "),
-            map(many1(satisfy(|c| 'a' <= c && c <= 'z')), |p: Vec<char>| {
-                p.into_iter().collect::<String>()
-            }),
+        let (input, (policy, password)) = preceded(
+            multispace0,
+            separated_pair(
+                Policy::parser,
+                tag(": "),
+                map(alpha1, |s: &str| s.to_owned()),
+            ),
         )(input)?;
 
         Ok((input, Self { policy, password }))
@@ -93,27 +93,20 @@ impl Entry {
             .password
             .chars()
             .filter(|&c| c == self.policy.letter)
-            .count() as u32;
-        self.policy.range.0 <= policy_letter_count && policy_letter_count <= self.policy.range.1
+            .count();
+        let policy_range = self.policy.range.0..=self.policy.range.1;
+        policy_range.contains(&policy_letter_count)
     }
 
     fn is_password_valid2(&self) -> bool {
         let mut count = 0;
-        if let Some(nth) = self
-            .password
-            .chars()
-            .nth((self.policy.range.0 - 1) as usize)
-        {
+        if let Some(nth) = self.password.chars().nth(self.policy.range.0 - 1) {
             if nth == self.policy.letter {
                 count += 1;
             }
         }
 
-        if let Some(nth) = self
-            .password
-            .chars()
-            .nth((self.policy.range.1 - 1) as usize)
-        {
+        if let Some(nth) = self.password.chars().nth(self.policy.range.1 - 1) {
             if nth == self.policy.letter {
                 count += 1;
             }
@@ -141,7 +134,7 @@ fn count_valid_passwords2(entries: &[Entry]) -> usize {
 
 #[aoc_generator(day2)]
 pub fn input_generator(input: &str) -> Vec<Entry> {
-    input.lines().map(Entry::from_string).collect()
+    many1(Entry::parser)(input).unwrap().1
 }
 
 #[aoc(day2, part1)]
