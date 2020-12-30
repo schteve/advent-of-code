@@ -91,8 +91,9 @@ fn sum_exists(list: &[u64], x: u64) -> bool {
 }
 
 fn find_first_non_sum(list: &[u64], window_size: usize) -> u64 {
-    for (window, &x) in list.windows(window_size).zip(list[window_size..].iter()) {
-        if sum_exists(window, x) == false {
+    for window in list.windows(window_size + 1) {
+        let x = window[window_size];
+        if sum_exists(&window[..window_size], x) == false {
             return x;
         }
     }
