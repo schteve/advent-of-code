@@ -202,7 +202,6 @@ pub fn input_generator(input: &str) -> BagCookBook {
 #[aoc(day7, part1)]
 pub fn part1(input: &BagCookBook) -> usize {
     let count = input.count_contains_gold();
-    println!("Bags containing shiny gold: {}", count);
     assert_eq!(count, 372);
     count
 }
@@ -210,7 +209,6 @@ pub fn part1(input: &BagCookBook) -> usize {
 #[aoc(day7, part2)]
 pub fn part2(input: &BagCookBook) -> u32 {
     let count = input.count_bags_in_gold();
-    println!("Bags contained by a shiny gold: {}", count);
     assert_eq!(count, 8015);
     count
 }

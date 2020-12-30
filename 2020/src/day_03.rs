@@ -133,7 +133,6 @@ pub fn input_generator(input: &str) -> Map {
 #[aoc(day3, part1)]
 pub fn part1(input: &Map) -> usize {
     let tree_count = input.ride_toboggan(3, 1);
-    println!("Tree count: {}", tree_count);
     assert_eq!(tree_count, 207);
     tree_count
 }
@@ -141,7 +140,6 @@ pub fn part1(input: &Map) -> usize {
 #[aoc(day3, part2)]
 pub fn part2(input: &Map) -> usize {
     let tree_product = input.ride_toboggan_many();
-    println!("Tree product: {}", tree_product);
     assert_eq!(tree_product, 2655892800);
     tree_product
 }

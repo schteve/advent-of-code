@@ -656,7 +656,6 @@ pub fn part1(input: &PocketDimension2D) -> usize {
     let mut pocket_dimension = PocketDimension3D::from_2d(input);
     pocket_dimension.simulate(6);
     let active_cubes = pocket_dimension.count_active_cubes();
-    println!("Active cubes after reboot: {}", active_cubes);
     assert_eq!(active_cubes, 401);
     active_cubes
 }
@@ -666,7 +665,6 @@ pub fn part2(input: &PocketDimension2D) -> usize {
     let mut pocket_dimension = PocketDimension4D::from_2d(input);
     pocket_dimension.simulate(6);
     let active_cubes = pocket_dimension.count_active_cubes();
-    println!("Active cubes after reboot: {}", active_cubes);
     assert_eq!(active_cubes, 2224);
     active_cubes
 }

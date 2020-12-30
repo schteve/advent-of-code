@@ -147,7 +147,6 @@ pub fn input_generator(input: &str) -> Vec<Entry> {
 #[aoc(day2, part1)]
 pub fn part1(input: &[Entry]) -> usize {
     let valid_count = count_valid_passwords1(input);
-    println!("Valid passwords: {}", valid_count);
     assert_eq!(valid_count, 456);
     valid_count
 }
@@ -155,7 +154,6 @@ pub fn part1(input: &[Entry]) -> usize {
 #[aoc(day2, part2)]
 pub fn part2(input: &[Entry]) -> usize {
     let valid_count = count_valid_passwords2(input);
-    println!("Valid passwords: {}", valid_count);
     assert_eq!(valid_count, 308);
     valid_count
 }

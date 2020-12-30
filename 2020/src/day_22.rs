@@ -565,7 +565,6 @@ pub fn part1(input: &Game) -> u32 {
     let mut game = input.clone();
     game.play_game();
     let score = game.score();
-    println!("Score: {}", score);
     assert_eq!(score, 32472);
     score
 }
@@ -575,7 +574,6 @@ pub fn part2(input: &Game) -> u32 {
     let mut game = input.clone();
     game.play_game_recursive();
     let score = game.score();
-    println!("Score: {}", score);
     assert_eq!(score, 36463);
     score
 }

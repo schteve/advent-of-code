@@ -207,7 +207,6 @@ pub fn input_generator(input: &str) -> Schedule {
 pub fn part1(input: &Schedule) -> u64 {
     let (bus_id, wait_time) = input.find_earliest_bus();
     let product = bus_id * wait_time;
-    println!("Bus product: {}", product);
     assert_eq!(product, 156);
     product
 }
@@ -215,7 +214,6 @@ pub fn part1(input: &Schedule) -> u64 {
 #[aoc(day13, part2)]
 pub fn part2(input: &Schedule) -> u64 {
     let syzygy = input.find_earliest_syzygy();
-    println!("Bus syzygy: {}", syzygy);
     assert_eq!(syzygy, 404517869995362);
     syzygy
 }

@@ -358,7 +358,6 @@ pub fn part1(input: &WaitingArea) -> usize {
     let mut waiting_area = input.clone();
     waiting_area.simulate1();
     let occupied = waiting_area.total_occupied();
-    println!("Occupied seats: {}", occupied);
     assert_eq!(occupied, 2183);
     occupied
 }
@@ -368,7 +367,6 @@ pub fn part2(input: &WaitingArea) -> usize {
     let mut waiting_area = input.clone();
     waiting_area.simulate2();
     let occupied = waiting_area.total_occupied();
-    println!("Occupied seats: {}", occupied);
     assert_eq!(occupied, 1990);
     occupied
 }

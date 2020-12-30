@@ -289,7 +289,6 @@ pub fn part1(input: &[Instruction]) -> u64 {
     let mut computer = Computer::new();
     input.iter().for_each(|i| computer.execute1(i));
     let memory_sum = computer.memory_sum();
-    println!("Sum of memory: {}", memory_sum);
     assert_eq!(memory_sum, 7997531787333);
     memory_sum
 }
@@ -299,7 +298,6 @@ pub fn part2(input: &[Instruction]) -> u64 {
     let mut computer = Computer::new();
     input.iter().for_each(|i| computer.execute2(i));
     let memory_sum = computer.memory_sum();
-    println!("Sum of memory: {}", memory_sum);
     assert_eq!(memory_sum, 3564822193820);
     memory_sum
 }

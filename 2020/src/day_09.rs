@@ -134,7 +134,6 @@ pub fn input_generator(input: &str) -> Vec<u64> {
 #[aoc(day9, part1)]
 pub fn part1(input: &[u64]) -> u64 {
     let non_sum = find_first_non_sum(input, 25);
-    println!("First non-sum: {}", non_sum);
     assert_eq!(non_sum, 1639024365);
     non_sum
 }
@@ -143,7 +142,6 @@ pub fn part1(input: &[u64]) -> u64 {
 pub fn part2(input: &[u64]) -> u64 {
     let non_sum = find_first_non_sum(input, 25);
     let encryption_weakness = find_contiguous_sum(input, non_sum);
-    println!("Encryption weakness: {}", encryption_weakness);
     assert_eq!(encryption_weakness, 219202240);
     encryption_weakness
 }
@@ -178,7 +176,6 @@ mod test {
     fn test_find_first_non_sum() {
         let values = input_generator(EXAMPLE_INPUT);
         let non_sum = find_first_non_sum(&values, 5);
-        println!("First non-sum: {}", non_sum);
         assert_eq!(non_sum, 127);
     }
 

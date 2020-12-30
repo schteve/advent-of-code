@@ -316,7 +316,6 @@ pub fn input_generator(input: &str) -> Vec<Passport> {
 #[aoc(day4, part1)]
 pub fn part1(input: &[Passport]) -> usize {
     let count = input.iter().filter(|pass| pass.is_valid1()).count();
-    println!("Valid passports: {}", count);
     assert_eq!(count, 192);
     count
 }
@@ -324,7 +323,6 @@ pub fn part1(input: &[Passport]) -> usize {
 #[aoc(day4, part2)]
 pub fn part2(input: &[Passport]) -> usize {
     let count = input.iter().filter(|pass| pass.is_valid2()).count();
-    println!("Valid passports: {}", count);
     assert_eq!(count, 101);
     count
 }

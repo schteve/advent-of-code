@@ -191,7 +191,6 @@ pub fn input_generator(input: &str) -> FoodList {
 #[aoc(day21, part1)]
 pub fn part1(input: &FoodList) -> usize {
     let count = input.no_allergen_count();
-    println!("No allergy count: {}", count);
     assert_eq!(count, 2061);
     count
 }
@@ -200,7 +199,6 @@ pub fn part1(input: &FoodList) -> usize {
 pub fn part2(input: &FoodList) -> String {
     let pairs = input.match_ingredients_allergens();
     let string = FoodList::ingredient_string(&pairs);
-    println!("Dangerous ingredient list: {}", string);
     assert_eq!(string, "cdqvp,dglm,zhqjs,rbpg,xvtrfz,tgmzqjz,mfqgx,rffqhl");
     string
 }

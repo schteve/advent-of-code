@@ -125,7 +125,6 @@ pub fn input_generator(input: &str) -> Vec<Group> {
 #[aoc(day6, part1)]
 pub fn part1(input: &[Group]) -> usize {
     let count_sum = input.iter().map(|g| g.answers1().len()).sum();
-    println!("Sum of any answers: {}", count_sum);
     assert_eq!(count_sum, 6683);
     count_sum
 }
@@ -133,7 +132,6 @@ pub fn part1(input: &[Group]) -> usize {
 #[aoc(day6, part2)]
 pub fn part2(input: &[Group]) -> usize {
     let count_sum = input.iter().map(|g| g.answers2().len()).sum();
-    println!("Sum of all answers: {}", count_sum);
     assert_eq!(count_sum, 3122);
     count_sum
 }

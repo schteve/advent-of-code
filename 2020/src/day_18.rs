@@ -195,7 +195,6 @@ pub fn part1(input: &[ExprInfix]) -> u64 {
         .iter()
         .map(|expr| expr.to_postfix(precedence1).evaluate())
         .sum();
-    println!("Expression sum: {}", sum);
     assert_eq!(sum, 280014646144);
     sum
 }
@@ -206,7 +205,6 @@ pub fn part2(input: &[ExprInfix]) -> u64 {
         .iter()
         .map(|expr| expr.to_postfix(precedence2).evaluate())
         .sum();
-    println!("Expression sum: {}", sum);
     assert_eq!(sum, 9966990988262);
     sum
 }

@@ -225,7 +225,6 @@ pub fn input_generator(input: &str) -> Vec<Instruction> {
 #[aoc(day12, part1)]
 pub fn part1(input: &[Instruction]) -> u32 {
     let distance = handle_instructions1(input);
-    println!("Distance: {}", distance);
     assert_eq!(distance, 2057);
     distance
 }
@@ -233,7 +232,6 @@ pub fn part1(input: &[Instruction]) -> u32 {
 #[aoc(day12, part2)]
 pub fn part2(input: &[Instruction]) -> u32 {
     let distance = handle_instructions2(input);
-    println!("Distance: {}", distance);
     assert_eq!(distance, 71504);
     distance
 }

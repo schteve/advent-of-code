@@ -226,7 +226,6 @@ pub fn input_generator(input: &str) -> Notes {
 #[aoc(day16, part1)]
 pub fn part1(input: &Notes) -> u32 {
     let error_rate = input.ticket_scanning_error_rate();
-    println!("Ticket scanning error rate: {}", error_rate);
     assert_eq!(error_rate, 24021);
     error_rate
 }
@@ -235,7 +234,6 @@ pub fn part1(input: &Notes) -> u32 {
 pub fn part2(input: &Notes) -> u64 {
     let ordering = input.find_field_ordering();
     let departure_product = input.departure_product(&ordering);
-    println!("Departure product: {}", departure_product);
     assert_eq!(departure_product, 1289178686687);
     departure_product
 }

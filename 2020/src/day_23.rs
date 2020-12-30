@@ -201,7 +201,6 @@ pub fn part1(input: &[u32]) -> String {
     let mut crab_cups = CrabCups::from_list(input, 9);
     crab_cups.make_move(100);
     let labels = crab_cups.order(crab_cups.cups[1], 8);
-    println!("Labels: {}", labels);
     assert_eq!(labels, "82573496");
     labels
 }
@@ -213,7 +212,6 @@ pub fn part2(input: &[u32]) -> usize {
     let a = crab_cups.cups[1];
     let b = crab_cups.cups[a];
     let label_product = a * b;
-    println!("Label product: {}", label_product);
     assert_eq!(label_product, 11498506800);
     label_product
 }

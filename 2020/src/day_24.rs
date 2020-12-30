@@ -239,7 +239,6 @@ pub fn part1(input: &[Vec<HexDir>]) -> usize {
     let mut floor = Floor::new();
     floor.setup(input);
     let black = floor.count_black();
-    println!("Black tiles: {}", black);
     assert_eq!(black, 469);
     black
 }
@@ -250,7 +249,6 @@ pub fn part2(input: &[Vec<HexDir>]) -> usize {
     floor.setup(input);
     floor.days_passed(100);
     let black = floor.count_black();
-    println!("Black tiles: {}", black);
     assert_eq!(black, 4353);
     black
 }

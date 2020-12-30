@@ -319,7 +319,6 @@ pub fn part1(input: &Comms) -> usize {
         .iter()
         .filter(|&m| input.match_message(m))
         .count();
-    println!("Valid message count: {}", count);
     assert_eq!(count, 272);
     count
 }
@@ -333,7 +332,6 @@ pub fn part2(input: &Comms) -> usize {
         .iter()
         .filter(|&m| comms.match_message(m))
         .count();
-    println!("Valid message count: {}", count);
     assert_eq!(count, 374);
     count
 }

@@ -114,7 +114,6 @@ pub fn input_generator(input: &str) -> Vec<BoardingPass> {
 #[aoc(day5, part1)]
 pub fn part1(input: &[BoardingPass]) -> u32 {
     let highest_seat_id = input.iter().map(|pass| pass.seat_id()).max().unwrap();
-    println!("Highest seat ID: {}", highest_seat_id);
     assert_eq!(highest_seat_id, 974);
     highest_seat_id
 }
@@ -122,7 +121,6 @@ pub fn part1(input: &[BoardingPass]) -> u32 {
 #[aoc(day5, part2)]
 pub fn part2(input: &[BoardingPass]) -> u32 {
     let my_seat_id = find_my_seat_id(input);
-    println!("My seat ID: {}", my_seat_id);
     assert_eq!(my_seat_id, 646);
     my_seat_id
 }

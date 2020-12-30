@@ -99,7 +99,6 @@ pub fn input_generator(input: &str) -> Vec<usize> {
 pub fn part1(input: &[usize]) -> usize {
     let mut game = MemoryGame::from_slice(input);
     let spoken_2020 = game.nth(2020 - 1).unwrap();
-    println!("2020th spoken: {}", spoken_2020);
     assert_eq!(spoken_2020, 319);
     spoken_2020
 }
@@ -108,7 +107,6 @@ pub fn part1(input: &[usize]) -> usize {
 pub fn part2(input: &[usize]) -> usize {
     let mut game = MemoryGame::from_slice(input);
     let spoken_30000000 = game.nth(30000000 - 1).unwrap();
-    println!("30000000th spoken: {}", spoken_30000000);
     assert_eq!(spoken_30000000, 2424);
     spoken_30000000
 }

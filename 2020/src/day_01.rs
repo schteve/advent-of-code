@@ -68,7 +68,6 @@ pub fn input_generator(input: &str) -> Vec<u32> {
 pub fn part1(input: &[u32]) -> u32 {
     let (a, b) = find_sum2_2020(input);
     let product = a * b;
-    println!("Product of 2020: {}", product);
     assert_eq!(product, 436404);
     product
 }
@@ -77,7 +76,6 @@ pub fn part1(input: &[u32]) -> u32 {
 pub fn part2(input: &[u32]) -> u32 {
     let (a, b, c) = find_sum3_2020(input);
     let product = a * b * c;
-    println!("Product of 2020: {}", product);
     assert_eq!(product, 274879808);
     product
 }

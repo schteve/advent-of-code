@@ -136,7 +136,6 @@ pub fn part1(input: &GameConsole) -> i32 {
     let mut console = input.clone(); // aoc-runner can only give an immutable reference, so to get mutable I have to clone
     let (is_infinite_loop, acc_value) = console.execute();
     assert_eq!(is_infinite_loop, true);
-    println!("Accumulator value: {}", acc_value);
     assert_eq!(acc_value, 1939);
     acc_value
 }
@@ -145,7 +144,6 @@ pub fn part1(input: &GameConsole) -> i32 {
 pub fn part2(input: &GameConsole) -> i32 {
     let mut console = input.clone(); // aoc-runner can only give an immutable reference, so to get mutable I have to clone
     let acc_value = console.fix_corruption();
-    println!("Accumulator value: {}", acc_value);
     assert_eq!(acc_value, 2212);
     acc_value
 }

@@ -778,7 +778,6 @@ pub fn part1(input: &[ImageTile]) -> u64 {
     let image = Image::from_image_tiles(input);
     let corners = image.find_corners();
     let product = corners.iter().product();
-    println!("Corners product: {}", product);
     assert_eq!(product, 111936085519519);
     product
 }
@@ -788,7 +787,6 @@ pub fn part2(input: &[ImageTile]) -> usize {
     let mut image = Image::from_image_tiles(input);
     image.assemble();
     let roughness = image.find_sea_monsters();
-    println!("Water roughness: {}", roughness);
     assert_eq!(roughness, 1792);
     roughness
 }

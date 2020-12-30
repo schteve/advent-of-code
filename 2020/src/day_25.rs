@@ -115,7 +115,6 @@ pub fn input_generator(input: &str) -> Handshake {
 #[aoc(day25, part1)]
 pub fn part1(input: &Handshake) -> u64 {
     let encryption_key = input.crack_encryption();
-    println!("Encryption key: {}", encryption_key);
     assert_eq!(encryption_key, 12285001);
     encryption_key
 }

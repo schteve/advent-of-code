@@ -196,7 +196,6 @@ pub fn input_generator(input: &str) -> Vec<u32> {
 pub fn part1(input: &[u32]) -> usize {
     let (one, _two, three) = find_jolt_differences(input);
     let product = one * three;
-    println!("1-jolt x 3-jolt: {}", product);
     assert_eq!(product, 2030);
     product
 }
@@ -204,7 +203,6 @@ pub fn part1(input: &[u32]) -> usize {
 #[aoc(day10, part2)]
 pub fn part2(input: &[u32]) -> usize {
     let arrangements = count_arrangements(input);
-    println!("Arrangements: {}", arrangements);
     assert_eq!(arrangements, 42313823813632);
     arrangements
 }
