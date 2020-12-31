@@ -199,19 +199,19 @@ impl Ship {
     }
 }
 
-fn handle_instructions1(instructions: &[Instruction]) -> u32 {
-    let mut ship = Ship::new();
-    for instruction in instructions {
-        ship.execute1(instruction);
-    }
-
-    Point::manhattan(Point::new(), ship.location)
+#[derive(Clone, Copy)]
+enum Mode {
+    M1,
+    M2,
 }
 
-fn handle_instructions2(instructions: &[Instruction]) -> u32 {
+fn handle_instructions(instructions: &[Instruction], mode: Mode) -> u32 {
     let mut ship = Ship::new();
     for instruction in instructions {
-        ship.execute2(instruction);
+        match mode {
+            Mode::M1 => ship.execute1(instruction),
+            Mode::M2 => ship.execute2(instruction),
+        }
     }
 
     Point::manhattan(Point::new(), ship.location)
@@ -224,14 +224,14 @@ pub fn input_generator(input: &str) -> Vec<Instruction> {
 
 #[aoc(day12, part1)]
 pub fn part1(input: &[Instruction]) -> u32 {
-    let distance = handle_instructions1(input);
+    let distance = handle_instructions(input, Mode::M1);
     assert_eq!(distance, 2057);
     distance
 }
 
 #[aoc(day12, part2)]
 pub fn part2(input: &[Instruction]) -> u32 {
-    let distance = handle_instructions2(input);
+    let distance = handle_instructions(input, Mode::M2);
     assert_eq!(distance, 71504);
     distance
 }
@@ -274,13 +274,6 @@ F11";
     }
 
     #[test]
-    fn test_handle_instructions1() {
-        let instructions = input_generator(EXAMPLE_INPUT);
-        let distance = handle_instructions1(&instructions);
-        assert_eq!(distance, 25);
-    }
-
-    #[test]
     fn test_ship_execute2() {
         let mut ship = Ship::new();
         let mut instr_iter = input_generator(EXAMPLE_INPUT).into_iter();
@@ -307,9 +300,13 @@ F11";
     }
 
     #[test]
-    fn test_handle_instructions2() {
+    fn test_handle_instructions() {
         let instructions = input_generator(EXAMPLE_INPUT);
-        let distance = handle_instructions2(&instructions);
+        let distance = handle_instructions(&instructions, Mode::M1);
+        assert_eq!(distance, 25);
+
+        let instructions = input_generator(EXAMPLE_INPUT);
+        let distance = handle_instructions(&instructions, Mode::M2);
         assert_eq!(distance, 286);
     }
 }
