@@ -162,14 +162,12 @@ impl Schedule {
             .bus_ids
             .iter()
             .enumerate()
-            .map(|(i, bus_id)| match bus_id {
-                Some(b) => Some(Req {
-                    offset: modulo(*b - modulo(i as u64, *b), *b),
-                    bus_id: *b,
-                }),
-                None => None,
+            .filter_map(|(i, bus_id)| {
+                bus_id.map(|b| Req {
+                    offset: wait_time(b, i as u64),
+                    bus_id: b,
+                })
             })
-            .flatten()
             .collect();
         reqs.sort_unstable_by_key(|req| std::cmp::Reverse(req.bus_id));
 
