@@ -96,6 +96,12 @@ use nom::{
 use std::collections::HashMap;
 
 #[derive(Clone, Copy)]
+enum Mode {
+    M1,
+    M2,
+}
+
+#[derive(Clone, Copy)]
 pub struct Mask {
     set: u64,
     clear: u64,
@@ -254,24 +260,24 @@ impl Computer {
         }
     }
 
-    fn execute1(&mut self, instruction: &Instruction) {
+    fn execute(&mut self, instruction: &Instruction, mode: Mode) {
         match instruction {
             Instruction::UpdateMask(mask) => self.mask = *mask,
-            Instruction::WriteMemory(addr, value) => {
-                self.memory.insert(*addr, self.mask.apply_value(*value));
-            }
+            Instruction::WriteMemory(addr, value) => match mode {
+                Mode::M1 => {
+                    self.memory.insert(*addr, self.mask.apply_value(*value));
+                }
+                Mode::M2 => {
+                    for a in self.mask.apply_address(*addr) {
+                        self.memory.insert(a, *value);
+                    }
+                }
+            },
         }
     }
 
-    fn execute2(&mut self, instruction: &Instruction) {
-        match instruction {
-            Instruction::UpdateMask(mask) => self.mask = *mask,
-            Instruction::WriteMemory(addr, value) => {
-                for a in self.mask.apply_address(*addr) {
-                    self.memory.insert(a, *value);
-                }
-            }
-        }
+    fn execute_all(&mut self, instructions: &[Instruction], mode: Mode) {
+        instructions.iter().for_each(|i| self.execute(i, mode));
     }
 
     fn memory_sum(&self) -> u64 {
@@ -287,7 +293,7 @@ pub fn input_generator(input: &str) -> Vec<Instruction> {
 #[aoc(day14, part1)]
 pub fn part1(input: &[Instruction]) -> u64 {
     let mut computer = Computer::new();
-    input.iter().for_each(|i| computer.execute1(i));
+    computer.execute_all(input, Mode::M1);
     let memory_sum = computer.memory_sum();
     assert_eq!(memory_sum, 7997531787333);
     memory_sum
@@ -296,7 +302,7 @@ pub fn part1(input: &[Instruction]) -> u64 {
 #[aoc(day14, part2)]
 pub fn part2(input: &[Instruction]) -> u64 {
     let mut computer = Computer::new();
-    input.iter().for_each(|i| computer.execute2(i));
+    computer.execute_all(input, Mode::M2);
     let memory_sum = computer.memory_sum();
     assert_eq!(memory_sum, 3564822193820);
     memory_sum
@@ -353,12 +359,12 @@ mem[26] = 1";
     fn test_memory_sum() {
         let mut computer = Computer::new();
         let instructions = input_generator(EXAMPLE_INPUT1);
-        instructions.iter().for_each(|i| computer.execute1(i));
+        computer.execute_all(&instructions, Mode::M1);
         assert_eq!(computer.memory_sum(), 165);
 
         let mut computer = Computer::new();
         let instructions = input_generator(EXAMPLE_INPUT2);
-        instructions.iter().for_each(|i| computer.execute2(i));
+        computer.execute_all(&instructions, Mode::M2);
         assert_eq!(computer.memory_sum(), 208);
     }
 }
