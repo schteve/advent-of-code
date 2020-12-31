@@ -204,143 +204,218 @@
 */
 
 use crate::common::Point;
-use std::collections::HashMap;
+
+#[derive(Clone, Copy, PartialEq)]
+enum Tile {
+    Floor,
+    Empty,
+    Occupied,
+}
+
+impl Tile {
+    fn from_char(c: char) -> Self {
+        match c {
+            '.' => Self::Floor,
+            'L' => Self::Empty,
+            '#' => Self::Occupied,
+            _ => panic!("Unknown character: {}", c),
+        }
+    }
+
+    fn to_char(&self) -> char {
+        match self {
+            Self::Floor => '.',
+            Self::Empty => 'L',
+            Self::Occupied => '#',
+        }
+    }
+}
+
+fn get_tile_flat(p: &Point, x_size: usize, y_size: usize, tiles: &[Tile]) -> Tile {
+    if p.x >= 0 && p.x < x_size as i32 && p.y >= 0 && p.y < y_size as i32 {
+        let idx = point_to_idx(p, x_size);
+        tiles[idx]
+    } else {
+        Tile::Floor
+    }
+}
+
+fn point_to_idx(p: &Point, x_size: usize) -> usize {
+    p.y as usize * x_size + p.x as usize
+}
+
+fn idx_to_point(idx: usize, x_size: usize) -> Point {
+    let x = (idx % x_size) as i32;
+    let y = (idx / x_size) as i32;
+    Point { x, y }
+}
+
+#[derive(Clone, Copy)]
+enum Mode {
+    M1,
+    M2,
+}
 
 #[derive(Clone)]
 pub struct WaitingArea {
-    seats: HashMap<Point, bool>,
-    visible: HashMap<Point, Vec<Point>>,
+    tiles: Vec<Tile>,
+    x_size: usize,
+    y_size: usize,
+    active: Vec<Point>,
+    neighbors_direct: Vec<Vec<Point>>,
+    neighbors_visible: Vec<Vec<Point>>,
 }
 
 impl WaitingArea {
     fn from_string(input: &str) -> Self {
-        let mut seats = HashMap::new();
-        let mut p = Point::new();
+        let mut tiles = Vec::new();
+        let mut x_size: Option<usize> = None;
         for line in input.trim().lines() {
-            p.x = 0;
-            for c in line.chars() {
-                if c == 'L' {
-                    seats.insert(p, false);
-                } else if c == '#' {
-                    seats.insert(p, true);
-                }
-                p.x += 1;
-            }
-            p.y += 1;
-        }
+            tiles.extend(line.chars().map(Tile::from_char));
 
-        // Map which seats are visible in each of the adjacent directions
+            if let Some(x) = x_size {
+                assert_eq!(x, line.len());
+            } else {
+                x_size = Some(line.len());
+            }
+        }
+        let x_size = x_size.unwrap();
+        let y_size = tiles.len() / x_size;
+
+        // Build list of which tiles are active
+        let active = tiles
+            .iter()
+            .enumerate()
+            .filter(|(_i, seat)| seat == &&Tile::Empty)
+            .map(|(i, _seat)| {
+                let x = (i % x_size) as i32;
+                let y = (i / x_size) as i32;
+                Point { x, y }
+            })
+            .collect();
+
+        // Build index of non-floor neighbors directly adjacent to each tile
+        let neighbors_direct = (0..tiles.len())
+            .map(|i| {
+                idx_to_point(i, x_size)
+                    .adjacents()
+                    .into_iter()
+                    .filter(|adj| get_tile_flat(&adj, x_size, y_size, &tiles) == Tile::Empty)
+                    .collect()
+            })
+            .collect();
+
+        // Build index of non-floor neighbors visible from each tile
         let directions = Point::new().adjacents();
-        let (x_range, y_range) = Point::get_range(seats.keys()).unwrap();
-        let mut visible = HashMap::new();
-        for start in seats.keys() {
+        let mut neighbors_visible = Vec::new();
+        for i in 0..tiles.len() {
             let mut visible_dirs: Vec<Point> = Vec::new();
             for dir in &directions {
-                let mut walk = *start;
-                while x_range.0 <= walk.x
-                    && walk.x <= x_range.1
-                    && y_range.0 <= walk.y
-                    && walk.y <= y_range.1
+                let mut walk = idx_to_point(i, x_size);
+                while 0 <= walk.x && walk.x < x_size as i32 && 0 <= walk.y && walk.y < y_size as i32
                 {
                     walk += dir;
-                    if seats.get(&walk).is_some() {
+                    if get_tile_flat(&walk, x_size, y_size, &tiles) == Tile::Empty {
                         visible_dirs.push(walk);
                         break;
                     }
                 }
                 // If we left the waiting area bounds, nothing is visible so don't save anything
             }
-            visible.insert(*start, visible_dirs);
+            neighbors_visible.push(visible_dirs);
         }
 
-        Self { seats, visible }
+        Self {
+            tiles,
+            x_size,
+            y_size,
+            active,
+            neighbors_direct,
+            neighbors_visible,
+        }
     }
 
-    fn count_occupied(&self, seats: &[Point]) -> usize {
-        seats
+    fn get_tile(&self, p: &Point) -> Tile {
+        get_tile_flat(p, self.x_size, self.y_size, &self.tiles)
+    }
+
+    fn set_tile(&mut self, p: &Point, tile: Tile) {
+        let idx = point_to_idx(p, self.x_size);
+        self.tiles[idx] = tile;
+    }
+
+    fn count_neighbors_direct(&self, p: &Point) -> usize {
+        let idx = point_to_idx(p, self.x_size);
+        self.neighbors_direct[idx]
             .iter()
-            .filter(|adj| self.seats.get(&adj) == Some(&true))
+            .filter(|adj| self.get_tile(&adj) == Tile::Occupied)
             .count()
     }
 
-    fn step1(&mut self) {
-        let mut changes: Vec<(Point, bool)> = Vec::new();
-        for (&k, &v) in self.seats.iter() {
-            if v == true {
-                // Is occupied. Becomes empty if four or more adjacent are also occupied.
-                if self.count_occupied(&k.adjacents()) >= 4 {
-                    changes.push((k, false));
-                }
-            } else {
-                // Empty. Becomes occupied if there are no adjacent occupied.
-                if self.count_occupied(&k.adjacents()) == 0 {
-                    changes.push((k, true));
-                }
-            }
-        }
-        self.seats.extend(changes);
+    fn count_neighbors_visible(&self, p: &Point) -> usize {
+        let idx = point_to_idx(p, self.x_size);
+        self.neighbors_visible[idx]
+            .iter()
+            .filter(|adj| self.get_tile(&adj) == Tile::Occupied)
+            .count()
     }
 
-    fn simulate1(&mut self) {
-        let mut last_state = String::new();
-        while self.to_string() != last_state {
-            last_state = self.to_string();
-            self.step1();
-        }
-    }
-
-    fn step2(&mut self) {
-        let mut changes: Vec<(Point, bool)> = Vec::new();
-        for (&k, &v) in self.seats.iter() {
-            if v == true {
-                // Is occupied. Becomes empty if five or more visible are also occupied.
-                if let Some(vis) = self.visible.get(&k) {
-                    if self.count_occupied(&vis) >= 5 {
-                        changes.push((k, false));
+    fn step(&mut self, mode: Mode) -> bool {
+        let mut changes: Vec<(Point, Tile)> = Vec::new();
+        for p in self.active.iter() {
+            match (mode, self.get_tile(&p)) {
+                (_, Tile::Floor) => (),
+                (Mode::M1, Tile::Empty) => {
+                    // Become occupied if there are no direct neighbors occupied
+                    if self.count_neighbors_direct(&p) == 0 {
+                        changes.push((*p, Tile::Occupied));
                     }
                 }
-            } else {
-                // Empty. Becomes occupied if there are no adjacent occupied.
-                if let Some(vis) = self.visible.get(&k) {
-                    if self.count_occupied(&vis) == 0 {
-                        changes.push((k, true));
+                (Mode::M1, Tile::Occupied) => {
+                    // Become empty if four or more direct neighbors are also occupied
+                    if self.count_neighbors_direct(&p) >= 4 {
+                        changes.push((*p, Tile::Empty));
+                    }
+                }
+                (Mode::M2, Tile::Empty) => {
+                    // Become occupied if there are no visible neighbors occupied
+                    if self.count_neighbors_visible(&p) == 0 {
+                        changes.push((*p, Tile::Occupied));
+                    }
+                }
+                (Mode::M2, Tile::Occupied) => {
+                    // Become empty if five or more visible neighbors are also occupied
+                    if self.count_neighbors_visible(&p) >= 5 {
+                        changes.push((*p, Tile::Empty));
                     }
                 }
             }
         }
-        self.seats.extend(changes);
+
+        for change in &changes {
+            self.set_tile(&change.0, change.1);
+        }
+        changes.is_empty()
     }
 
-    fn simulate2(&mut self) {
-        let mut last_state = String::new();
-        while self.to_string() != last_state {
-            last_state = self.to_string();
-            self.step2();
-        }
+    fn simulate(&mut self, mode: Mode) {
+        while self.step(mode) == false {}
     }
 
     fn total_occupied(&self) -> usize {
-        self.seats
-            .values()
-            .filter(|&&is_occupied| is_occupied == true)
+        self.tiles
+            .iter()
+            .filter(|seat| seat == &&Tile::Occupied)
             .count()
     }
 }
 
 impl std::fmt::Display for WaitingArea {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let (x_range, y_range) = Point::get_range(self.seats.keys()).unwrap();
-        for y in y_range.0..=y_range.1 {
-            for x in x_range.0..=x_range.1 {
-                if let Some(&is_occupied) = self.seats.get(&Point { x, y }) {
-                    if is_occupied == true {
-                        write!(f, "#")?;
-                    } else {
-                        write!(f, "L")?;
-                    }
-                } else {
-                    write!(f, ".")?;
-                }
+        for y in 0..self.y_size as i32 {
+            for x in 0..self.x_size as i32 {
+                let p = Point { x, y };
+                write!(f, "{}", self.get_tile(&p).to_char())?;
             }
             writeln!(f)?;
         }
@@ -356,7 +431,7 @@ pub fn input_generator(input: &str) -> WaitingArea {
 #[aoc(day11, part1)]
 pub fn part1(input: &WaitingArea) -> usize {
     let mut waiting_area = input.clone();
-    waiting_area.simulate1();
+    waiting_area.simulate(Mode::M1);
     let occupied = waiting_area.total_occupied();
     assert_eq!(occupied, 2183);
     occupied
@@ -365,7 +440,7 @@ pub fn part1(input: &WaitingArea) -> usize {
 #[aoc(day11, part2)]
 pub fn part2(input: &WaitingArea) -> usize {
     let mut waiting_area = input.clone();
-    waiting_area.simulate2();
+    waiting_area.simulate(Mode::M2);
     let occupied = waiting_area.total_occupied();
     assert_eq!(occupied, 1990);
     occupied
@@ -388,12 +463,11 @@ L.LLLLLL.L
 L.LLLLL.LL";
 
     #[test]
-    fn test_simulate1() {
+    fn test_simulate() {
         let mut waiting_area = input_generator(EXAMPLE_INPUT);
-        waiting_area.simulate1();
+        waiting_area.simulate(Mode::M1);
         let occupied = waiting_area.total_occupied();
         assert_eq!(occupied, 37);
-
         let expected = input_generator(
             "\
 #.#L.L#.##
@@ -408,12 +482,9 @@ L.#.L..#..
 #.#L#L#.##",
         );
         assert_eq!(waiting_area.to_string(), expected.to_string());
-    }
 
-    #[test]
-    fn test_simulate2() {
         let mut waiting_area = input_generator(EXAMPLE_INPUT);
-        waiting_area.simulate2();
+        waiting_area.simulate(Mode::M2);
         let occupied = waiting_area.total_occupied();
         assert_eq!(occupied, 26);
 
