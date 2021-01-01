@@ -391,12 +391,138 @@
     Starting with your given initial configuration, simulate six cycles in a 4-dimensional space. How many cubes are left in the active state after the sixth cycle?
 */
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 type Point2D = (i32, i32);
 type Point3D = (i32, i32, i32);
 type Point4D = (i32, i32, i32, i32);
 type DimRange = (i32, i32);
+
+const NEIGHBOR_OFFSETS_3D: [Point3D; 26] = [
+    (-1, -1, -1),
+    (-1, -1, 0),
+    (-1, -1, 1),
+    (-1, 0, -1),
+    (-1, 0, 0),
+    (-1, 0, 1),
+    (-1, 1, -1),
+    (-1, 1, 0),
+    (-1, 1, 1),
+    (0, -1, -1),
+    (0, -1, 0),
+    (0, -1, 1),
+    (0, 0, -1),
+    (0, 0, 1),
+    (0, 1, -1),
+    (0, 1, 0),
+    (0, 1, 1),
+    (1, -1, -1),
+    (1, -1, 0),
+    (1, -1, 1),
+    (1, 0, -1),
+    (1, 0, 0),
+    (1, 0, 1),
+    (1, 1, -1),
+    (1, 1, 0),
+    (1, 1, 1),
+];
+
+const NEIGHBOR_OFFSETS_4D: [Point4D; 80] = [
+    (-1, -1, -1, -1),
+    (-1, -1, -1, 0),
+    (-1, -1, -1, 1),
+    (-1, -1, 0, -1),
+    (-1, -1, 0, 0),
+    (-1, -1, 0, 1),
+    (-1, -1, 1, -1),
+    (-1, -1, 1, 0),
+    (-1, -1, 1, 1),
+    (-1, 0, -1, -1),
+    (-1, 0, -1, 0),
+    (-1, 0, -1, 1),
+    (-1, 0, 0, -1),
+    (-1, 0, 0, 0),
+    (-1, 0, 0, 1),
+    (-1, 0, 1, -1),
+    (-1, 0, 1, 0),
+    (-1, 0, 1, 1),
+    (-1, 1, -1, -1),
+    (-1, 1, -1, 0),
+    (-1, 1, -1, 1),
+    (-1, 1, 0, -1),
+    (-1, 1, 0, 0),
+    (-1, 1, 0, 1),
+    (-1, 1, 1, -1),
+    (-1, 1, 1, 0),
+    (-1, 1, 1, 1),
+    (0, -1, -1, -1),
+    (0, -1, -1, 0),
+    (0, -1, -1, 1),
+    (0, -1, 0, -1),
+    (0, -1, 0, 0),
+    (0, -1, 0, 1),
+    (0, -1, 1, -1),
+    (0, -1, 1, 0),
+    (0, -1, 1, 1),
+    (0, 0, -1, -1),
+    (0, 0, -1, 0),
+    (0, 0, -1, 1),
+    (0, 0, 0, -1),
+    (0, 0, 0, 1),
+    (0, 0, 1, -1),
+    (0, 0, 1, 0),
+    (0, 0, 1, 1),
+    (0, 1, -1, -1),
+    (0, 1, -1, 0),
+    (0, 1, -1, 1),
+    (0, 1, 0, -1),
+    (0, 1, 0, 0),
+    (0, 1, 0, 1),
+    (0, 1, 1, -1),
+    (0, 1, 1, 0),
+    (0, 1, 1, 1),
+    (1, -1, -1, -1),
+    (1, -1, -1, 0),
+    (1, -1, -1, 1),
+    (1, -1, 0, -1),
+    (1, -1, 0, 0),
+    (1, -1, 0, 1),
+    (1, -1, 1, -1),
+    (1, -1, 1, 0),
+    (1, -1, 1, 1),
+    (1, 0, -1, -1),
+    (1, 0, -1, 0),
+    (1, 0, -1, 1),
+    (1, 0, 0, -1),
+    (1, 0, 0, 0),
+    (1, 0, 0, 1),
+    (1, 0, 1, -1),
+    (1, 0, 1, 0),
+    (1, 0, 1, 1),
+    (1, 1, -1, -1),
+    (1, 1, -1, 0),
+    (1, 1, -1, 1),
+    (1, 1, 0, -1),
+    (1, 1, 0, 0),
+    (1, 1, 0, 1),
+    (1, 1, 1, -1),
+    (1, 1, 1, 0),
+    (1, 1, 1, 1),
+];
+
+struct State {
+    is_active: bool,
+    active_neighbors: u8,
+}
+
+impl State {
+    fn new() -> Self {
+        Self {
+            is_active: false,
+            active_neighbors: 0,
+        }
+    }
+}
 
 pub struct PocketDimension2D {
     squares: HashSet<Point2D>,
@@ -417,75 +543,65 @@ impl PocketDimension2D {
 }
 
 struct PocketDimension3D {
-    cubes: HashSet<Point3D>,
+    cubes: HashMap<Point3D, State>,
 }
 
 impl PocketDimension3D {
     fn from_2d(pd: &PocketDimension2D) -> Self {
-        let cubes = pd
-            .squares
-            .iter()
-            .map(|point| (point.0, point.1, 0))
-            .collect();
+        let mut cubes = HashMap::new();
+        for sq in &pd.squares {
+            Self::set_active(&mut cubes, &(sq.0, sq.1, 0));
+        }
         Self { cubes }
     }
 
-    fn get_range(&self) -> (DimRange, DimRange, DimRange) {
-        let mut cubes_iter = self.cubes.iter();
-        if let Some(first) = cubes_iter.next() {
-            cubes_iter.fold(
-                ((first.0, first.0), (first.1, first.1), (first.2, first.2)),
-                |(acc_x, acc_y, acc_z), p| {
-                    (
-                        (acc_x.0.min(p.0), acc_x.1.max(p.0)),
-                        (acc_y.0.min(p.1), acc_y.1.max(p.1)),
-                        (acc_z.0.min(p.2), acc_z.1.max(p.2)),
-                    )
-                },
-            )
-        } else {
-            panic!("No cubes in list");
+    fn set_active(cubes: &mut HashMap<Point3D, State>, point: &Point3D) {
+        for neighbor in Self::neighbors(point) {
+            let entry = cubes.entry(neighbor).or_insert_with(State::new);
+            entry.active_neighbors += 1;
         }
+        let entry = cubes.entry(*point).or_insert_with(State::new);
+        entry.is_active = true;
     }
 
-    fn neighbors(point: &Point3D) -> Vec<Point3D> {
-        let mut neighbors = Vec::new();
-        for x in -1..=1 {
-            for y in -1..=1 {
-                for z in -1..=1 {
-                    if (x == 0 && y == 0 && z == 0) == false {
-                        neighbors.push((point.0 + x, point.1 + y, point.2 + z));
-                    }
-                }
-            }
-        }
-        assert_eq!(neighbors.len(), 26);
-        neighbors
+    fn neighbors(point: &Point3D) -> impl Iterator<Item = Point3D> + '_ {
+        NEIGHBOR_OFFSETS_3D
+            .iter()
+            .map(move |offset| (point.0 + offset.0, point.1 + offset.1, point.2 + offset.2))
+    }
+
+    fn get_range(&self) -> (DimRange, DimRange, DimRange) {
+        let mut cubes_iter = self
+            .cubes
+            .iter()
+            .filter(|(_point, state)| state.is_active == true)
+            .map(|(point, _state)| point);
+        let first = cubes_iter.next().expect("No cubes in list");
+        cubes_iter.fold(
+            ((first.0, first.0), (first.1, first.1), (first.2, first.2)),
+            |(acc_x, acc_y, acc_z), p| {
+                (
+                    (acc_x.0.min(p.0), acc_x.1.max(p.0)),
+                    (acc_y.0.min(p.1), acc_y.1.max(p.1)),
+                    (acc_z.0.min(p.2), acc_z.1.max(p.2)),
+                )
+            },
+        )
     }
 
     fn step(&mut self) {
-        let mut new_cubes = HashSet::new();
+        let mut new_cubes = HashMap::new();
 
-        let (x_range, y_range, z_range) = self.get_range();
-        for z in z_range.0 - 1..=z_range.1 + 1 {
-            for y in y_range.0 - 1..=y_range.1 + 1 {
-                for x in x_range.0 - 1..=x_range.1 + 1 {
-                    let cube = (x, y, z);
-                    let count = Self::neighbors(&cube)
-                        .iter()
-                        .filter(|n| self.cubes.contains(n))
-                        .count();
-                    if self.cubes.contains(&cube) {
-                        // Active. 2 or 3 to stay alive, otherwise die.
-                        if count == 2 || count == 3 {
-                            new_cubes.insert(cube);
-                        }
-                    } else {
-                        // Inactive. 3 to become alive, otherwise stay dead.
-                        if count == 3 {
-                            new_cubes.insert(cube);
-                        }
-                    }
+        for (cube, state) in self.cubes.iter() {
+            if state.is_active == true {
+                // Active. 2 or 3 to stay alive, otherwise die.
+                if state.active_neighbors == 2 || state.active_neighbors == 3 {
+                    Self::set_active(&mut new_cubes, &cube);
+                }
+            } else {
+                // Inactive. 3 to become alive, otherwise stay dead.
+                if state.active_neighbors == 3 {
+                    Self::set_active(&mut new_cubes, &cube);
                 }
             }
         }
@@ -500,7 +616,10 @@ impl PocketDimension3D {
     }
 
     fn count_active_cubes(&self) -> usize {
-        self.cubes.len()
+        self.cubes
+            .iter()
+            .filter(|(_point, state)| state.is_active == true)
+            .count()
     }
 }
 
@@ -511,7 +630,10 @@ impl std::fmt::Display for PocketDimension3D {
             writeln!(f, "z={}", z)?;
             for y in y_range.0..=y_range.1 {
                 for x in x_range.0..=x_range.1 {
-                    if self.cubes.contains(&(x, y, z)) {
+                    if let Some(State {
+                        is_active: true, ..
+                    }) = self.cubes.get(&(x, y, z))
+                    {
                         write!(f, "#")?;
                     } else {
                         write!(f, ".")?;
@@ -526,85 +648,77 @@ impl std::fmt::Display for PocketDimension3D {
 }
 
 struct PocketDimension4D {
-    hypercubes: HashSet<Point4D>,
+    hypercubes: HashMap<Point4D, State>,
 }
 
 impl PocketDimension4D {
     fn from_2d(pd: &PocketDimension2D) -> Self {
-        let hypercubes = pd
-            .squares
-            .iter()
-            .map(|point| (point.0, point.1, 0, 0))
-            .collect();
+        let mut hypercubes = HashMap::new();
+        for sq in &pd.squares {
+            Self::set_active(&mut hypercubes, &(sq.0, sq.1, 0, 0));
+        }
+
         Self { hypercubes }
     }
 
-    fn get_range(&self) -> (DimRange, DimRange, DimRange, DimRange) {
-        let mut hypercubes_iter = self.hypercubes.iter();
-        if let Some(first) = hypercubes_iter.next() {
-            hypercubes_iter.fold(
-                (
-                    (first.0, first.0),
-                    (first.1, first.1),
-                    (first.2, first.2),
-                    (first.3, first.3),
-                ),
-                |(acc_x, acc_y, acc_z, acc_w), p| {
-                    (
-                        (acc_x.0.min(p.0), acc_x.1.max(p.0)),
-                        (acc_y.0.min(p.1), acc_y.1.max(p.1)),
-                        (acc_z.0.min(p.2), acc_z.1.max(p.2)),
-                        (acc_w.0.min(p.3), acc_w.1.max(p.3)),
-                    )
-                },
-            )
-        } else {
-            panic!("No cubes in list");
+    fn set_active(hypercubes: &mut HashMap<Point4D, State>, point: &Point4D) {
+        for neighbor in Self::neighbors(point) {
+            let entry = hypercubes.entry(neighbor).or_insert_with(State::new);
+            entry.active_neighbors += 1;
         }
+        let entry = hypercubes.entry(*point).or_insert_with(State::new);
+        entry.is_active = true;
     }
 
-    fn neighbors(point: &Point4D) -> Vec<Point4D> {
-        let mut neighbors = Vec::new();
-        for x in -1..=1 {
-            for y in -1..=1 {
-                for z in -1..=1 {
-                    for w in -1..=1 {
-                        if (x == 0 && y == 0 && z == 0 && w == 0) == false {
-                            neighbors.push((point.0 + x, point.1 + y, point.2 + z, point.3 + w));
-                        }
-                    }
-                }
-            }
-        }
-        assert_eq!(neighbors.len(), 80);
-        neighbors
+    fn neighbors(point: &Point4D) -> impl Iterator<Item = Point4D> + '_ {
+        NEIGHBOR_OFFSETS_4D.iter().map(move |offset| {
+            (
+                point.0 + offset.0,
+                point.1 + offset.1,
+                point.2 + offset.2,
+                point.3 + offset.3,
+            )
+        })
+    }
+
+    fn get_range(&self) -> (DimRange, DimRange, DimRange, DimRange) {
+        let mut hypercubes_iter = self
+            .hypercubes
+            .iter()
+            .filter(|(_point, state)| state.is_active == true)
+            .map(|(point, _state)| point);
+        let first = hypercubes_iter.next().expect("No cubes in list");
+        hypercubes_iter.fold(
+            (
+                (first.0, first.0),
+                (first.1, first.1),
+                (first.2, first.2),
+                (first.3, first.3),
+            ),
+            |(acc_x, acc_y, acc_z, acc_w), p| {
+                (
+                    (acc_x.0.min(p.0), acc_x.1.max(p.0)),
+                    (acc_y.0.min(p.1), acc_y.1.max(p.1)),
+                    (acc_z.0.min(p.2), acc_z.1.max(p.2)),
+                    (acc_w.0.min(p.3), acc_w.1.max(p.3)),
+                )
+            },
+        )
     }
 
     fn step(&mut self) {
-        let mut new_hypercubes = HashSet::new();
+        let mut new_hypercubes = HashMap::new();
 
-        let (x_range, y_range, z_range, w_range) = self.get_range();
-        for w in w_range.0 - 1..=w_range.1 + 1 {
-            for z in z_range.0 - 1..=z_range.1 + 1 {
-                for y in y_range.0 - 1..=y_range.1 + 1 {
-                    for x in x_range.0 - 1..=x_range.1 + 1 {
-                        let hypercube = (x, y, z, w);
-                        let count = Self::neighbors(&hypercube)
-                            .iter()
-                            .filter(|n| self.hypercubes.contains(n))
-                            .count();
-                        if self.hypercubes.contains(&hypercube) {
-                            // Active. 2 or 3 to stay alive, otherwise die.
-                            if count == 2 || count == 3 {
-                                new_hypercubes.insert(hypercube);
-                            }
-                        } else {
-                            // Inactive. 3 to become alive, otherwise stay dead.
-                            if count == 3 {
-                                new_hypercubes.insert(hypercube);
-                            }
-                        }
-                    }
+        for (hypercube, state) in self.hypercubes.iter() {
+            if state.is_active == true {
+                // Active. 2 or 3 to stay alive, otherwise die.
+                if state.active_neighbors == 2 || state.active_neighbors == 3 {
+                    Self::set_active(&mut new_hypercubes, &hypercube);
+                }
+            } else {
+                // Inactive. 3 to become alive, otherwise stay dead.
+                if state.active_neighbors == 3 {
+                    Self::set_active(&mut new_hypercubes, &hypercube);
                 }
             }
         }
@@ -619,7 +733,10 @@ impl PocketDimension4D {
     }
 
     fn count_active_cubes(&self) -> usize {
-        self.hypercubes.len()
+        self.hypercubes
+            .iter()
+            .filter(|(_point, state)| state.is_active == true)
+            .count()
     }
 }
 
@@ -631,7 +748,10 @@ impl std::fmt::Display for PocketDimension4D {
                 writeln!(f, "z={}, w={}", z, w)?;
                 for y in y_range.0..=y_range.1 {
                     for x in x_range.0..=x_range.1 {
-                        if self.hypercubes.contains(&(x, y, z, w)) {
+                        if let Some(State {
+                            is_active: true, ..
+                        }) = self.hypercubes.get(&(x, y, z, w))
+                        {
                             write!(f, "#")?;
                         } else {
                             write!(f, ".")?;
