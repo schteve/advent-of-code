@@ -58,7 +58,7 @@
 use nom::{
     branch::alt,
     character::complete::{char, digit1, multispace0},
-    combinator::{map, map_res},
+    combinator::{map, map_res, value},
     multi::many1,
     sequence::preceded,
     IResult,
@@ -79,10 +79,10 @@ impl Token {
             multispace0,
             alt((
                 map(map_res(digit1, |d: &str| d.parse::<u64>()), Self::Number),
-                map(char('+'), |_| Self::Add),
-                map(char('*'), |_| Self::Mult),
-                map(char('('), |_| Self::ParenOpen),
-                map(char(')'), |_| Self::ParenClose),
+                value(Self::Add, char('+')),
+                value(Self::Mult, char('*')),
+                value(Self::ParenOpen, char('(')),
+                value(Self::ParenClose, char(')')),
             )),
         )(input)
     }
