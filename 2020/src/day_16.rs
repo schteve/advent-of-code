@@ -71,25 +71,22 @@ use nom::{
     IResult,
 };
 use std::collections::HashMap;
-use std::ops::Range;
+use std::ops::RangeInclusive;
 
-fn range_parser(input: &str) -> IResult<&str, Range<u32>> {
+fn range_parser(input: &str) -> IResult<&str, RangeInclusive<u32>> {
     map(
         separated_pair(
             map_res(digit1, |d: &str| d.parse::<u32>()),
             char('-'),
             map_res(digit1, |d: &str| d.parse::<u32>()),
         ),
-        |(a, b)| Range {
-            start: a,
-            end: b + 1,
-        }, // Add one since a Range is open ended but the rule is not
+        |(a, b)| a..=b,
     )(input)
 }
 
 #[derive(Debug)]
 pub struct Notes {
-    rules: HashMap<String, Vec<Range<u32>>>,
+    rules: HashMap<String, Vec<RangeInclusive<u32>>>,
     my_ticket: Vec<u32>,
     nearby_tickets: Vec<Vec<u32>>,
 }
@@ -133,7 +130,7 @@ impl Notes {
         ))
     }
 
-    fn field_in_ranges(field: &u32, ranges: &[Range<u32>]) -> bool {
+    fn field_in_ranges(field: &u32, ranges: &[RangeInclusive<u32>]) -> bool {
         ranges.iter().any(|r| r.contains(field))
     }
 
@@ -148,15 +145,14 @@ impl Notes {
     }
 
     fn ticket_scanning_error_rate(&self) -> u32 {
-        let mut error_rate = 0;
-        for ticket in &self.nearby_tickets {
-            for field in ticket {
-                if self.field_is_valid(field) == false {
-                    error_rate += field;
-                }
-            }
-        }
-        error_rate
+        self.nearby_tickets
+            .iter()
+            .flat_map(|ticket| {
+                ticket
+                    .iter()
+                    .filter(|field| self.field_is_valid(field) == false)
+            })
+            .sum()
     }
 
     fn find_field_ordering(&self) -> Vec<String> {
