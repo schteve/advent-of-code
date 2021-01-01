@@ -49,20 +49,27 @@
     Given your starting numbers, what will be the 30000000th number spoken?
 */
 
-use std::collections::HashMap;
+// Use a sentinel value to indicate that the value has never been spoken before. This is
+// this is significantly faster than using Option<32>, presumably because the compiler doesn't
+// know that we only need values up to 30 million and so uses more than 32 bits for the option,
+// leading to higher memory usage and poorer cache performance.
+const NOT_SPOKEN: u32 = u32::MAX;
 
 struct MemoryGame {
     start: Vec<usize>,
-    spoken: HashMap<usize, usize>,
+    spoken: Vec<u32>,
     next_idx: usize,
     next_value: usize,
 }
 
 impl MemoryGame {
-    fn from_slice(input: &[usize]) -> Self {
+    fn from_slice(input: &[usize], max_rounds: usize) -> Self {
+        assert_eq!(input.is_empty(), false);
+        assert!(max_rounds < u32::MAX as usize);
+
         Self {
             start: input.to_vec(),
-            spoken: HashMap::new(),
+            spoken: vec![NOT_SPOKEN; max_rounds],
             next_idx: 0,
             next_value: input[0],
         }
@@ -72,18 +79,24 @@ impl MemoryGame {
 impl Iterator for MemoryGame {
     type Item = usize;
     fn next(&mut self) -> Option<usize> {
-        let tmp = self.next_value;
-        let prev = self.spoken.insert(self.next_value, self.next_idx);
-        if self.spoken.len() < self.start.len() {
-            self.next_value = self.start[self.spoken.len()];
+        if self.next_idx < self.spoken.len() {
+            let curr_value = self.next_value;
+            let curr_idx = self.next_idx;
+            let prev = self.spoken[curr_value];
+            self.spoken[curr_value] = curr_idx as u32;
+
+            self.next_idx += 1;
+            self.next_value = if self.next_idx < self.start.len() {
+                self.start[self.next_idx]
+            } else if prev == NOT_SPOKEN {
+                0
+            } else {
+                curr_idx - prev as usize
+            };
+            Some(curr_value)
         } else {
-            match prev {
-                Some(prev_idx) => self.next_value = self.next_idx - prev_idx,
-                None => self.next_value = 0,
-            }
+            None
         }
-        self.next_idx += 1;
-        Some(tmp)
     }
 }
 
@@ -97,18 +110,18 @@ pub fn input_generator(input: &str) -> Vec<usize> {
 
 #[aoc(day15, part1)]
 pub fn part1(input: &[usize]) -> usize {
-    let mut game = MemoryGame::from_slice(input);
-    let spoken_2020 = game.nth(2020 - 1).unwrap();
-    assert_eq!(spoken_2020, 319);
-    spoken_2020
+    let game = MemoryGame::from_slice(input, 2020);
+    let spoken = game.last().unwrap();
+    assert_eq!(spoken, 319);
+    spoken
 }
 
 #[aoc(day15, part2)]
 pub fn part2(input: &[usize]) -> usize {
-    let mut game = MemoryGame::from_slice(input);
-    let spoken_30000000 = game.nth(30000000 - 1).unwrap();
-    assert_eq!(spoken_30000000, 2424);
-    spoken_30000000
+    let game = MemoryGame::from_slice(input, 30_000_000);
+    let spoken = game.last().unwrap();
+    assert_eq!(spoken, 2424);
+    spoken
 }
 
 #[cfg(test)]
@@ -124,69 +137,72 @@ mod test {
     static INPUT_EXAMPLE7: &str = "3,1,2";
 
     #[test]
-    #[ignore]
     fn test_next() {
         let start = input_generator(INPUT_EXAMPLE1);
-        let game = MemoryGame::from_slice(&start);
+        let game = MemoryGame::from_slice(&start, 10);
         assert_eq!(
             game.take(10).collect::<Vec<usize>>(),
             [0, 3, 6, 0, 3, 3, 1, 0, 4, 0]
         );
 
         let start = input_generator(INPUT_EXAMPLE1);
-        let mut game = MemoryGame::from_slice(&start);
-        assert_eq!(game.nth(2020 - 1), Some(436));
+        let game = MemoryGame::from_slice(&start, 2020);
+        assert_eq!(game.last(), Some(436));
 
         let start = input_generator(INPUT_EXAMPLE2);
-        let mut game = MemoryGame::from_slice(&start);
-        assert_eq!(game.nth(2020 - 1), Some(1));
+        let game = MemoryGame::from_slice(&start, 2020);
+        assert_eq!(game.last(), Some(1));
 
         let start = input_generator(INPUT_EXAMPLE3);
-        let mut game = MemoryGame::from_slice(&start);
-        assert_eq!(game.nth(2020 - 1), Some(10));
+        let game = MemoryGame::from_slice(&start, 2020);
+        assert_eq!(game.last(), Some(10));
 
         let start = input_generator(INPUT_EXAMPLE4);
-        let mut game = MemoryGame::from_slice(&start);
-        assert_eq!(game.nth(2020 - 1), Some(27));
+        let game = MemoryGame::from_slice(&start, 2020);
+        assert_eq!(game.last(), Some(27));
 
         let start = input_generator(INPUT_EXAMPLE5);
-        let mut game = MemoryGame::from_slice(&start);
-        assert_eq!(game.nth(2020 - 1), Some(78));
+        let game = MemoryGame::from_slice(&start, 2020);
+        assert_eq!(game.last(), Some(78));
 
         let start = input_generator(INPUT_EXAMPLE6);
-        let mut game = MemoryGame::from_slice(&start);
-        assert_eq!(game.nth(2020 - 1), Some(438));
+        let game = MemoryGame::from_slice(&start, 2020);
+        assert_eq!(game.last(), Some(438));
 
         let start = input_generator(INPUT_EXAMPLE7);
-        let mut game = MemoryGame::from_slice(&start);
-        assert_eq!(game.nth(2020 - 1), Some(1836));
+        let game = MemoryGame::from_slice(&start, 2020);
+        assert_eq!(game.last(), Some(1836));
+    }
 
+    #[test]
+    #[ignore]
+    fn test_next_long() {
         let start = input_generator(INPUT_EXAMPLE1);
-        let mut game = MemoryGame::from_slice(&start);
-        assert_eq!(game.nth(30000000 - 1), Some(175594));
+        let game = MemoryGame::from_slice(&start, 30_000_000);
+        assert_eq!(game.last(), Some(175594));
 
         let start = input_generator(INPUT_EXAMPLE2);
-        let mut game = MemoryGame::from_slice(&start);
-        assert_eq!(game.nth(30000000 - 1), Some(2578));
+        let game = MemoryGame::from_slice(&start, 30_000_000);
+        assert_eq!(game.last(), Some(2578));
 
         let start = input_generator(INPUT_EXAMPLE3);
-        let mut game = MemoryGame::from_slice(&start);
-        assert_eq!(game.nth(30000000 - 1), Some(3544142));
+        let game = MemoryGame::from_slice(&start, 30_000_000);
+        assert_eq!(game.last(), Some(3544142));
 
         let start = input_generator(INPUT_EXAMPLE4);
-        let mut game = MemoryGame::from_slice(&start);
-        assert_eq!(game.nth(30000000 - 1), Some(261214));
+        let game = MemoryGame::from_slice(&start, 30_000_000);
+        assert_eq!(game.last(), Some(261214));
 
         let start = input_generator(INPUT_EXAMPLE5);
-        let mut game = MemoryGame::from_slice(&start);
-        assert_eq!(game.nth(30000000 - 1), Some(6895259));
+        let game = MemoryGame::from_slice(&start, 30_000_000);
+        assert_eq!(game.last(), Some(6895259));
 
         let start = input_generator(INPUT_EXAMPLE6);
-        let mut game = MemoryGame::from_slice(&start);
-        assert_eq!(game.nth(30000000 - 1), Some(18));
+        let game = MemoryGame::from_slice(&start, 30_000_000);
+        assert_eq!(game.last(), Some(18));
 
         let start = input_generator(INPUT_EXAMPLE7);
-        let mut game = MemoryGame::from_slice(&start);
-        assert_eq!(game.nth(30000000 - 1), Some(362));
+        let game = MemoryGame::from_slice(&start, 30_000_000);
+        assert_eq!(game.last(), Some(362));
     }
 }
