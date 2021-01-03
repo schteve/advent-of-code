@@ -162,6 +162,110 @@ impl Rule {
 }
 
 #[derive(Clone, Debug)]
+enum Frame<'a> {
+    RulesIter(std::slice::Iter<'a, u32>),
+    Value(char),
+}
+
+#[derive(Clone, Debug)]
+struct FrameStack<'a> {
+    stack: Vec<Frame<'a>>,
+}
+
+impl<'a> FrameStack<'a> {
+    fn new() -> Self {
+        Self { stack: Vec::new() }
+    }
+
+    fn from_rule(start_rule: &'a Rule) -> Vec<Self> {
+        let mut first = Self::new();
+        let mut others = first.process_rule(start_rule);
+        others.push(first);
+        others
+    }
+
+    fn process_rule(&mut self, r: &'a Rule) -> Vec<Self> {
+        let mut frame_stacks = Vec::new();
+        match r {
+            Rule::Rules(rules) => {
+                // This rule has multiple rules within it, duplicate the current frame stack and add a new frame to each of them
+                let mut rules_iter = rules.iter();
+                let first = rules_iter.next(); // Process the first item last so that we can clone self as the base but still re-use its memory
+                for rule in rules_iter {
+                    let frame = Frame::RulesIter(rule.iter());
+                    let mut frame_stack = self.clone();
+                    frame_stack.stack.push(frame);
+                    frame_stacks.push(frame_stack);
+                }
+                if let Some(rule) = first {
+                    let frame = Frame::RulesIter(rule.iter());
+                    self.stack.push(frame);
+                }
+            }
+            Rule::Value(c) => {
+                // Add the value to the stack
+                let frame = Frame::Value(*c);
+                self.stack.push(frame);
+            }
+        }
+        frame_stacks
+    }
+
+    fn advance_to_value(&mut self, rules: &'a HashMap<u32, Rule>) -> (Option<bool>, Vec<Self>) {
+        let mut done = None; // Some(true) means keep the stack, Some(false) means discard it, None means more to process
+        let mut new_frame_stacks = Vec::new();
+        match self.stack.last_mut() {
+            Some(Frame::RulesIter(ref mut rules_iter)) => {
+                if let Some(rule_id) = rules_iter.next() {
+                    // This frame has more rule IDs to process
+                    new_frame_stacks = self.process_rule(&rules[&rule_id]);
+                } else {
+                    // This frame is done being processed. Remove it from the stack, but keep the stack on the frontier so its next frame can be processed.
+                    self.stack.pop();
+                }
+            }
+            Some(Frame::Value(_)) => {
+                // This frame is a value, so this stack is done being processed
+                done = Some(true);
+            }
+            None => {
+                // This stack matched earlier, but more input exists so it's no longer relevant
+                done = Some(false);
+            }
+        }
+        (done, new_frame_stacks)
+    }
+
+    fn advance_value(&mut self) {
+        self.stack.pop();
+    }
+
+    fn matches(&self, msg_char: char) -> bool {
+        if let Some(Frame::Value(c)) = self.stack.last() {
+            *c == msg_char
+        } else {
+            panic!("Expected value");
+        }
+    }
+
+    fn remove_matched_frames(&mut self) {
+        while let Some(Frame::RulesIter(ref mut rules_iter)) = self.stack.last_mut() {
+            if rules_iter.next().is_none() {
+                // This frame was done already, remove it
+                self.stack.pop();
+            } else {
+                // This frame wasn't done yet, nothing left to do on this frame stack
+                break;
+            }
+        }
+    }
+
+    fn is_complete(&self) -> bool {
+        self.stack.is_empty()
+    }
+}
+
+#[derive(Clone, Debug)]
 pub struct Comms {
     rules: HashMap<u32, Rule>,
     messages: Vec<String>,
@@ -187,117 +291,47 @@ impl Comms {
     }
 
     fn match_message(&self, message: &str) -> bool {
-        #[derive(Clone, Debug)]
-        enum Frame<'a> {
-            RulesIter(std::slice::Iter<'a, u32>),
-            Value(char),
-        }
-
         // Initialize the frame stacks
-        let mut frame_stacks: Vec<Vec<Frame>> = Vec::new();
-        let start = &self.rules[&0];
-        match start {
-            Rule::Rules(rules) => {
-                for rule in rules {
-                    let frame = Frame::RulesIter(rule.iter());
-                    let frame_stack = vec![frame];
-                    frame_stacks.push(frame_stack);
-                }
-            }
-            Rule::Value(c) => {
-                let frame = Frame::Value(*c);
-                let frame_stack = vec![frame];
-                frame_stacks.push(frame_stack);
-            }
-        }
+        let mut frame_stacks: Vec<FrameStack> = FrameStack::from_rule(&self.rules[&0]);
 
         for msg_char in message.chars() {
             // First, process each frame stack until its current frame is at a value.
-            let mut frontier_frame_stacks: Vec<Vec<Frame>> = frame_stacks.drain(..).collect();
-            while let Some(mut frame_stack) = frontier_frame_stacks.pop() {
-                if frame_stack.is_empty() == true {
-                    continue; // This stack already matched, but more input exists so it's no longer relevant
-                }
-
-                let mut current_frame = frame_stack.pop().unwrap();
-                match current_frame {
-                    Frame::RulesIter(ref mut rules_iter) => {
-                        if let Some(rule_id) = rules_iter.next() {
-                            // This frame has more rule IDs to process
-                            frame_stack.push(current_frame);
-                            let next_rule = &self.rules[&rule_id];
-                            match next_rule {
-                                Rule::Rules(rules) => {
-                                    // This rule has multiple rules within it, duplicate the current state and add the new frame to each of them
-                                    for rule in rules {
-                                        let mut new_frame_stack = frame_stack.clone();
-                                        let frame = Frame::RulesIter(rule.iter());
-                                        new_frame_stack.push(frame);
-                                        frontier_frame_stacks.push(new_frame_stack);
-                                    }
-                                }
-                                Rule::Value(c) => {
-                                    // This rule is a value, so this stack is done being processed
-                                    let frame = Frame::Value(*c);
-                                    frame_stack.push(frame);
-                                    frame_stacks.push(frame_stack);
-                                }
-                            }
-                        } else {
-                            // This frame is done being processed. Put the stack back on the frontier so its next frame can be processed.
-                            frontier_frame_stacks.push(frame_stack);
-                        }
-                    }
-                    Frame::Value(_) => {
-                        // This frame is a value, push it back onto the stack and this stack is done being processed
-                        frame_stack.push(current_frame);
+            let mut frontier_frame_stacks: Vec<FrameStack> = frame_stacks.drain(..).collect();
+            while let Some(frame_stack) = frontier_frame_stacks.last_mut() {
+                let (done, mut new_frame_stacks) = frame_stack.advance_to_value(&self.rules);
+                match done {
+                    Some(true) => {
+                        // Done processing, keep the frame stack
+                        let frame_stack = frontier_frame_stacks.pop().unwrap();
                         frame_stacks.push(frame_stack);
                     }
+                    Some(false) => {
+                        // Done processing, discard the frame stack
+                        frontier_frame_stacks.pop();
+                    }
+                    None => {}
                 }
+                frontier_frame_stacks.append(&mut new_frame_stacks);
             }
 
-            // Then, grab the current frame for each frame and check if it matches the input
-            let mut kill_stack: Vec<bool> = Vec::new();
+            // Keep only the frame stacks for which the current frame matches the input
+            frame_stacks.retain(|frame_stack| frame_stack.matches(msg_char) == true);
+
+            // All remaining stacks match the input, so far. Advance past the value that was just matched on each stack.
             for frame_stack in frame_stacks.iter_mut() {
-                let current_frame = frame_stack.pop().unwrap();
-                match current_frame {
-                    Frame::RulesIter(_) => panic!("Expected value"),
-                    Frame::Value(c) => kill_stack.push(c != msg_char), // If it's a match, keep the stack going; otherwise, mark it to be killed
-                }
+                frame_stack.advance_value();
             }
-
-            // Kill any stacks that were marked for removal
-            let mut i = 0;
-            frame_stacks.retain(|_| {
-                let tmp = kill_stack[i];
-                i += 1;
-                tmp == false
-            });
         }
 
-        // Post process the stacks. Remove frames that are empty rule iters.
+        // Post process the stacks. Remove frames that already matched (empty rule iterators).
         for frame_stack in frame_stacks.iter_mut() {
-            while let Some(mut current_frame) = frame_stack.pop() {
-                if let Frame::RulesIter(ref mut rules_iter) = current_frame {
-                    if rules_iter.next().is_none() {
-                        // This frame was done already, kill it by not adding it back
-                    } else {
-                        // This frame wasn't done yet, add it back
-                        frame_stack.push(current_frame);
-                        break;
-                    }
-                } else {
-                    // This wasn't an iter frame, add it back
-                    frame_stack.push(current_frame);
-                    break;
-                }
-            }
+            frame_stack.remove_matched_frames();
         }
 
         // The match is successful only if all of the input was matched; only stacks that are empty were completely matched with the last character.
         frame_stacks
             .iter()
-            .any(|frame_stack| frame_stack.is_empty())
+            .any(|frame_stack| frame_stack.is_complete())
     }
 
     fn patch_rules(&mut self) {
