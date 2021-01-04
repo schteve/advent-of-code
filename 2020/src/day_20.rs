@@ -269,6 +269,7 @@ use nom::{
 use std::collections::{HashMap, HashSet};
 
 const TILE_SIZE: usize = 10;
+const MAX_ROT: u32 = 4;
 
 fn bit_reverse(input: &u32, size: usize) -> u32 {
     assert!(size > 0);
@@ -284,7 +285,7 @@ fn bit_reverse(input: &u32, size: usize) -> u32 {
 }
 
 fn transform(pixels: &HashSet<Point>, orientation: TileOrientation) -> HashSet<Point> {
-    assert!(orientation.rotation < 4);
+    assert!(orientation.rotation < MAX_ROT);
     let (mut x_range, mut y_range) = Point::get_range(pixels).unwrap();
     let mut output = HashSet::new();
     for p in pixels.iter() {
@@ -318,14 +319,28 @@ enum TileSide {
 }
 
 impl TileSide {
-    fn from_u32(value: u32) -> Self {
-        match value {
-            0 => Self::Top,
-            1 => Self::Right,
-            2 => Self::Bottom,
-            3 => Self::Left,
-            _ => panic!("Invalid value: {}", value),
+    fn to_unit_point(&self) -> Point {
+        match self {
+            Self::Top => Point { x: 0, y: -1 },
+            Self::Right => Point { x: 1, y: 0 },
+            Self::Bottom => Point { x: 0, y: 1 },
+            Self::Left => Point { x: -1, y: 0 },
         }
+    }
+
+    fn opposite(&self) -> Self {
+        match self {
+            Self::Top => Self::Bottom,
+            Self::Right => Self::Left,
+            Self::Bottom => Self::Top,
+            Self::Left => Self::Right,
+        }
+    }
+
+    const VALUES: [Self; 4] = [Self::Top, Self::Right, Self::Bottom, Self::Left];
+
+    fn iter() -> impl Iterator<Item = Self> {
+        Self::VALUES.iter().copied()
     }
 }
 
@@ -367,34 +382,34 @@ impl ImageTile {
         }
 
         let (x_range, y_range) = Point::get_range(&pixels).unwrap();
-        let top_a = (x_range.0..=x_range.1).fold(0, |mut acc, x| {
-            acc <<= 1;
-            if pixels.contains(&Point { x, y: y_range.0 }) == true {
-                acc |= 1;
-            }
-            acc
-        });
-        let bottom_a = (x_range.0..=x_range.1).fold(0, |mut acc, x| {
-            acc <<= 1;
-            if pixels.contains(&Point { x, y: y_range.1 }) == true {
-                acc |= 1;
-            }
-            acc
-        });
-        let left_a = (y_range.0..=y_range.1).fold(0, |mut acc, y| {
-            acc <<= 1;
-            if pixels.contains(&Point { x: x_range.0, y }) == true {
-                acc |= 1;
-            }
-            acc
-        });
-        let right_a = (y_range.0..=y_range.1).fold(0, |mut acc, y| {
-            acc <<= 1;
-            if pixels.contains(&Point { x: x_range.1, y }) == true {
-                acc |= 1;
-            }
-            acc
-        });
+        fn make_side_id<I>(pixels: &HashSet<Point>, values: I) -> u32
+        where
+            I: Iterator<Item = Point>,
+        {
+            values.fold(0, |mut acc, p| {
+                acc <<= 1;
+                if pixels.contains(&p) == true {
+                    acc |= 1;
+                }
+                acc
+            })
+        };
+        let top_a = make_side_id(
+            &pixels,
+            (x_range.0..=x_range.1).map(|x| Point { x, y: y_range.0 }),
+        );
+        let bottom_a = make_side_id(
+            &pixels,
+            (x_range.0..=x_range.1).map(|x| Point { x, y: y_range.1 }),
+        );
+        let left_a = make_side_id(
+            &pixels,
+            (y_range.0..=y_range.1).map(|y| Point { x: x_range.0, y }),
+        );
+        let right_a = make_side_id(
+            &pixels,
+            (y_range.0..=y_range.1).map(|y| Point { x: x_range.1, y }),
+        );
 
         // Flip horizontally; top and bottom are reversed bitwise, left and right swap
         let top_b = bit_reverse(&top_a, TILE_SIZE);
@@ -417,8 +432,8 @@ impl ImageTile {
         // Side IDs are encoded left to right and top to bottom. So, when rotating,
         // the ID will flip sometimes - for example rotating 180 degrees means all
         // sides are now reverse of their original encoding.
-        let rot_idx = modulo(4 - modulo(orientation.rotation, 4), 4);
-        let idx = modulo(side as usize + rot_idx as usize, 4);
+        let rot_idx = modulo(MAX_ROT - modulo(orientation.rotation, MAX_ROT), MAX_ROT);
+        let idx = modulo(side as u32 + rot_idx, MAX_ROT) as usize;
 
         let ary = if orientation.flipped == false {
             &self.side_a_ids
@@ -445,8 +460,8 @@ impl ImageTile {
 
     fn all_orientations() -> Vec<(TileSide, TileOrientation)> {
         let mut output = Vec::new();
-        for side in (0..4).map(TileSide::from_u32) {
-            for rotation in 0..4 {
+        for side in TileSide::iter() {
+            for rotation in 0..MAX_ROT {
                 for &flipped in &[false, true] {
                     output.push((side, TileOrientation { rotation, flipped }));
                 }
@@ -512,8 +527,7 @@ impl Image {
             .tiles
             .keys()
             .filter(|tile_id| {
-                (0..4)
-                    .map(TileSide::from_u32)
+                TileSide::iter()
                     .filter(|&side| {
                         let side_id =
                             self.tiles[&tile_id].get_side_id(side, TileOrientation::default());
@@ -572,21 +586,14 @@ impl Image {
 
             // Get the candidate tiles; in practice there will be at most one!
             let mut candidates: Vec<(u64, TileSide, TileOrientation)> = Vec::new();
-            if let Some(&(tile_id, orientation)) = tile_map.get(&(next_point + (0, -1))) {
-                let existing_side = self.tiles[&tile_id].get_side_id(TileSide::Bottom, orientation);
-                candidates.extend(self.possibilities[&existing_side].iter());
-            }
-            if let Some(&(tile_id, orientation)) = tile_map.get(&(next_point + (0, 1))) {
-                let existing_side = self.tiles[&tile_id].get_side_id(TileSide::Top, orientation);
-                candidates.extend(self.possibilities[&existing_side].iter());
-            }
-            if let Some(&(tile_id, orientation)) = tile_map.get(&(next_point + (-1, 0))) {
-                let existing_side = self.tiles[&tile_id].get_side_id(TileSide::Right, orientation);
-                candidates.extend(self.possibilities[&existing_side].iter());
-            }
-            if let Some(&(tile_id, orientation)) = tile_map.get(&(next_point + (1, 0))) {
-                let existing_side = self.tiles[&tile_id].get_side_id(TileSide::Left, orientation);
-                candidates.extend(self.possibilities[&existing_side].iter());
+            for side in TileSide::iter() {
+                if let Some(&(tile_id, orientation)) =
+                    tile_map.get(&(next_point + side.to_unit_point()))
+                {
+                    let existing_side =
+                        self.tiles[&tile_id].get_side_id(side.opposite(), orientation);
+                    candidates.extend(self.possibilities[&existing_side].iter());
+                }
             }
             candidates.retain(|&(t, ..)| unplaced_tiles.contains(&t));
             candidates.sort_unstable();
@@ -604,48 +611,21 @@ impl Image {
             // Find the first candidate that meets all requirements
             let mut picked: Option<(u64, TileOrientation)> = None;
             for (candidate_tile_id, _, candidate_orientation) in candidates {
-                let top_ok =
-                    if let Some(&(tile_id, orientation)) = tile_map.get(&(next_point + (0, -1))) {
+                let all_ok = TileSide::iter().all(|side| {
+                    if let Some(&(tile_id, orientation)) =
+                        tile_map.get(&(next_point + side.to_unit_point()))
+                    {
                         let neighbor_side_id =
-                            self.tiles[&tile_id].get_side_id(TileSide::Bottom, orientation);
-                        let candidate_side_id = self.tiles[&candidate_tile_id]
-                            .get_side_id(TileSide::Top, candidate_orientation);
+                            self.tiles[&tile_id].get_side_id(side.opposite(), orientation);
+                        let candidate_side_id =
+                            self.tiles[&candidate_tile_id].get_side_id(side, candidate_orientation);
                         neighbor_side_id == candidate_side_id
                     } else {
                         true
-                    };
-                let bot_ok =
-                    if let Some(&(tile_id, orientation)) = tile_map.get(&(next_point + (0, 1))) {
-                        let neighbor_side_id =
-                            self.tiles[&tile_id].get_side_id(TileSide::Top, orientation);
-                        let candidate_side_id = self.tiles[&candidate_tile_id]
-                            .get_side_id(TileSide::Bottom, candidate_orientation);
-                        neighbor_side_id == candidate_side_id
-                    } else {
-                        true
-                    };
-                let left_ok =
-                    if let Some(&(tile_id, orientation)) = tile_map.get(&(next_point + (-1, 0))) {
-                        let neighbor_side_id =
-                            self.tiles[&tile_id].get_side_id(TileSide::Right, orientation);
-                        let candidate_side_id = self.tiles[&candidate_tile_id]
-                            .get_side_id(TileSide::Left, candidate_orientation);
-                        neighbor_side_id == candidate_side_id
-                    } else {
-                        true
-                    };
-                let right_ok =
-                    if let Some(&(tile_id, orientation)) = tile_map.get(&(next_point + (1, 0))) {
-                        let neighbor_side_id =
-                            self.tiles[&tile_id].get_side_id(TileSide::Left, orientation);
-                        let candidate_side_id = self.tiles[&candidate_tile_id]
-                            .get_side_id(TileSide::Right, candidate_orientation);
-                        neighbor_side_id == candidate_side_id
-                    } else {
-                        true
-                    };
+                    }
+                });
 
-                if top_ok && bot_ok && left_ok && right_ok {
+                if all_ok == true {
                     picked = Some((candidate_tile_id, candidate_orientation));
                     break;
                 }
@@ -704,7 +684,7 @@ impl Image {
 
         // Check each orientation; only one should show sea monsters
         for &flipped in &[false, true] {
-            for rotation in 0..4 {
+            for rotation in 0.. {
                 let orientation = TileOrientation { rotation, flipped };
                 let input = transform(&self.combined_pixels, orientation);
                 let mut pixels_highlighted: HashMap<Point, char> =
@@ -1053,7 +1033,7 @@ Tile 3079:
         let original = image.combined_pixels.clone();
         let mut any = false;
         for &flipped in &[false, true] {
-            for rotation in 0..4 {
+            for rotation in 0..MAX_ROT {
                 let orientation = TileOrientation { rotation, flipped };
                 image.combined_pixels = transform(&original, orientation);
                 if image.to_string().trim() == expected {
