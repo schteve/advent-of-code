@@ -42,7 +42,6 @@ use nom::{
     IResult,
 };
 use std::collections::HashSet;
-use std::iter::FromIterator;
 
 type Ingredient = String;
 type Allergen = String;
@@ -107,7 +106,7 @@ impl FoodList {
         let mut ingredients: Vec<HashSet<Ingredient>> = Vec::new();
         for f in &self.food {
             if f.allergens.iter().any(|a| a == allergen) == true {
-                let set = HashSet::from_iter(f.ingredients.iter().cloned());
+                let set: HashSet<String> = f.ingredients.iter().cloned().collect();
                 ingredients.push(set);
             }
         }
