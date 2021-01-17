@@ -114,9 +114,7 @@ impl FoodList {
         // Find the intersection of all ingredients contained in foods with the allergen
         let mut iter = ingredients.into_iter();
         let start: HashSet<Ingredient> = iter.next().unwrap();
-        iter.fold(start, |acc, set| {
-            acc.intersection(&set).cloned().collect::<HashSet<_>>()
-        })
+        iter.fold(start, |acc, set| &acc & &set)
     }
 
     fn no_allergen_count(&self) -> usize {
