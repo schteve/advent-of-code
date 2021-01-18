@@ -95,26 +95,26 @@ fn u32_list_parser(input: &str) -> IResult<&str, Vec<u32>> {
 
 #[derive(Clone)]
 pub struct CrabCups {
-    cups: Vec<usize>, // A singly-linked list; 0th slot is empty so we can 1-index
-    current_cup: usize,
-    max_cup: usize,
+    cups: Vec<u32>, // A singly-linked list; 0th slot is empty so we can 1-index
+    current_cup: u32,
+    max_cup: u32,
 }
 
 impl CrabCups {
-    fn from_list(input: &[u32], max_cup: usize) -> Self {
-        let mut cups = vec![0; max_cup + 1];
+    fn from_list(input: &[u32], max_cup: u32) -> Self {
+        let mut cups = vec![0; (max_cup + 1) as usize];
         let mut cups_list_iter = input.iter();
-        let current_cup = *cups_list_iter.next().unwrap() as usize;
+        let current_cup = *cups_list_iter.next().unwrap();
         let mut last_cup = current_cup;
         for cup in cups_list_iter {
-            cups[last_cup] = *cup as usize;
-            last_cup = *cup as usize;
+            cups[last_cup as usize] = *cup;
+            last_cup = *cup;
         }
-        for cup in input.len() + 1..=max_cup {
-            cups[last_cup] = cup;
+        for cup in input.len() as u32 + 1..=max_cup {
+            cups[last_cup as usize] = cup;
             last_cup = cup;
         }
-        cups[last_cup] = current_cup;
+        cups[last_cup as usize] = current_cup;
 
         Self {
             cups,
@@ -123,32 +123,41 @@ impl CrabCups {
         }
     }
 
-    fn insert(&mut self, after: usize, cup: usize) {
+    fn insert3(&mut self, after: u32, cups: [u32; 3]) {
         assert!(after >= 1 && after <= self.max_cup);
-        assert!(cup >= 1 && cup <= self.max_cup);
-        assert!(self.cups[after] != 0);
+        assert!(self.cups[after as usize] != 0);
 
-        let next = self.cups[after];
-        self.cups[after] = cup;
-        self.cups[cup] = next;
+        let [a, b, c] = cups;
+        assert!(a >= 1 && a <= self.max_cup);
+        assert!(b >= 1 && b <= self.max_cup);
+        assert!(c >= 1 && c <= self.max_cup);
+
+        let next = self.cups[after as usize];
+        self.cups[after as usize] = a;
+        self.cups[a as usize] = b;
+        self.cups[b as usize] = c;
+        self.cups[c as usize] = next;
     }
 
-    fn remove(&mut self, after: usize) -> usize {
+    fn remove3(&mut self, after: u32) -> [u32; 3] {
         assert!(after >= 1 && after <= self.max_cup);
-        assert!(self.cups[after] != 0);
+        assert!(self.cups[after as usize] != 0);
 
-        let to_remove = self.cups[after];
-        self.cups[after] = self.cups[to_remove];
-        self.cups[to_remove] = 0;
-        to_remove
+        let a = self.cups[after as usize];
+        let b = self.cups[a as usize];
+        let c = self.cups[b as usize];
+
+        self.cups[after as usize] = self.cups[c as usize];
+        self.cups[a as usize] = 0;
+        self.cups[b as usize] = 0;
+        self.cups[c as usize] = 0;
+        [a, b, c]
     }
 
-    fn make_move(&mut self, num: usize) {
+    fn make_move(&mut self, num: u32) {
         for _ in 0..num {
             // Pick up 3 cups immediately clockwise of the current cup
-            let a = self.remove(self.current_cup);
-            let b = self.remove(self.current_cup);
-            let c = self.remove(self.current_cup);
+            let [a, b, c] = self.remove3(self.current_cup);
 
             // Select destination cup
             let mut dest_cup = self.current_cup;
@@ -163,23 +172,21 @@ impl CrabCups {
             }
 
             // Place 3 cups immediately clockwise of the destination cup
-            self.insert(dest_cup, c);
-            self.insert(dest_cup, b);
-            self.insert(dest_cup, a);
+            self.insert3(dest_cup, [a, b, c]);
 
             // Select new current cup, immediately clockwise of current cup
-            self.current_cup = self.cups[self.current_cup];
+            self.current_cup = self.cups[self.current_cup as usize];
         }
     }
 
-    fn order(&self, start: usize, num: usize) -> String {
+    fn order(&self, start: u32, num: u32) -> String {
         assert_ne!(start, 0);
 
         let mut output = String::new();
         let mut cup = start;
         for _ in 0..num {
             write!(output, "{}", cup).unwrap();
-            cup = self.cups[cup];
+            cup = self.cups[cup as usize];
         }
         output
     }
@@ -206,12 +213,12 @@ pub fn part1(input: &[u32]) -> String {
 }
 
 #[aoc(day23, part2)]
-pub fn part2(input: &[u32]) -> usize {
+pub fn part2(input: &[u32]) -> u64 {
     let mut crab_cups = CrabCups::from_list(input, 1000000);
     crab_cups.make_move(10000000);
     let a = crab_cups.cups[1];
-    let b = crab_cups.cups[a];
-    let label_product = a * b;
+    let b = crab_cups.cups[a as usize];
+    let label_product = a as u64 * b as u64;
     assert_eq!(label_product, 11498506800);
     label_product
 }
@@ -289,8 +296,8 @@ mod test {
         let mut crab_cups = CrabCups::from_list(&input, 1000000);
         crab_cups.make_move(10000000);
         let a = crab_cups.cups[1];
-        let b = crab_cups.cups[a];
-        let label_product = a * b;
+        let b = crab_cups.cups[a as usize];
+        let label_product = a as u64 * b as u64;
         assert_eq!(label_product, 149245887792);
     }
 }
