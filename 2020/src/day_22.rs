@@ -383,14 +383,14 @@ use std::collections::HashSet;
 
 #[derive(Clone, Eq, Hash, PartialEq)]
 pub struct Deck {
-    cards: Vec<u32>,
+    cards: Vec<u8>, // Surprisingly, using a Vec is actually quicker than using a VecDeque for this application (by about 20%), presumably because the decks are small
 }
 
 impl Deck {
     fn parser(input: &str) -> IResult<&str, Self> {
         let (input, cards) = many1(preceded(
             multispace0,
-            map_res(digit1, |d: &str| d.parse::<u32>()),
+            map_res(digit1, |d: &str| d.parse::<u8>()),
         ))(input)?;
 
         Ok((input, Self { cards }))
@@ -429,7 +429,7 @@ impl Game {
         ))
     }
 
-    fn new_game(&self, player_card: u32, crab_card: u32) -> Self {
+    fn new_game(&self, player_card: u8, crab_card: u8) -> Self {
         let new_player_cards = (&self.player.cards[0..player_card as usize]).to_vec();
         let new_crab_cards = (&self.crab.cards[0..crab_card as usize]).to_vec();
         Self {
@@ -444,19 +444,8 @@ impl Game {
         }
     }
 
-    fn check_winner(&mut self) -> Option<Player> {
-        if self.winner.is_none() {
-            self.winner = match (self.player.cards.is_empty(), self.crab.cards.is_empty()) {
-                (false, true) => Some(Player::P1),
-                (true, false) => Some(Player::P2),
-                _ => None,
-            };
-        }
-        self.winner
-    }
-
     fn score(&mut self) -> u32 {
-        let winner_deck = match self.check_winner() {
+        let winner_deck = match self.winner {
             Some(Player::P1) => &self.player.cards,
             Some(Player::P2) => &self.crab.cards,
             _ => panic!("Invalid game state!"),
@@ -465,91 +454,93 @@ impl Game {
         winner_deck
             .iter()
             .enumerate()
-            .map(|(i, card)| card * (winner_deck.len() - i) as u32)
+            .map(|(i, card)| *card as u32 * (winner_deck.len() - i) as u32)
             .sum()
     }
 
-    fn play_round(&mut self, num: usize) {
-        for _ in 0..num {
-            let player_card = self.player.cards.remove(0);
-            let crab_card = self.crab.cards.remove(0);
-            match player_card.cmp(&crab_card) {
-                Ordering::Less => {
-                    self.crab.cards.push(crab_card);
-                    self.crab.cards.push(player_card);
-                }
-                Ordering::Greater => {
-                    self.player.cards.push(player_card);
-                    self.player.cards.push(crab_card);
-                }
-                Ordering::Equal => {
-                    self.player.cards.push(player_card);
-                    self.crab.cards.push(crab_card);
-                }
+    fn play_round(&mut self) -> Option<Player> {
+        match (self.player.cards.is_empty(), self.crab.cards.is_empty()) {
+            (false, true) => return Some(Player::P1),
+            (true, false) => return Some(Player::P2),
+            _ => (),
+        }
+
+        let player_card = self.player.cards.remove(0);
+        let crab_card = self.crab.cards.remove(0);
+        match player_card.cmp(&crab_card) {
+            Ordering::Less => {
+                self.crab.cards.push(crab_card);
+                self.crab.cards.push(player_card);
+            }
+            Ordering::Greater => {
+                self.player.cards.push(player_card);
+                self.player.cards.push(crab_card);
+            }
+            Ordering::Equal => {
+                self.player.cards.push(player_card);
+                self.crab.cards.push(crab_card);
             }
         }
+
+        None
     }
 
     fn play_game(&mut self) -> Player {
         loop {
-            if let Some(winner) = self.check_winner() {
+            if let Some(winner) = self.play_round() {
+                self.winner = Some(winner);
                 return winner;
-            } else {
-                self.play_round(1);
             }
         }
     }
 
-    fn play_round_recursive(&mut self, num: usize) {
-        for _ in 0..num {
-            if self
-                .states
-                .contains(&(self.player.clone(), self.crab.clone()))
-                == true
-            {
-                // This exact state has been seen before - player 1 wins!
-                self.winner = Some(Player::P1);
-                return;
-            } else {
-                // Haven't seen this state before, record it
-                self.states.insert((self.player.clone(), self.crab.clone()));
+    fn play_round_recursive(&mut self) -> Option<Player> {
+        match (self.player.cards.is_empty(), self.crab.cards.is_empty()) {
+            (false, true) => return Some(Player::P1),
+            (true, false) => return Some(Player::P2),
+            _ => (),
+        }
+
+        // Record the current state, if it had been seen before then player 1 wins!
+        if self.states.insert((self.player.clone(), self.crab.clone())) == false {
+            return Some(Player::P1);
+        }
+
+        let player_card = self.player.cards.remove(0);
+        let crab_card = self.crab.cards.remove(0);
+
+        let winner = if player_card as usize <= self.player.cards.len()
+            && crab_card as usize <= self.crab.cards.len()
+        {
+            let mut new_game = self.new_game(player_card, crab_card);
+            new_game.play_game_recursive()
+        } else {
+            match player_card.cmp(&crab_card) {
+                Ordering::Less => Player::P2,
+                Ordering::Greater => Player::P1,
+                Ordering::Equal => panic!("Equal cards; shouldn't be possible!"),
             }
+        };
 
-            let player_card = self.player.cards.remove(0);
-            let crab_card = self.crab.cards.remove(0);
-
-            let winner = if player_card as usize <= self.player.cards.len()
-                && crab_card as usize <= self.crab.cards.len()
-            {
-                let mut new_game = self.new_game(player_card, crab_card);
-                new_game.play_game_recursive()
-            } else {
-                match player_card.cmp(&crab_card) {
-                    Ordering::Less => Player::P2,
-                    Ordering::Greater => Player::P1,
-                    Ordering::Equal => panic!("Equal cards; shouldn't be possible!"),
-                }
-            };
-
-            match winner {
-                Player::P1 => {
-                    self.player.cards.push(player_card);
-                    self.player.cards.push(crab_card);
-                }
-                Player::P2 => {
-                    self.crab.cards.push(crab_card);
-                    self.crab.cards.push(player_card);
-                }
+        match winner {
+            Player::P1 => {
+                self.player.cards.push(player_card);
+                self.player.cards.push(crab_card);
+            }
+            Player::P2 => {
+                self.crab.cards.push(crab_card);
+                self.crab.cards.push(player_card);
             }
         }
+
+        None
     }
 
     fn play_game_recursive(&mut self) -> Player {
         loop {
-            if let Some(winner) = self.check_winner() {
+            if let Some(winner) = self.play_round_recursive() {
+                self.winner = Some(winner);
                 return winner;
-            } else {
-                self.play_round_recursive(1);
             }
         }
     }
@@ -601,35 +592,37 @@ Player 2:
     fn test_play_round() {
         let mut game = input_generator(EXAMPLE_INPUT);
 
-        game.play_round(1);
+        game.play_round();
         assert_eq!(game.player.cards, [2, 6, 3, 1, 9, 5]);
         assert_eq!(game.crab.cards, [8, 4, 7, 10]);
 
-        game.play_round(1);
+        game.play_round();
         assert_eq!(game.player.cards, [6, 3, 1, 9, 5]);
         assert_eq!(game.crab.cards, [4, 7, 10, 8, 2]);
 
-        game.play_round(1);
+        game.play_round();
         assert_eq!(game.player.cards, [3, 1, 9, 5, 6, 4]);
         assert_eq!(game.crab.cards, [7, 10, 8, 2]);
 
-        game.play_round(1);
+        game.play_round();
         assert_eq!(game.player.cards, [1, 9, 5, 6, 4]);
         assert_eq!(game.crab.cards, [10, 8, 2, 7, 3]);
 
-        game.play_round(22);
+        for _ in 0..22 {
+            game.play_round();
+        }
         assert_eq!(game.player.cards, [5, 4, 1]);
         assert_eq!(game.crab.cards, [8, 9, 7, 3, 2, 10, 6]);
 
-        game.play_round(1);
+        game.play_round();
         assert_eq!(game.player.cards, [4, 1]);
         assert_eq!(game.crab.cards, [9, 7, 3, 2, 10, 6, 8, 5]);
 
-        game.play_round(1);
+        game.play_round();
         assert_eq!(game.player.cards, [1]);
         assert_eq!(game.crab.cards, [7, 3, 2, 10, 6, 8, 5, 9, 4]);
 
-        game.play_round(1);
+        game.play_round();
         assert_eq!(game.player.cards, []);
         assert_eq!(game.crab.cards, [3, 2, 10, 6, 8, 5, 9, 4, 7, 1]);
     }
@@ -648,71 +641,71 @@ Player 2:
         assert_eq!(game.player.cards, [9, 2, 6, 3, 1]);
         assert_eq!(game.crab.cards, [5, 8, 4, 7, 10]);
 
-        game.play_round_recursive(1);
+        game.play_round_recursive();
         assert_eq!(game.player.cards, [2, 6, 3, 1, 9, 5]);
         assert_eq!(game.crab.cards, [8, 4, 7, 10]);
 
-        game.play_round_recursive(1);
+        game.play_round_recursive();
         assert_eq!(game.player.cards, [6, 3, 1, 9, 5]);
         assert_eq!(game.crab.cards, [4, 7, 10, 8, 2]);
 
-        game.play_round_recursive(1);
+        game.play_round_recursive();
         assert_eq!(game.player.cards, [3, 1, 9, 5, 6, 4]);
         assert_eq!(game.crab.cards, [7, 10, 8, 2]);
 
-        game.play_round_recursive(1);
+        game.play_round_recursive();
         assert_eq!(game.player.cards, [1, 9, 5, 6, 4]);
         assert_eq!(game.crab.cards, [10, 8, 2, 7, 3]);
 
-        game.play_round_recursive(1);
+        game.play_round_recursive();
         assert_eq!(game.player.cards, [9, 5, 6, 4]);
         assert_eq!(game.crab.cards, [8, 2, 7, 3, 10, 1]);
 
-        game.play_round_recursive(1);
+        game.play_round_recursive();
         assert_eq!(game.player.cards, [5, 6, 4, 9, 8]);
         assert_eq!(game.crab.cards, [2, 7, 3, 10, 1]);
 
-        game.play_round_recursive(1);
+        game.play_round_recursive();
         assert_eq!(game.player.cards, [6, 4, 9, 8, 5, 2]);
         assert_eq!(game.crab.cards, [7, 3, 10, 1]);
 
-        game.play_round_recursive(1);
+        game.play_round_recursive();
         assert_eq!(game.player.cards, [4, 9, 8, 5, 2]);
         assert_eq!(game.crab.cards, [3, 10, 1, 7, 6]);
 
-        game.play_round_recursive(1);
+        game.play_round_recursive();
         assert_eq!(game.player.cards, [9, 8, 5, 2]);
         assert_eq!(game.crab.cards, [10, 1, 7, 6, 3, 4]);
 
-        game.play_round_recursive(1);
+        game.play_round_recursive();
         assert_eq!(game.player.cards, [8, 5, 2]);
         assert_eq!(game.crab.cards, [1, 7, 6, 3, 4, 10, 9]);
 
-        game.play_round_recursive(1);
+        game.play_round_recursive();
         assert_eq!(game.player.cards, [5, 2, 8, 1]);
         assert_eq!(game.crab.cards, [7, 6, 3, 4, 10, 9]);
 
-        game.play_round_recursive(1);
+        game.play_round_recursive();
         assert_eq!(game.player.cards, [2, 8, 1]);
         assert_eq!(game.crab.cards, [6, 3, 4, 10, 9, 7, 5]);
 
-        game.play_round_recursive(1);
+        game.play_round_recursive();
         assert_eq!(game.player.cards, [8, 1]);
         assert_eq!(game.crab.cards, [3, 4, 10, 9, 7, 5, 6, 2]);
 
-        game.play_round_recursive(1);
+        game.play_round_recursive();
         assert_eq!(game.player.cards, [1, 8, 3]);
         assert_eq!(game.crab.cards, [4, 10, 9, 7, 5, 6, 2]);
 
-        game.play_round_recursive(1);
+        game.play_round_recursive();
         assert_eq!(game.player.cards, [8, 3]);
         assert_eq!(game.crab.cards, [10, 9, 7, 5, 6, 2, 4, 1]);
 
-        game.play_round_recursive(1);
+        game.play_round_recursive();
         assert_eq!(game.player.cards, [3]);
         assert_eq!(game.crab.cards, [9, 7, 5, 6, 2, 4, 1, 10, 8]);
 
-        game.play_round_recursive(1);
+        game.play_round_recursive();
         assert_eq!(game.player.cards, []);
         assert_eq!(game.crab.cards, [7, 5, 6, 2, 4, 1, 10, 8, 9, 3]);
     }
