@@ -80,8 +80,7 @@ use nom::{
     branch::alt, bytes::complete::tag, character::complete::multispace0, combinator::value,
     multi::many1, sequence::preceded, IResult,
 };
-use std::collections::HashSet;
-use std::iter::FromIterator;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Clone, Copy)]
 pub enum HexDir {
@@ -109,11 +108,11 @@ impl HexDir {
     }
 }
 
-#[derive(Clone, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Eq, Hash, PartialEq)]
 struct HexPoint {
-    x: i32,
-    y: i32,
-    z: i32,
+    x: i8,
+    y: i8,
+    z: i8,
 }
 
 impl HexPoint {
@@ -155,12 +154,8 @@ struct Floor {
 }
 
 impl Floor {
-    fn new() -> Self {
-        let tiles = HashSet::new();
-        Self { tiles }
-    }
-
-    fn setup(&mut self, rules: &[Vec<HexDir>]) {
+    fn from_rules(rules: &[Vec<HexDir>]) -> Self {
+        let mut tiles = HashSet::new();
         for rule in rules {
             // Walk through the directions
             let mut point = HexPoint::new();
@@ -169,59 +164,51 @@ impl Floor {
             }
 
             // Toggle the final tile
-            if self.tiles.contains(&point) == true {
-                self.tiles.remove(&point);
+            if tiles.contains(&point) == true {
+                tiles.remove(&point);
             } else {
-                self.tiles.insert(point);
+                tiles.insert(point);
             }
         }
+
+        Self { tiles }
     }
 
     fn count_black(&self) -> usize {
         self.tiles.len()
     }
 
-    fn count_adjacents(&self, p: &HexPoint) -> usize {
-        p.adjacents()
-            .iter()
-            .filter(|adj| self.tiles.contains(&adj))
-            .count()
-    }
-
     fn days_passed(&mut self, num: usize) {
+        let mut counts: HashMap<HexPoint, u8> = HashMap::new();
         for _ in 0..num {
-            let mut new_tiles = HashSet::new();
-            // First apply rules to black tiles
+            counts.clear();
             for t in &self.tiles {
-                let black_adj = self.count_adjacents(t);
-                if black_adj == 0 || black_adj > 2 {
-                    // Flip to white (don't do anything)
-                } else {
-                    // Keep as black
-                    new_tiles.insert(t.clone());
+                for adj in &t.adjacents() {
+                    let e = counts.entry(*adj).or_insert(0);
+                    *e += 1;
                 }
             }
 
-            // Then apply rules to white tiles
-            let white_tiles: HashSet<HexPoint> =
-                HashSet::from_iter(self.tiles.iter().flat_map(|t| {
-                    t.adjacents()
-                        .iter()
-                        .filter(|adj| self.tiles.contains(&adj) == false)
-                        .cloned()
-                        .collect::<Vec<_>>()
-                }));
-            for t in white_tiles {
-                let white_adj = self.count_adjacents(&t);
-                if white_adj == 2 {
-                    // Flip to black
-                    new_tiles.insert(t.clone());
-                } else {
-                    // Keep as white (don't do anything)
-                }
-            }
-
-            self.tiles = new_tiles;
+            self.tiles = counts
+                .iter()
+                .filter_map(|(&tile, &count)| {
+                    if self.tiles.contains(&tile) {
+                        // Black tile rules
+                        if count == 0 || count > 2 {
+                            None // Flip to white (don't do anything)
+                        } else {
+                            Some(tile) // Keep as black
+                        }
+                    } else {
+                        // White tile rules
+                        if count == 2 {
+                            Some(tile) // Flip to black
+                        } else {
+                            None // Keep as white (don't do anything)
+                        }
+                    }
+                })
+                .collect();
         }
     }
 }
@@ -236,8 +223,7 @@ pub fn input_generator(input: &str) -> Vec<Vec<HexDir>> {
 
 #[aoc(day24, part1)]
 pub fn part1(input: &[Vec<HexDir>]) -> usize {
-    let mut floor = Floor::new();
-    floor.setup(input);
+    let floor = Floor::from_rules(input);
     let black = floor.count_black();
     assert_eq!(black, 469);
     black
@@ -245,8 +231,7 @@ pub fn part1(input: &[Vec<HexDir>]) -> usize {
 
 #[aoc(day24, part2)]
 pub fn part2(input: &[Vec<HexDir>]) -> usize {
-    let mut floor = Floor::new();
-    floor.setup(input);
+    let mut floor = Floor::from_rules(input);
     floor.days_passed(100);
     let black = floor.count_black();
     assert_eq!(black, 4353);
@@ -282,8 +267,7 @@ wseweeenwnesenwwwswnew";
     #[test]
     fn test_setup() {
         let input = input_generator(EXAMPLE_INPUT);
-        let mut floor = Floor::new();
-        floor.setup(&input);
+        let floor = Floor::from_rules(&input);
         assert_eq!(floor.count_black(), 10);
     }
 
@@ -291,8 +275,7 @@ wseweeenwnesenwwwswnew";
     #[ignore]
     fn test_days_passed() {
         let input = input_generator(EXAMPLE_INPUT);
-        let mut floor = Floor::new();
-        floor.setup(&input);
+        let mut floor = Floor::from_rules(&input);
 
         floor.days_passed(1);
         assert_eq!(floor.count_black(), 15);
@@ -351,8 +334,7 @@ wseweeenwnesenwwwswnew";
         floor.days_passed(10);
         assert_eq!(floor.count_black(), 2208);
 
-        let mut floor = Floor::new();
-        floor.setup(&input);
+        let mut floor = Floor::from_rules(&input);
         floor.days_passed(100);
         assert_eq!(floor.count_black(), 2208);
     }
