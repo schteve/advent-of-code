@@ -86,7 +86,7 @@ impl Handshake {
     fn transform(subject_number: u64, loop_size: u64) -> u64 {
         let mut value = 1;
         for _ in 0..loop_size {
-            value = Handshake::op(value, subject_number);
+            value = Self::op(value, subject_number);
         }
         value
     }
@@ -95,15 +95,15 @@ impl Handshake {
         let mut value = 1;
         let mut loop_count = 0;
         while value != key {
-            value = Handshake::op(value, 7);
+            value = Self::op(value, 7);
             loop_count += 1;
         }
         loop_count
     }
 
     fn crack_encryption(&self) -> u64 {
-        let card_loop_size = Handshake::find_loop_size(self.card_public_key);
-        Handshake::transform(self.door_public_key, card_loop_size)
+        let card_loop_size = Self::find_loop_size(self.card_public_key);
+        Self::transform(self.door_public_key, card_loop_size)
     }
 }
 
