@@ -204,7 +204,7 @@ impl Passport {
     fn validate_birth_year(&self) -> bool {
         if let Some(v) = &self.birth_year {
             if let Ok(value) = v.parse::<u32>() {
-                1920 <= value && value <= 2002
+                (1920..=2002).contains(&value)
             } else {
                 false
             }
@@ -216,7 +216,7 @@ impl Passport {
     fn validate_issue_year(&self) -> bool {
         if let Some(v) = &self.issue_year {
             if let Ok(value) = v.parse::<u32>() {
-                2010 <= value && value <= 2020
+                (2010..=2020).contains(&value)
             } else {
                 false
             }
@@ -228,7 +228,7 @@ impl Passport {
     fn validate_expire_year(&self) -> bool {
         if let Some(v) = &self.expire_year {
             if let Ok(value) = v.parse::<u32>() {
-                2020 <= value && value <= 2030
+                (2020..=2030).contains(&value)
             } else {
                 false
             }
@@ -246,8 +246,8 @@ impl Passport {
 
             if let Ok((_, (value, units))) = result {
                 match units {
-                    "cm" => 150 <= value && value <= 193,
-                    "in" => 59 <= value && value <= 76,
+                    "cm" => (150..=193).contains(&value),
+                    "in" => (59..=76).contains(&value),
                     _ => false,
                 }
             } else {

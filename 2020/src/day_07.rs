@@ -137,7 +137,7 @@ impl BagCookBook {
             for ingredient in v {
                 let e = reverse_lookup
                     .entry(ingredient.color.clone())
-                    .or_insert(Vec::new());
+                    .or_insert_with(Vec::new);
                 e.push(k.clone());
             }
         }

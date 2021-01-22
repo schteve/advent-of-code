@@ -504,7 +504,7 @@ impl Image {
         for tile in tiles.values() {
             for (side, orientation) in ImageTile::all_orientations() {
                 let side_id = tile.get_side_id(side, orientation);
-                let entry = possibilities.entry(side_id).or_insert(Vec::new());
+                let entry = possibilities.entry(side_id).or_insert_with(Vec::new);
                 entry.push((tile.id, side, orientation));
             }
         }
