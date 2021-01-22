@@ -1,3 +1,5 @@
+#![allow(clippy::bool_comparison)]
+#![allow(clippy::needless_bool)]
 #![allow(dead_code)]
 
 #[macro_use]

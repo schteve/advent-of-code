@@ -37,7 +37,7 @@ The clippy linter does not produce any warnings on the code at the default warni
 Each commit is checked with the following commands:
 * `cargo fmt -- --check`
 * `cargo test`
-* `cargo clean; cargo clippy -- -Dwarnings -A clippy::bool_comparison -A clippy::needless_bool`
+* `cargo clean; cargo clippy -- -Dwarnings`
 
 # Execution times
 After completing the puzzles I measured the execution times of each solution and performed some optimization in order to reduce total execution time. This year most of my initial solutions completed in less than 1 ms, so the bulk of the optimization was done on those days that were significantly longer.
