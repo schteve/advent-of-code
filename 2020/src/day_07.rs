@@ -56,13 +56,14 @@
     How many individual bags are required inside your single shiny gold bag?
 */
 
+use crate::common::{to_owned, trim_start, unsigned};
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    character::complete::{alpha1, char, digit1, multispace0},
-    combinator::{map, map_res, recognize, success},
+    character::complete::{alpha1, char},
+    combinator::{recognize, value},
     multi::{many1, separated_list1},
-    sequence::{delimited, pair, terminated, tuple},
+    sequence::{pair, terminated, tuple},
     IResult,
 };
 use std::collections::HashMap;
@@ -77,10 +78,8 @@ pub struct Ingredient {
 impl Ingredient {
     fn parser(input: &str) -> IResult<&str, Self> {
         let (input, (num, color)) = pair(
-            terminated(map_res(digit1, |x: &str| x.parse::<u32>()), char(' ')),
-            map(recognize(tuple((alpha1, char(' '), alpha1))), |c: &str| {
-                c.to_owned()
-            }),
+            terminated(unsigned, char(' ')),
+            to_owned(recognize(tuple((alpha1, char(' '), alpha1)))),
         )(input)?;
 
         Ok((input, Self { num, color }))
@@ -95,18 +94,14 @@ struct Recipe {
 impl Recipe {
     fn parser(input: &str) -> IResult<&str, Self> {
         let (input, (color, ingredients)) = pair(
-            map(
-                delimited(
-                    multispace0,
-                    recognize(tuple((alpha1, char(' '), alpha1))),
-                    tag(" bags contain "),
-                ),
-                |p: &str| p.to_owned(),
+            terminated(
+                trim_start(to_owned(recognize(tuple((alpha1, char(' '), alpha1))))),
+                tag(" bags contain "),
             ),
             terminated(
                 alt((
                     separated_list1(alt((tag(" bag, "), tag(" bags, "))), Ingredient::parser),
-                    terminated(success(Vec::new()), tag("no other")),
+                    value(Vec::new(), tag("no other")),
                 )),
                 alt((tag(" bag."), tag(" bags."))),
             ),

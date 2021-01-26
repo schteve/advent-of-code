@@ -59,15 +59,13 @@
     Figure out where the navigation instructions actually lead. What is the Manhattan distance between that location and the ship's starting position?
 */
 
-use crate::common::{Cardinal, Point, Turn};
+use crate::common::{trim_start, unsigned, Cardinal, Point, Turn};
 use nom::{
-    character::complete::{digit1, multispace0, one_of},
-    combinator::{map, map_res},
-    multi::many1,
-    sequence::{pair, preceded},
+    branch::alt, character::complete::char, combinator::value, multi::many1, sequence::pair,
     IResult,
 };
 
+#[derive(Clone)]
 pub enum Action {
     North,
     South,
@@ -80,16 +78,15 @@ pub enum Action {
 
 impl Action {
     fn parser(input: &str) -> IResult<&str, Self> {
-        map(one_of("NSEWLRF"), |c: char| match c {
-            'N' => Self::North,
-            'S' => Self::South,
-            'E' => Self::East,
-            'W' => Self::West,
-            'L' => Self::Left,
-            'R' => Self::Right,
-            'F' => Self::Forward,
-            _ => panic!("Invalid action character received!"),
-        })(input)
+        alt((
+            value(Self::North, char('N')),
+            value(Self::South, char('S')),
+            value(Self::East, char('E')),
+            value(Self::West, char('W')),
+            value(Self::Left, char('L')),
+            value(Self::Right, char('R')),
+            value(Self::Forward, char('F')),
+        ))(input)
     }
 }
 
@@ -100,10 +97,7 @@ pub struct Instruction {
 
 impl Instruction {
     fn parser(input: &str) -> IResult<&str, Self> {
-        let (input, (action, value)) = pair(
-            preceded(multispace0, Action::parser),
-            map_res(digit1, |d: &str| d.parse::<u32>()),
-        )(input)?;
+        let (input, (action, value)) = pair(trim_start(Action::parser), unsigned)(input)?;
 
         Ok((input, Self { action, value }))
     }

@@ -257,13 +257,12 @@
     How many # are not part of a sea monster?
 */
 
-use crate::common::{modulo, Point};
+use crate::common::{modulo, trim_start, unsigned, Point};
 use nom::{
     bytes::complete::tag,
-    character::complete::{char, digit1, multispace0, one_of},
-    combinator::map_res,
+    character::complete::{char, one_of},
     multi::many1,
-    sequence::{delimited, pair, preceded},
+    sequence::{delimited, pair},
     IResult,
 };
 use std::collections::{HashMap, HashSet};
@@ -361,12 +360,8 @@ pub struct ImageTile {
 impl ImageTile {
     fn parser(input: &str) -> IResult<&str, Self> {
         let (input, (id, pixels_list)) = pair(
-            delimited(
-                pair(multispace0, tag("Tile ")),
-                map_res(digit1, |d: &str| d.parse::<u64>()),
-                char(':'),
-            ),
-            many1(preceded(multispace0, many1(one_of(".#")))),
+            delimited(trim_start(tag("Tile ")), unsigned, char(':')),
+            many1(trim_start(many1(one_of(".#")))),
         )(input)?;
 
         let mut pixels = HashSet::new();

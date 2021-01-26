@@ -33,12 +33,12 @@
     Time to stock your raft with supplies. What is your canonical dangerous ingredient list?
 */
 
+use crate::common::{to_owned, trim_start};
 use nom::{
     bytes::complete::tag,
-    character::complete::{alpha1, char, multispace0},
-    combinator::map,
+    character::complete::{alpha1, char},
     multi::{many1, separated_list1},
-    sequence::{delimited, pair, preceded},
+    sequence::{delimited, pair},
     IResult,
 };
 use std::collections::HashSet;
@@ -55,13 +55,10 @@ pub struct Food {
 impl Food {
     fn parser(input: &str) -> IResult<&str, Self> {
         let (input, (ingredients, allergens)) = pair(
-            preceded(
-                multispace0,
-                separated_list1(char(' '), map(alpha1, |s: &str| s.to_owned())),
-            ),
+            trim_start(separated_list1(char(' '), to_owned(alpha1))),
             delimited(
                 tag(" (contains "),
-                separated_list1(tag(", "), map(alpha1, |s: &str| s.to_owned())),
+                separated_list1(tag(", "), to_owned(alpha1)),
                 char(')'),
             ),
         )(input)?;

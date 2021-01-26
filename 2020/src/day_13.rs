@@ -105,13 +105,11 @@
     What is the earliest timestamp such that all of the listed bus IDs depart at offsets matching their positions in the list?
 */
 
-use crate::common::modulo;
+use crate::common::{modulo, trim_start, unsigned};
 use nom::{
-    branch::alt,
-    character::complete::{alpha1, char, digit1, multispace0},
-    combinator::map_res,
+    character::complete::{alphanumeric1, char},
     multi::separated_list1,
-    sequence::{pair, preceded},
+    sequence::pair,
     IResult,
 };
 
@@ -127,11 +125,8 @@ pub struct Schedule {
 impl Schedule {
     fn parser(input: &str) -> IResult<&str, Self> {
         let (input, (arrival, bus_ids_strs)) = pair(
-            preceded(multispace0, map_res(digit1, |d: &str| d.parse::<u64>())),
-            preceded(
-                multispace0,
-                separated_list1(char(','), alt((digit1, alpha1))),
-            ),
+            trim_start(unsigned),
+            trim_start(separated_list1(char(','), alphanumeric1)),
         )(input)?;
 
         let bus_ids = bus_ids_strs

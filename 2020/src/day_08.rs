@@ -2,11 +2,11 @@
 
 */
 
+use crate::common::{signed, trim_start};
 use nom::{
-    character::complete::{alpha1, char, multispace0, one_of},
-    combinator::{map_res, recognize},
+    character::complete::{alpha1, char},
     multi::many1,
-    sequence::{preceded, separated_pair},
+    sequence::separated_pair,
     IResult,
 };
 
@@ -19,13 +19,7 @@ pub enum Instruction {
 
 impl Instruction {
     fn parser(input: &str) -> IResult<&str, Self> {
-        let (input, (op, arg)) = separated_pair(
-            preceded(multispace0, alpha1),
-            char(' '),
-            map_res(recognize(many1(one_of("+-01234567890"))), |x: &str| {
-                x.parse::<i32>()
-            }),
-        )(input)?;
+        let (input, (op, arg)) = separated_pair(trim_start(alpha1), char(' '), signed)(input)?;
 
         let instruction = match op {
             "jmp" => Self::Jmp(arg),

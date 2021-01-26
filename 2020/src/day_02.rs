@@ -34,15 +34,15 @@
     How many passwords are valid according to the new interpretation of the policies?
 */
 
+use crate::common::{to_owned, trim_start, unsigned};
 use nom::{
     bytes::complete::tag,
     character::{
-        complete::{alpha1, char, digit1, multispace0, satisfy, space1},
+        complete::{alpha1, char, satisfy, space1},
         is_alphabetic,
     },
-    combinator::{map, map_res},
     multi::many1,
-    sequence::{preceded, separated_pair},
+    sequence::separated_pair,
     IResult,
 };
 
@@ -55,11 +55,7 @@ pub struct Policy {
 impl Policy {
     fn parser(input: &str) -> IResult<&str, Self> {
         let (input, (range, letter)) = separated_pair(
-            separated_pair(
-                map_res(digit1, |min: &str| min.parse::<usize>()),
-                char('-'),
-                map_res(digit1, |max: &str| max.parse::<usize>()),
-            ),
+            separated_pair(unsigned, char('-'), unsigned),
             space1,
             satisfy(|c| is_alphabetic(c as u8)),
         )(input)?;
@@ -76,14 +72,8 @@ pub struct Entry {
 
 impl Entry {
     fn parser(input: &str) -> IResult<&str, Self> {
-        let (input, (policy, password)) = preceded(
-            multispace0,
-            separated_pair(
-                Policy::parser,
-                tag(": "),
-                map(alpha1, |s: &str| s.to_owned()),
-            ),
-        )(input)?;
+        let (input, (policy, password)) =
+            trim_start(separated_pair(Policy::parser, tag(": "), to_owned(alpha1)))(input)?;
 
         Ok((input, Self { policy, password }))
     }

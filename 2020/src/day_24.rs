@@ -76,10 +76,8 @@
     How many tiles will be black after 100 days?
 */
 
-use nom::{
-    branch::alt, bytes::complete::tag, character::complete::multispace0, combinator::value,
-    multi::many1, sequence::preceded, IResult,
-};
+use crate::common::trim_start;
+use nom::{branch::alt, bytes::complete::tag, combinator::value, multi::many1, IResult};
 use std::collections::{HashMap, HashSet};
 
 #[derive(Clone, Copy)]
@@ -94,17 +92,14 @@ pub enum HexDir {
 
 impl HexDir {
     fn parser(input: &str) -> IResult<&str, Self> {
-        preceded(
-            multispace0,
-            alt((
-                value(Self::East, tag("e")),
-                value(Self::SouthEast, tag("se")),
-                value(Self::SouthWest, tag("sw")),
-                value(Self::West, tag("w")),
-                value(Self::NorthWest, tag("nw")),
-                value(Self::NorthEast, tag("ne")),
-            )),
-        )(input)
+        trim_start(alt((
+            value(Self::East, tag("e")),
+            value(Self::SouthEast, tag("se")),
+            value(Self::SouthWest, tag("sw")),
+            value(Self::West, tag("w")),
+            value(Self::NorthWest, tag("nw")),
+            value(Self::NorthEast, tag("ne")),
+        )))(input)
     }
 }
 

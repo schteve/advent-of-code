@@ -61,27 +61,25 @@
     Once you work out which field is which, look for the six fields on your ticket that start with the word departure. What do you get if you multiply those six values together?
 */
 
+use crate::common::{to_owned, trim, trim_start, unsigned};
 use nom::{
-    branch::alt,
-    bytes::complete::tag,
-    character::complete::{alpha1, char, digit1, line_ending, multispace0, space1},
-    combinator::{map, map_res, recognize},
+    bytes::complete::{tag, take_while1},
+    character::{
+        complete::{char, line_ending},
+        is_alphabetic, is_space,
+    },
+    combinator::map,
     multi::{many1, separated_list1},
-    sequence::{delimited, pair, preceded, separated_pair, tuple},
+    sequence::{pair, preceded, separated_pair, terminated, tuple},
     IResult,
 };
 use std::collections::HashMap;
 use std::ops::RangeInclusive;
 
 fn range_parser(input: &str) -> IResult<&str, RangeInclusive<u32>> {
-    map(
-        separated_pair(
-            map_res(digit1, |d: &str| d.parse::<u32>()),
-            char('-'),
-            map_res(digit1, |d: &str| d.parse::<u32>()),
-        ),
-        |(a, b)| a..=b,
-    )(input)
+    map(separated_pair(unsigned, char('-'), unsigned), |(a, b)| {
+        a..=b
+    })(input)
 }
 
 #[derive(Debug)]
@@ -95,25 +93,21 @@ impl Notes {
     fn parser(input: &str) -> IResult<&str, Self> {
         let (input, (rules_list, my_ticket, nearby_tickets)) = tuple((
             many1(pair(
-                delimited(
-                    multispace0,
-                    map(recognize(many1(alt((alpha1, space1)))), |s: &str| {
-                        s.to_owned()
-                    }),
+                terminated(
+                    trim_start(to_owned(take_while1(|c: char| {
+                        is_alphabetic(c as u8) || is_space(c as u8)
+                    }))),
                     tag(": "),
                 ),
                 separated_list1(tag(" or "), range_parser),
             )),
             preceded(
-                tuple((multispace0, tag("your ticket:"), multispace0)),
-                separated_list1(char(','), map_res(digit1, |d: &str| d.parse::<u32>())),
+                trim(tag("your ticket:")),
+                separated_list1(char(','), unsigned),
             ),
             preceded(
-                tuple((multispace0, tag("nearby tickets:"), multispace0)),
-                separated_list1(
-                    line_ending,
-                    separated_list1(char(','), map_res(digit1, |d: &str| d.parse::<u32>())),
-                ),
+                trim(tag("nearby tickets:")),
+                separated_list1(line_ending, separated_list1(char(','), unsigned)),
             ),
         ))(input)?;
 

@@ -84,13 +84,14 @@
     Execute the initialization program using an emulator for a version 2 decoder chip. What is the sum of all values left in memory after it completes?
 */
 
+use crate::common::{trim_start, unsigned};
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    character::complete::{digit1, multispace0, one_of},
-    combinator::{map, map_res},
-    multi::many1,
-    sequence::{pair, preceded, separated_pair},
+    character::complete::one_of,
+    combinator::map,
+    multi::{fold_many1, many1},
+    sequence::{preceded, separated_pair},
     IResult,
 };
 use std::collections::HashMap;
@@ -122,9 +123,7 @@ impl Mask {
     }
 
     fn parser(input: &str) -> IResult<&str, Self> {
-        let (input, bits) = preceded(multispace0, many1(one_of("01X")))(input)?;
-
-        let mask = bits.iter().fold(Mask::new(), |mut acc, bit| {
+        let (input, mask) = trim_start(fold_many1(one_of("01X"), Mask::new(), |mut acc, bit| {
             acc.set <<= 1;
             acc.clear <<= 1;
             acc.floating <<= 1;
@@ -135,7 +134,7 @@ impl Mask {
                 _ => panic!("Invalid bit character received!"),
             }
             acc
-        });
+        }))(input)?;
 
         assert!(mask.is_valid());
 
@@ -227,19 +226,14 @@ impl Instruction {
     fn parser(input: &str) -> IResult<&str, Self> {
         let (input, instruction) = alt((
             preceded(
-                pair(multispace0, tag("mask = ")),
+                trim_start(tag("mask = ")),
                 map(Mask::parser, Self::UpdateMask),
             ),
             preceded(
-                pair(multispace0, tag("mem[")),
-                map(
-                    separated_pair(
-                        map_res(digit1, |d: &str| d.parse::<usize>()),
-                        tag("] = "),
-                        map_res(digit1, |d: &str| d.parse::<u64>()),
-                    ),
-                    |mem| Self::WriteMemory(mem.0, mem.1),
-                ),
+                trim_start(tag("mem[")),
+                map(separated_pair(unsigned, tag("] = "), unsigned), |mem| {
+                    Self::WriteMemory(mem.0, mem.1)
+                }),
             ),
         ))(input)?;
 

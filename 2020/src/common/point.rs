@@ -1,8 +1,7 @@
-use crate::common::Cardinal;
+use crate::common::{signed, Cardinal};
 use nom::{
-    character::complete::{char, one_of, space0},
-    combinator::{cond, map_res, opt, recognize},
-    multi::many1,
+    character::complete::{char, space0},
+    combinator::{cond, opt},
     sequence::{pair, preceded, separated_pair, tuple},
     IResult,
 };
@@ -33,15 +32,7 @@ impl Point {
         let (input, open_paren) = opt(char('('))(input)?;
         let (input, (x, y)) = preceded(
             space0,
-            separated_pair(
-                map_res(recognize(many1(one_of("-01234567890"))), |x: &str| {
-                    x.parse::<i32>()
-                }),
-                tuple((space0, char(','), space0)),
-                map_res(recognize(many1(one_of("-01234567890"))), |y: &str| {
-                    y.parse::<i32>()
-                }),
-            ),
+            separated_pair(signed, tuple((space0, char(','), space0)), signed),
         )(input)?;
         let (input, _) = cond(open_paren.is_some(), pair(space0, char(')')))(input)?;
 

@@ -51,12 +51,8 @@
     Looks like you only needed 49 stars after all.
 */
 
-use nom::{
-    character::complete::{digit1, multispace0},
-    combinator::map_res,
-    sequence::{pair, preceded},
-    IResult,
-};
+use crate::common::{trim_start, unsigned};
+use nom::{sequence::pair, IResult};
 
 pub struct Handshake {
     card_public_key: u64,
@@ -65,10 +61,8 @@ pub struct Handshake {
 
 impl Handshake {
     fn parser(input: &str) -> IResult<&str, Self> {
-        let (input, (card_public_key, door_public_key)) = pair(
-            map_res(preceded(multispace0, digit1), |d: &str| d.parse::<u64>()),
-            map_res(preceded(multispace0, digit1), |d: &str| d.parse::<u64>()),
-        )(input)?;
+        let (input, (card_public_key, door_public_key)) =
+            pair(trim_start(unsigned), trim_start(unsigned))(input)?;
 
         Ok((
             input,

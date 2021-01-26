@@ -109,14 +109,15 @@
     Count the number of valid passports - those that have all required fields and valid values. Continue to treat cid as optional. In your batch file, how many passports are valid?
 */
 
+use crate::common::{to_owned, trim_start, unsigned};
 use nom::{
     branch::alt,
     bytes::complete::{is_not, take_while_m_n},
     character::{
-        complete::{alpha1, char, digit1, line_ending, multispace0, space1},
+        complete::{alpha1, char, line_ending, space1},
         is_digit, is_hex_digit,
     },
-    combinator::{all_consuming, map_res},
+    combinator::all_consuming,
     multi::{many1, separated_list1},
     sequence::{pair, preceded, separated_pair},
     IResult,
@@ -129,15 +130,10 @@ struct Field {
 
 impl Field {
     fn parser(input: &str) -> IResult<&str, Self> {
-        let (input, (k, v)) = separated_pair(alpha1, char(':'), is_not(" \t\r\n"))(input)?;
+        let (input, (key, value)) =
+            separated_pair(to_owned(alpha1), char(':'), to_owned(is_not(" \t\r\n")))(input)?;
 
-        Ok((
-            input,
-            Self {
-                key: k.to_owned(),
-                value: v.to_owned(),
-            },
-        ))
+        Ok((input, Self { key, value }))
     }
 }
 
@@ -168,10 +164,8 @@ impl Passport {
     }
 
     fn parser(input: &str) -> IResult<&str, Self> {
-        let (input, fields) = preceded(
-            multispace0,
-            separated_list1(alt((space1, line_ending)), Field::parser),
-        )(input)?;
+        let (input, fields) =
+            trim_start(separated_list1(alt((space1, line_ending)), Field::parser))(input)?;
 
         let mut pass = Self::new();
         for field in fields {
@@ -239,10 +233,8 @@ impl Passport {
 
     fn validate_height(&self) -> bool {
         if let Some(v) = &self.height {
-            let result: IResult<&str, (u32, &str)> = all_consuming(pair(
-                map_res(digit1, |d: &str| d.parse::<u32>()),
-                alpha1,
-            ))(v.as_str());
+            let result: IResult<&str, (u32, &str)> =
+                all_consuming(pair(unsigned, alpha1))(v.as_str());
 
             if let Ok((_, (value, units))) = result {
                 match units {

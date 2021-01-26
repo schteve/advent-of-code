@@ -73,11 +73,10 @@
     For each group, count the number of questions to which everyone answered "yes". What is the sum of those counts?
 */
 
+use crate::common::{to_owned, trim_start};
 use nom::{
-    character::complete::{alpha1, line_ending, multispace0},
-    combinator::map,
+    character::complete::{alpha1, line_ending},
     multi::{many1, separated_list1},
-    sequence::preceded,
     IResult,
 };
 
@@ -88,10 +87,7 @@ pub struct Group {
 
 impl Group {
     fn parser(input: &str) -> IResult<&str, Self> {
-        let (input, people) = preceded(
-            multispace0,
-            separated_list1(line_ending, map(alpha1, |x: &str| x.to_owned())),
-        )(input)?;
+        let (input, people) = trim_start(separated_list1(line_ending, to_owned(alpha1)))(input)?;
 
         Ok((input, Group { people }))
     }

@@ -55,12 +55,12 @@
     What do you get if you add up the results of evaluating the homework problems using these new rules?
 */
 
+use crate::common::{trim_start, unsigned};
 use nom::{
     branch::alt,
-    character::complete::{char, digit1, multispace0},
-    combinator::{map, map_res, value},
+    character::complete::char,
+    combinator::{map, value},
     multi::many1,
-    sequence::preceded,
     IResult,
 };
 
@@ -75,16 +75,13 @@ pub enum Token {
 
 impl Token {
     fn parser(input: &str) -> IResult<&str, Self> {
-        preceded(
-            multispace0,
-            alt((
-                map(map_res(digit1, |d: &str| d.parse::<u64>()), Self::Number),
-                value(Self::Add, char('+')),
-                value(Self::Mult, char('*')),
-                value(Self::ParenOpen, char('(')),
-                value(Self::ParenClose, char(')')),
-            )),
-        )(input)
+        trim_start(alt((
+            map(unsigned, Self::Number),
+            value(Self::Add, char('+')),
+            value(Self::Mult, char('*')),
+            value(Self::ParenOpen, char('(')),
+            value(Self::ParenClose, char(')')),
+        )))(input)
     }
 
     fn is_op(&self) -> bool {

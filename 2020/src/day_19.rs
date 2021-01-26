@@ -129,13 +129,14 @@
     After updating rules 8 and 11, how many messages completely match rule 0?
 */
 
+use crate::common::{to_owned, trim_start, unsigned};
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    character::complete::{alpha1, anychar, char, digit1, multispace0},
-    combinator::{map, map_res},
+    character::complete::{alpha1, anychar, char},
+    combinator::map,
     multi::{many0, many1, separated_list1},
-    sequence::{delimited, pair, preceded, terminated},
+    sequence::{delimited, pair, separated_pair},
     IResult,
 };
 use std::collections::HashMap;
@@ -150,10 +151,7 @@ impl Rule {
     fn parser(input: &str) -> IResult<&str, Self> {
         alt((
             map(
-                separated_list1(
-                    tag(" | "),
-                    separated_list1(char(' '), map_res(digit1, |d: &str| d.parse::<u32>())),
-                ),
+                separated_list1(tag(" | "), separated_list1(char(' '), unsigned)),
                 Self::Rules,
             ),
             map(delimited(char('"'), anychar, char('"')), Self::Value),
@@ -275,16 +273,14 @@ impl Comms {
     fn parser(input: &str) -> IResult<&str, Self> {
         let (input, (rules, messages)) = pair(
             map(
-                many1(preceded(
-                    multispace0,
-                    pair(
-                        terminated(map_res(digit1, |d: &str| d.parse::<u32>()), tag(": ")),
-                        Rule::parser,
-                    ),
-                )),
+                many1(trim_start(separated_pair(
+                    unsigned,
+                    tag(": "),
+                    Rule::parser,
+                ))),
                 |rules_list| rules_list.into_iter().collect(),
             ),
-            many0(preceded(multispace0, map(alpha1, |s: &str| s.to_owned()))),
+            many0(trim_start(to_owned(alpha1))),
         )(input)?;
 
         Ok((input, Self { rules, messages }))

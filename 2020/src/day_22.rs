@@ -370,10 +370,9 @@
     Defend your honor as Raft Captain by playing the small crab in a game of Recursive Combat using the same two decks as before. What is the winning player's score?
 */
 
+use crate::common::{trim_start, unsigned};
 use nom::{
     bytes::complete::tag,
-    character::complete::{digit1, multispace0},
-    combinator::map_res,
     multi::many1,
     sequence::{pair, preceded},
     IResult,
@@ -388,10 +387,7 @@ pub struct Deck {
 
 impl Deck {
     fn parser(input: &str) -> IResult<&str, Self> {
-        let (input, cards) = many1(preceded(
-            multispace0,
-            map_res(digit1, |d: &str| d.parse::<u8>()),
-        ))(input)?;
+        let (input, cards) = many1(trim_start(unsigned))(input)?;
 
         Ok((input, Self { cards }))
     }
@@ -414,8 +410,8 @@ pub struct Game {
 impl Game {
     fn parser(input: &str) -> IResult<&str, Self> {
         let (input, (player, crab)) = pair(
-            preceded(pair(multispace0, tag("Player 1:")), Deck::parser),
-            preceded(pair(multispace0, tag("Player 2:")), Deck::parser),
+            preceded(trim_start(tag("Player 1:")), Deck::parser),
+            preceded(trim_start(tag("Player 2:")), Deck::parser),
         )(input)?;
 
         Ok((
