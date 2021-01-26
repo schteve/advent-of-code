@@ -124,9 +124,7 @@ impl Mask {
 
     fn parser(input: &str) -> IResult<&str, Self> {
         let (input, mask) = trim_start(fold_many1(one_of("01X"), Mask::new(), |mut acc, bit| {
-            acc.set <<= 1;
-            acc.clear <<= 1;
-            acc.floating <<= 1;
+            acc <<= 1;
             match bit {
                 '0' => acc.clear |= 1,
                 '1' => acc.set |= 1,
@@ -162,6 +160,23 @@ impl Mask {
             addr,
             count: 0,
         }
+    }
+}
+
+impl std::ops::Shl<u8> for Mask {
+    type Output = Self;
+    fn shl(self, rhs: u8) -> Self::Output {
+        let mut output = self;
+        output.set <<= rhs;
+        output.clear <<= rhs;
+        output.floating <<= rhs;
+        output
+    }
+}
+
+impl std::ops::ShlAssign<u8> for Mask {
+    fn shl_assign(&mut self, rhs: u8) {
+        *self = *self << rhs;
     }
 }
 
