@@ -6,8 +6,6 @@ use nom::{
     IResult,
 };
 use std::cmp::Ordering;
-use std::fmt;
-use std::ops;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub struct Point {
@@ -118,7 +116,7 @@ impl Point {
     }
 }
 
-impl ops::Add<Self> for Point {
+impl std::ops::Add<Self> for Point {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self {
@@ -129,7 +127,7 @@ impl ops::Add<Self> for Point {
     }
 }
 
-impl ops::Add<&Self> for Point {
+impl std::ops::Add<&Self> for Point {
     type Output = Self;
 
     fn add(self, rhs: &Self) -> Self {
@@ -140,7 +138,7 @@ impl ops::Add<&Self> for Point {
     }
 }
 
-impl ops::Add<(i32, i32)> for Point {
+impl std::ops::Add<(i32, i32)> for Point {
     type Output = Self;
 
     fn add(self, rhs: (i32, i32)) -> Self {
@@ -151,25 +149,25 @@ impl ops::Add<(i32, i32)> for Point {
     }
 }
 
-impl ops::AddAssign<Self> for Point {
+impl std::ops::AddAssign<Self> for Point {
     fn add_assign(&mut self, rhs: Self) {
         *self = *self + rhs;
     }
 }
 
-impl ops::AddAssign<&Self> for Point {
+impl std::ops::AddAssign<&Self> for Point {
     fn add_assign(&mut self, rhs: &Self) {
         *self = *self + rhs;
     }
 }
 
-impl ops::AddAssign<(i32, i32)> for Point {
+impl std::ops::AddAssign<(i32, i32)> for Point {
     fn add_assign(&mut self, rhs: (i32, i32)) {
         *self = *self + rhs;
     }
 }
 
-impl ops::Sub<Self> for Point {
+impl std::ops::Sub<Self> for Point {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self {
@@ -180,7 +178,7 @@ impl ops::Sub<Self> for Point {
     }
 }
 
-impl ops::Sub<(i32, i32)> for Point {
+impl std::ops::Sub<(i32, i32)> for Point {
     type Output = Self;
 
     fn sub(self, rhs: (i32, i32)) -> Self {
@@ -191,20 +189,20 @@ impl ops::Sub<(i32, i32)> for Point {
     }
 }
 
-impl ops::SubAssign<Self> for Point {
+impl std::ops::SubAssign<Self> for Point {
     fn sub_assign(&mut self, rhs: Self) {
         *self = *self - rhs;
     }
 }
 
-impl ops::SubAssign<(i32, i32)> for Point {
+impl std::ops::SubAssign<(i32, i32)> for Point {
     fn sub_assign(&mut self, rhs: (i32, i32)) {
         *self = *self - rhs;
     }
 }
 
-impl fmt::Display for Point {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl std::fmt::Display for Point {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "({}, {})", self.x, self.y)
     }
 }

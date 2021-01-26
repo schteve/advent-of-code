@@ -1,5 +1,3 @@
-use std::fmt;
-
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Cardinal {
     North,
@@ -75,8 +73,8 @@ impl Cardinal {
     }
 }
 
-impl fmt::Display for Cardinal {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl std::fmt::Display for Cardinal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match *self {
             Self::North => write!(f, "North"),
             Self::South => write!(f, "South"),
@@ -92,8 +90,8 @@ pub enum Turn {
     Right,
 }
 
-impl fmt::Display for Turn {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl std::fmt::Display for Turn {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match *self {
             Self::Left => write!(f, "L"),
             Self::Right => write!(f, "R"),

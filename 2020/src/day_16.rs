@@ -73,8 +73,7 @@ use nom::{
     sequence::{pair, preceded, separated_pair, terminated, tuple},
     IResult,
 };
-use std::collections::HashMap;
-use std::ops::RangeInclusive;
+use std::{collections::HashMap, ops::RangeInclusive};
 
 fn range_parser(input: &str) -> IResult<&str, RangeInclusive<u32>> {
     map(separated_pair(unsigned, char('-'), unsigned), |(a, b)| {

@@ -66,8 +66,7 @@
     What do you get if you multiply together the number of trees encountered on each of the listed slopes?
 */
 
-use crate::common::modulo;
-use crate::common::Point;
+use crate::common::{modulo, Point};
 use std::collections::HashSet;
 
 pub struct Map {

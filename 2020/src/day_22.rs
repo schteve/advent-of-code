@@ -377,8 +377,7 @@ use nom::{
     sequence::{pair, preceded},
     IResult,
 };
-use std::cmp::Ordering;
-use std::collections::HashSet;
+use std::{cmp::Ordering, collections::HashSet};
 
 #[derive(Clone, Eq, Hash, PartialEq)]
 pub struct Deck {

@@ -66,8 +66,7 @@ use nom::{
     sequence::{pair, terminated, tuple},
     IResult,
 };
-use std::collections::HashMap;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Ingredient {
