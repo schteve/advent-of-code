@@ -84,7 +84,7 @@
     Execute the initialization program using an emulator for a version 2 decoder chip. What is the sum of all values left in memory after it completes?
 */
 
-use crate::common::{trim_start, unsigned};
+use crate::common::{trim_start, unsigned, Mode};
 use nom::{
     branch::alt,
     bytes::complete::tag,
@@ -95,12 +95,6 @@ use nom::{
     IResult,
 };
 use std::collections::HashMap;
-
-#[derive(Clone, Copy)]
-enum Mode {
-    M1,
-    M2,
-}
 
 #[derive(Clone, Copy)]
 pub struct Mask {

@@ -203,7 +203,7 @@
     Given the new visibility method and the rule change for occupied seats becoming empty, once equilibrium is reached, how many seats end up occupied?
 */
 
-use crate::common::Point;
+use crate::common::{Mode, Point};
 
 #[derive(Clone, Copy, PartialEq)]
 enum Tile {
@@ -248,12 +248,6 @@ fn idx_to_point(idx: usize, x_size: usize) -> Point {
     let x = (idx % x_size) as i32;
     let y = (idx / x_size) as i32;
     Point { x, y }
-}
-
-#[derive(Clone, Copy)]
-enum Mode {
-    M1,
-    M2,
 }
 
 #[derive(Clone)]

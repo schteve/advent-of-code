@@ -59,7 +59,7 @@
     Figure out where the navigation instructions actually lead. What is the Manhattan distance between that location and the ship's starting position?
 */
 
-use crate::common::{trim_start, unsigned, Cardinal, Point, Turn};
+use crate::common::{trim_start, unsigned, Cardinal, Mode, Point, Turn};
 use nom::{
     branch::alt, character::complete::char, combinator::value, multi::many1, sequence::pair,
     IResult,
@@ -191,12 +191,6 @@ impl Ship {
             }
         }
     }
-}
-
-#[derive(Clone, Copy)]
-enum Mode {
-    M1,
-    M2,
 }
 
 fn handle_instructions(instructions: &[Instruction], mode: Mode) -> u32 {
