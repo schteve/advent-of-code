@@ -565,9 +565,9 @@ impl Image {
 
         let mut tile_map: HashMap<Point, (u64, TileOrientation)> = HashMap::new();
         let mut unplaced_tiles: Vec<u64> = self.tiles.keys().copied().collect();
-        let mut frontier: Vec<Point> = Point::new().orthogonals();
+        let mut frontier: Vec<Point> = Point::origin().orthogonals().collect();
         place_tile(
-            Point::new(),
+            Point::origin(),
             corners[0],
             TileOrientation::default(),
             &mut tile_map,

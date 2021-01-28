@@ -14,7 +14,7 @@ pub struct Point {
 }
 
 impl Point {
-    pub fn new() -> Self {
+    pub const fn origin() -> Self {
         Self { x: 0, y: 0 }
     }
 
@@ -70,28 +70,18 @@ impl Point {
         }
     }
 
-    pub fn orthogonals(&self) -> Vec<Self> {
-        vec![
-            *self + (0, -1),
-            *self + (0, 1),
-            *self + (1, 0),
-            *self + (-1, 0),
-        ]
+    const ORTHOGONALS: [(i32, i32); 4] = [(0, -1), (0, 1), (1, 0), (-1, 0)];
+    pub fn orthogonals(&self) -> impl Iterator<Item = Self> + '_ {
+        Self::ORTHOGONALS.iter().map(move |p| *self + *p)
     }
 
-    pub fn diagonals(&self) -> Vec<Self> {
-        vec![
-            *self + (-1, -1),
-            *self + (1, -1),
-            *self + (1, 1),
-            *self + (-1, 1),
-        ]
+    const DIAGONALS: [(i32, i32); 4] = [(-1, -1), (1, -1), (1, 1), (-1, 1)];
+    pub fn diagonals(&self) -> impl Iterator<Item = Self> + '_ {
+        Self::DIAGONALS.iter().map(move |p| *self + *p)
     }
 
-    pub fn adjacents(&self) -> Vec<Self> {
-        let mut adjacents = self.orthogonals();
-        adjacents.append(&mut self.diagonals());
-        adjacents
+    pub fn adjacents(&self) -> impl Iterator<Item = Self> + '_ {
+        self.orthogonals().chain(self.diagonals())
     }
 
     pub fn get_range<'a, I>(values: I) -> Option<((i32, i32), (i32, i32))>

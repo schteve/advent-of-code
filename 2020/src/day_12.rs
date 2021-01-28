@@ -112,7 +112,7 @@ struct Ship {
 impl Ship {
     fn new() -> Self {
         Self {
-            location: Point::new(),
+            location: Point::origin(),
             direction: Cardinal::East,
             waypoint: Point { x: 10, y: -1 },
         }
@@ -202,7 +202,7 @@ fn handle_instructions(instructions: &[Instruction], mode: Mode) -> u32 {
         }
     }
 
-    Point::manhattan(Point::new(), ship.location)
+    Point::manhattan(Point::origin(), ship.location)
 }
 
 #[aoc_generator(day12)]

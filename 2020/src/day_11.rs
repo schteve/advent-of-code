@@ -293,18 +293,16 @@ impl WaitingArea {
             .map(|i| {
                 idx_to_point(i, x_size)
                     .adjacents()
-                    .into_iter()
-                    .filter(|adj| get_tile_flat(&adj, x_size, y_size, &tiles) == Tile::Empty)
+                    .filter(|adj| get_tile_flat(adj, x_size, y_size, &tiles) == Tile::Empty)
                     .collect()
             })
             .collect();
 
         // Build index of non-floor neighbors visible from each tile
-        let directions = Point::new().adjacents();
         let mut neighbors_visible = Vec::new();
         for i in 0..tiles.len() {
             let mut visible_dirs: Vec<Point> = Vec::new();
-            for dir in &directions {
+            for dir in Point::origin().adjacents() {
                 let mut walk = idx_to_point(i, x_size);
                 while 0 <= walk.x && walk.x < x_size as i32 && 0 <= walk.y && walk.y < y_size as i32
                 {

@@ -78,7 +78,7 @@ pub struct Map {
 impl Map {
     fn from_string(input: &str) -> Self {
         let mut tiles = HashSet::new();
-        let mut p = Point::new();
+        let mut p = Point::origin();
         for line in input.lines() {
             p.x = 0;
             for c in line.chars() {
@@ -100,7 +100,7 @@ impl Map {
     }
 
     fn ride_toboggan(&self, x_delta: i32, y_delta: i32) -> usize {
-        let mut p = Point::new();
+        let mut p = Point::origin();
         let mut tree_count = 0;
 
         while p.y <= self.y_max {
