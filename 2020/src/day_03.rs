@@ -78,16 +78,15 @@ pub struct Map {
 impl Map {
     fn from_string(input: &str) -> Self {
         let mut tiles = HashSet::new();
-        let mut p = Point::origin();
-        for line in input.lines() {
-            p.x = 0;
-            for c in line.chars() {
+        for (y, line) in input.lines().enumerate() {
+            for (x, c) in line.chars().enumerate() {
                 if c == '#' {
-                    tiles.insert(p);
+                    tiles.insert(Point {
+                        x: x as i32,
+                        y: y as i32,
+                    });
                 }
-                p.x += 1;
             }
-            p.y += 1;
         }
 
         let range = Point::get_range(&tiles).unwrap();
