@@ -1,4 +1,5 @@
 use crate::common::{signed, Cardinal};
+use auto_ops::*;
 use nom::{
     character::complete::{char, space0},
     combinator::{cond, opt},
@@ -106,90 +107,41 @@ impl Point {
     }
 }
 
-impl std::ops::Add<Self> for Point {
-    type Output = Self;
+type Tuple = (i32, i32); // TODO: remove me when auto_ops releases a new version (0.2.0?) that allows sequence types to be used in the impl macros
 
-    fn add(self, rhs: Self) -> Self {
-        Self {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
-        }
+impl_op_ex!(+ |a: &Point, b: &Point| -> Point {
+    Point {
+        x: a.x + b.x,
+        y: a.y + b.y,
     }
-}
+});
 
-impl std::ops::Add<&Self> for Point {
-    type Output = Self;
-
-    fn add(self, rhs: &Self) -> Self {
-        Self {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
-        }
+impl_op_ex_commutative!(+ |a: &Point, b: &Tuple| -> Point {
+    Point {
+        x: a.x + b.0,
+        y: a.y + b.1,
     }
-}
+});
 
-impl std::ops::Add<(i32, i32)> for Point {
-    type Output = Self;
+impl_op_ex!(+= |a: &mut Point, b: &Point| { *a = *a + b });
+impl_op_ex!(+= |a: &mut Point, b: &Tuple| { *a = *a + b });
 
-    fn add(self, rhs: (i32, i32)) -> Self {
-        Self {
-            x: self.x + rhs.0,
-            y: self.y + rhs.1,
-        }
+impl_op_ex!(-|a: &Point, b: &Point| -> Point {
+    Point {
+        x: a.x - b.x,
+        y: a.y - b.y,
     }
-}
+});
 
-impl std::ops::AddAssign<Self> for Point {
-    fn add_assign(&mut self, rhs: Self) {
-        *self = *self + rhs;
+impl_op_ex!(-|a: &Point, b: &Tuple| -> Point {
+    Point {
+        x: a.x - b.0,
+        y: a.y - b.1,
     }
-}
+});
 
-impl std::ops::AddAssign<&Self> for Point {
-    fn add_assign(&mut self, rhs: &Self) {
-        *self = *self + rhs;
-    }
-}
-
-impl std::ops::AddAssign<(i32, i32)> for Point {
-    fn add_assign(&mut self, rhs: (i32, i32)) {
-        *self = *self + rhs;
-    }
-}
-
-impl std::ops::Sub<Self> for Point {
-    type Output = Self;
-
-    fn sub(self, rhs: Self) -> Self {
-        Self {
-            x: self.x - rhs.x,
-            y: self.y - rhs.y,
-        }
-    }
-}
-
-impl std::ops::Sub<(i32, i32)> for Point {
-    type Output = Self;
-
-    fn sub(self, rhs: (i32, i32)) -> Self {
-        Self {
-            x: self.x - rhs.0,
-            y: self.y - rhs.1,
-        }
-    }
-}
-
-impl std::ops::SubAssign<Self> for Point {
-    fn sub_assign(&mut self, rhs: Self) {
-        *self = *self - rhs;
-    }
-}
-
-impl std::ops::SubAssign<(i32, i32)> for Point {
-    fn sub_assign(&mut self, rhs: (i32, i32)) {
-        *self = *self - rhs;
-    }
-}
+impl_op_ex!(-= |a: &mut Point, b: &Point| { *a = *a - b });
+impl_op_ex!(-= |a: &mut Point, b: &Tuple| { *a = *a - b });
 
 impl std::fmt::Display for Point {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
