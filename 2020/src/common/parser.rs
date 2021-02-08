@@ -142,13 +142,13 @@ mod test {
         let result: IResult<&str, String> = to_owned(alpha1)(input);
         let (remain, s) = result.unwrap();
         assert_eq!(remain, "");
-        assert_eq!(s, String::from("abcd"));
+        assert_eq!(s, "abcd");
 
         let input = "abcd123;";
         let result: IResult<&str, String> = to_owned(alphanumeric1)(input);
         let (remain, s) = result.unwrap();
         assert_eq!(remain, ";");
-        assert_eq!(s, String::from("abcd123"));
+        assert_eq!(s, "abcd123");
 
         let input = b"abcd123";
         let result: IResult<&[u8], Vec<u8>> = to_owned(alpha1)(input);

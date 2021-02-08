@@ -320,11 +320,12 @@ enum TileSide {
 impl TileSide {
     fn to_unit_point(&self) -> Point {
         match self {
-            Self::Top => Point { x: 0, y: -1 },
-            Self::Right => Point { x: 1, y: 0 },
-            Self::Bottom => Point { x: 0, y: 1 },
-            Self::Left => Point { x: -1, y: 0 },
+            Self::Top => (0, -1),
+            Self::Right => (1, 0),
+            Self::Bottom => (0, 1),
+            Self::Left => (-1, 0),
         }
+        .into()
     }
 
     fn opposite(&self) -> Self {
@@ -368,10 +369,8 @@ impl ImageTile {
         for (y, line) in pixels_list.iter().enumerate() {
             for (x, c) in line.iter().enumerate() {
                 if *c == '#' {
-                    pixels.insert(Point {
-                        x: x as i32,
-                        y: y as i32,
-                    });
+                    let p = (x as i32, y as i32).into();
+                    pixels.insert(p);
                 }
             }
         }
@@ -666,10 +665,8 @@ impl Image {
         for (y, line) in sea_monster.lines().enumerate() {
             for (x, c) in line.chars().enumerate() {
                 if c == '#' {
-                    sea_monster_pixels.insert(Point {
-                        x: x as i32,
-                        y: y as i32,
-                    });
+                    let p = (x as i32, y as i32).into();
+                    sea_monster_pixels.insert(p);
                 }
             }
         }
@@ -958,10 +955,10 @@ Tile 3079:
     #[test]
     fn test_transform() {
         let mut a: HashSet<Point> = HashSet::new();
-        a.insert(Point { x: -2, y: -1 });
-        a.insert(Point { x: 2, y: -1 });
-        a.insert(Point { x: 2, y: 3 });
-        a.insert(Point { x: -2, y: 3 });
+        a.insert((-2, -1).into());
+        a.insert((2, -1).into());
+        a.insert((2, 3).into());
+        a.insert((-2, 3).into());
 
         let transformed = a.clone();
         let orientation = TileOrientation {

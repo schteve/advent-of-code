@@ -107,6 +107,15 @@ impl Point {
     }
 }
 
+impl From<(i32, i32)> for Point {
+    fn from(tuple: (i32, i32)) -> Self {
+        Self {
+            x: tuple.0,
+            y: tuple.1,
+        }
+    }
+}
+
 type Tuple = (i32, i32); // TODO: remove me when auto_ops releases a new version (0.2.0?) that allows sequence types to be used in the impl macros
 
 impl_op_ex!(+ |a: &Point, b: &Point| -> Point {

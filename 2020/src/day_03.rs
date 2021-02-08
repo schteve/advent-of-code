@@ -81,10 +81,8 @@ impl Map {
         for (y, line) in input.lines().enumerate() {
             for (x, c) in line.chars().enumerate() {
                 if c == '#' {
-                    tiles.insert(Point {
-                        x: x as i32,
-                        y: y as i32,
-                    });
+                    let p = (x as i32, y as i32).into();
+                    tiles.insert(p);
                 }
             }
         }

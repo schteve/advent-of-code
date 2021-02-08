@@ -114,7 +114,7 @@ impl Ship {
         Self {
             location: Point::origin(),
             direction: Cardinal::East,
-            waypoint: Point { x: 10, y: -1 },
+            waypoint: (10, -1).into(),
         }
     }
 
@@ -241,23 +241,23 @@ F11";
         let mut instr_iter = input_generator(EXAMPLE_INPUT).into_iter();
 
         ship.execute1(&instr_iter.next().unwrap());
-        assert_eq!(ship.location, Point { x: 10, y: 0 });
+        assert_eq!(ship.location, (10, 0).into());
         assert_eq!(ship.direction, Cardinal::East);
 
         ship.execute1(&instr_iter.next().unwrap());
-        assert_eq!(ship.location, Point { x: 10, y: -3 });
+        assert_eq!(ship.location, (10, -3).into());
         assert_eq!(ship.direction, Cardinal::East);
 
         ship.execute1(&instr_iter.next().unwrap());
-        assert_eq!(ship.location, Point { x: 17, y: -3 });
+        assert_eq!(ship.location, (17, -3).into());
         assert_eq!(ship.direction, Cardinal::East);
 
         ship.execute1(&instr_iter.next().unwrap());
-        assert_eq!(ship.location, Point { x: 17, y: -3 });
+        assert_eq!(ship.location, (17, -3).into());
         assert_eq!(ship.direction, Cardinal::South);
 
         ship.execute1(&instr_iter.next().unwrap());
-        assert_eq!(ship.location, Point { x: 17, y: 8 });
+        assert_eq!(ship.location, (17, 8).into());
         assert_eq!(ship.direction, Cardinal::South);
     }
 
@@ -267,24 +267,24 @@ F11";
         let mut instr_iter = input_generator(EXAMPLE_INPUT).into_iter();
 
         ship.execute2(&instr_iter.next().unwrap());
-        assert_eq!(ship.location, Point { x: 100, y: -10 });
-        assert_eq!(ship.waypoint, Point { x: 10, y: -1 });
+        assert_eq!(ship.location, (100, -10).into());
+        assert_eq!(ship.waypoint, (10, -1).into());
 
         ship.execute2(&instr_iter.next().unwrap());
-        assert_eq!(ship.location, Point { x: 100, y: -10 });
-        assert_eq!(ship.waypoint, Point { x: 10, y: -4 });
+        assert_eq!(ship.location, (100, -10).into());
+        assert_eq!(ship.waypoint, (10, -4).into());
 
         ship.execute2(&instr_iter.next().unwrap());
-        assert_eq!(ship.location, Point { x: 170, y: -38 });
-        assert_eq!(ship.waypoint, Point { x: 10, y: -4 });
+        assert_eq!(ship.location, (170, -38).into());
+        assert_eq!(ship.waypoint, (10, -4).into());
 
         ship.execute2(&instr_iter.next().unwrap());
-        assert_eq!(ship.location, Point { x: 170, y: -38 });
-        assert_eq!(ship.waypoint, Point { x: 4, y: 10 });
+        assert_eq!(ship.location, (170, -38).into());
+        assert_eq!(ship.waypoint, (4, 10).into());
 
         ship.execute2(&instr_iter.next().unwrap());
-        assert_eq!(ship.location, Point { x: 214, y: 72 });
-        assert_eq!(ship.waypoint, Point { x: 4, y: 10 });
+        assert_eq!(ship.location, (214, 72).into());
+        assert_eq!(ship.waypoint, (4, 10).into());
     }
 
     #[test]
