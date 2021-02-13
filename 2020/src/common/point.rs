@@ -3,8 +3,9 @@ use auto_ops::*;
 use nom::{
     character::complete::{char, space0},
     combinator::{cond, opt},
+    error::Error,
     sequence::{pair, preceded, separated_pair, tuple},
-    IResult,
+    Finish, IResult,
 };
 use std::cmp::Ordering;
 
@@ -17,10 +18,6 @@ pub struct Point {
 impl Point {
     pub const fn origin() -> Self {
         Self { x: 0, y: 0 }
-    }
-
-    pub fn from_string(input: &str) -> Self {
-        Point::parser(input).expect("Invalid point format").1
     }
 
     pub fn parser(input: &str) -> IResult<&str, Self> {
@@ -156,6 +153,19 @@ impl std::fmt::Display for Point {
     }
 }
 
+impl std::str::FromStr for Point {
+    type Err = Error<String>;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match Point::parser(s).finish() {
+            Ok((_remaining, point)) => Ok(point),
+            Err(Error { input, code }) => Err(Error {
+                input: input.to_string(),
+                code,
+            }),
+        }
+    }
+}
+
 impl PartialOrd for Point {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
@@ -174,30 +184,27 @@ mod test {
 
     #[test]
     fn test_from_string() {
-        assert_eq!(Point::from_string("123,456"), Point { x: 123, y: 456 });
-        assert_eq!(Point::from_string(" 123,456"), Point { x: 123, y: 456 });
-        assert_eq!(Point::from_string("123 ,456"), Point { x: 123, y: 456 });
-        assert_eq!(Point::from_string("123, 456"), Point { x: 123, y: 456 });
-        assert_eq!(Point::from_string("123,456 "), Point { x: 123, y: 456 });
-        assert_eq!(Point::from_string(" 123 , 456 "), Point { x: 123, y: 456 });
-        assert_eq!(Point::from_string("(123,456)"), Point { x: 123, y: 456 });
-        assert_eq!(Point::from_string(" (123,456)"), Point { x: 123, y: 456 });
-        assert_eq!(Point::from_string("( 123,456)"), Point { x: 123, y: 456 });
-        assert_eq!(Point::from_string("(123 ,456)"), Point { x: 123, y: 456 });
-        assert_eq!(Point::from_string("(123, 456)"), Point { x: 123, y: 456 });
-        assert_eq!(Point::from_string("(123,456 )"), Point { x: 123, y: 456 });
-        assert_eq!(Point::from_string("(123,456) "), Point { x: 123, y: 456 });
-        assert_eq!(
-            Point::from_string("( 123 , 456 )"),
-            Point { x: 123, y: 456 }
-        );
-        assert_eq!(Point::from_string("123,456)"), Point { x: 123, y: 456 });
+        assert_eq!("123,456".parse(), Ok(Point { x: 123, y: 456 }));
+        assert_eq!(" 123,456".parse(), Ok(Point { x: 123, y: 456 }));
+        assert_eq!("123 ,456".parse(), Ok(Point { x: 123, y: 456 }));
+        assert_eq!("123, 456".parse(), Ok(Point { x: 123, y: 456 }));
+        assert_eq!("123,456 ".parse(), Ok(Point { x: 123, y: 456 }));
+        assert_eq!(" 123 , 456 ".parse(), Ok(Point { x: 123, y: 456 }));
+        assert_eq!("(123,456)".parse(), Ok(Point { x: 123, y: 456 }));
+        assert_eq!(" (123,456)".parse(), Ok(Point { x: 123, y: 456 }));
+        assert_eq!("( 123,456)".parse(), Ok(Point { x: 123, y: 456 }));
+        assert_eq!("(123 ,456)".parse(), Ok(Point { x: 123, y: 456 }));
+        assert_eq!("(123, 456)".parse(), Ok(Point { x: 123, y: 456 }));
+        assert_eq!("(123,456 )".parse(), Ok(Point { x: 123, y: 456 }));
+        assert_eq!("(123,456) ".parse(), Ok(Point { x: 123, y: 456 }));
+        assert_eq!("( 123 , 456 )".parse(), Ok(Point { x: 123, y: 456 }));
+        assert_eq!("123,456)".parse(), Ok(Point { x: 123, y: 456 }));
     }
 
     #[test]
     #[should_panic]
     fn test_from_string_fail() {
-        Point::from_string("(123,456");
+        "(123,456".parse::<Point>().unwrap();
     }
 
     #[test]
