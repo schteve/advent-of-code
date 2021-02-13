@@ -104,7 +104,10 @@ impl GameConsole {
                 panic!("No corrupted instruction found!");
             }
 
-            if matches!(self.program[self.ip], Instruction::Jmp(_) | Instruction::Nop(_)) {
+            if matches!(
+                self.program[self.ip],
+                Instruction::Jmp(_) | Instruction::Nop(_)
+            ) {
                 let mut new_console = self.clone();
                 new_console.program[self.ip] = self.program[self.ip].transform();
 
