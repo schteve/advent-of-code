@@ -116,8 +116,6 @@ impl From<(i32, i32)> for Point {
     }
 }
 
-type Tuple = (i32, i32); // TODO: remove me when auto_ops releases a new version (0.2.0?) that allows sequence types to be used in the impl macros
-
 impl_op_ex!(+ |a: &Point, b: &Point| -> Point {
     Point {
         x: a.x + b.x,
@@ -125,7 +123,7 @@ impl_op_ex!(+ |a: &Point, b: &Point| -> Point {
     }
 });
 
-impl_op_ex_commutative!(+ |a: &Point, b: &Tuple| -> Point {
+impl_op_ex_commutative!(+ |a: &Point, b: &(i32, i32)| -> Point {
     Point {
         x: a.x + b.0,
         y: a.y + b.1,
@@ -133,7 +131,7 @@ impl_op_ex_commutative!(+ |a: &Point, b: &Tuple| -> Point {
 });
 
 impl_op_ex!(+= |a: &mut Point, b: &Point| { *a = *a + b });
-impl_op_ex!(+= |a: &mut Point, b: &Tuple| { *a = *a + b });
+impl_op_ex!(+= |a: &mut Point, b: &(i32, i32)| { *a = *a + b });
 
 impl_op_ex!(-|a: &Point, b: &Point| -> Point {
     Point {
@@ -142,7 +140,7 @@ impl_op_ex!(-|a: &Point, b: &Point| -> Point {
     }
 });
 
-impl_op_ex!(-|a: &Point, b: &Tuple| -> Point {
+impl_op_ex!(-|a: &Point, b: &(i32, i32)| -> Point {
     Point {
         x: a.x - b.0,
         y: a.y - b.1,
@@ -150,7 +148,7 @@ impl_op_ex!(-|a: &Point, b: &Tuple| -> Point {
 });
 
 impl_op_ex!(-= |a: &mut Point, b: &Point| { *a = *a - b });
-impl_op_ex!(-= |a: &mut Point, b: &Tuple| { *a = *a - b });
+impl_op_ex!(-= |a: &mut Point, b: &(i32, i32)| { *a = *a - b });
 
 impl std::fmt::Display for Point {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
