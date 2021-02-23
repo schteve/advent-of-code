@@ -102,6 +102,10 @@ impl Point {
             None
         }
     }
+
+    pub fn in_range(&self, range: ((i32, i32), (i32, i32))) -> bool {
+        range.0 .0 <= self.x && self.x <= range.0 .1 && range.1 .0 <= self.y && self.y <= range.1 .1
+    }
 }
 
 impl From<(i32, i32)> for Point {

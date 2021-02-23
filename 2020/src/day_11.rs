@@ -304,8 +304,7 @@ impl WaitingArea {
             let mut visible_dirs: Vec<Point> = Vec::new();
             for dir in Point::origin().adjacents() {
                 let mut walk = idx_to_point(i, x_size);
-                while 0 <= walk.x && walk.x < x_size as i32 && 0 <= walk.y && walk.y < y_size as i32
-                {
+                while walk.in_range(((0, x_size as i32 + 1), (0, y_size as i32 + 1))) {
                     walk += dir;
                     if get_tile_flat(&walk, x_size, y_size, &tiles) == Tile::Empty {
                         visible_dirs.push(walk);
