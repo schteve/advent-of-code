@@ -257,15 +257,15 @@
     How many # are not part of a sea monster?
 */
 
-use crate::common::{modulo, trim_start, unsigned, Point};
+use crate::common::{modulo, trim_start, unsigned, Point, TileChar, TileMap, TileSet};
 use nom::{
     bytes::complete::tag,
-    character::complete::{char, one_of},
+    character::complete::char,
     multi::many1,
     sequence::{delimited, pair},
     IResult,
 };
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 const TILE_SIZE: usize = 10;
 const MAX_ROT: u32 = 4;
@@ -283,10 +283,10 @@ fn bit_reverse(input: &u32, size: usize) -> u32 {
     output
 }
 
-fn transform(pixels: &HashSet<Point>, orientation: TileOrientation) -> HashSet<Point> {
+fn transform(pixels: &TileSet, orientation: TileOrientation) -> TileSet {
     assert!(orientation.rotation < MAX_ROT);
-    let (mut x_range, mut y_range) = Point::get_range(pixels).unwrap();
-    let mut output = HashSet::new();
+    let (mut x_range, mut y_range) = pixels.get_range().unwrap();
+    let mut output = TileSet::new();
     for p in pixels.iter() {
         let mut p_new = *p;
         if orientation.flipped == true {
@@ -353,30 +353,20 @@ struct TileOrientation {
 #[derive(Clone, Debug)]
 pub struct ImageTile {
     id: u64,
-    pixels: HashSet<Point>,
+    pixels: TileSet,
     side_a_ids: [u32; 4],
     side_b_ids: [u32; 4],
 }
 
 impl ImageTile {
     fn parser(input: &str) -> IResult<&str, Self> {
-        let (input, (id, pixels_list)) = pair(
+        let (input, (id, pixels)) = pair(
             delimited(trim_start(tag("Tile ")), unsigned, char(':')),
-            many1(trim_start(many1(one_of(".#")))),
+            TileSet::parser('#'),
         )(input)?;
 
-        let mut pixels = HashSet::new();
-        for (y, line) in pixels_list.iter().enumerate() {
-            for (x, c) in line.iter().enumerate() {
-                if *c == '#' {
-                    let p = (x as i32, y as i32).into();
-                    pixels.insert(p);
-                }
-            }
-        }
-
-        let (x_range, y_range) = Point::get_range(&pixels).unwrap();
-        fn make_side_id<I>(pixels: &HashSet<Point>, values: I) -> u32
+        let (x_range, y_range) = pixels.get_range().unwrap();
+        fn make_side_id<I>(pixels: &TileSet, values: I) -> u32
         where
             I: Iterator<Item = Point>,
         {
@@ -467,7 +457,7 @@ impl ImageTile {
 
 impl std::fmt::Display for ImageTile {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let (x_range, y_range) = Point::get_range(&self.pixels).unwrap();
+        let (x_range, y_range) = self.pixels.get_range().unwrap();
         for y in y_range.0..=y_range.1 {
             for x in x_range.0..=x_range.1 {
                 if self.pixels.contains(&Point { x, y }) == true {
@@ -486,7 +476,7 @@ impl std::fmt::Display for ImageTile {
 struct Image {
     tiles: HashMap<u64, ImageTile>,
     possibilities: HashMap<u32, Vec<(u64, TileSide, TileOrientation)>>,
-    combined_pixels: HashSet<Point>,
+    combined_pixels: TileSet,
 }
 
 impl Image {
@@ -506,7 +496,7 @@ impl Image {
         Self {
             tiles,
             possibilities,
-            combined_pixels: HashSet::new(),
+            combined_pixels: TileSet::new(),
         }
     }
 
@@ -641,14 +631,14 @@ impl Image {
         self.combined_pixels.clear();
         for (tile_point, (tile_id, tile_orientation)) in tile_map {
             let transformed_pixels = transform(&self.tiles[&tile_id].pixels, tile_orientation);
-            let (x_range, y_range) = Point::get_range(&transformed_pixels).unwrap();
+            let (x_range, y_range) = transformed_pixels.get_range().unwrap();
             let x_size = x_range.1 - x_range.0 - 1;
             let y_size = y_range.1 - y_range.0 - 1;
             let base_point = Point {
                 x: tile_point.x * x_size,
                 y: tile_point.y * y_size,
             };
-            for p in &transformed_pixels {
+            for p in transformed_pixels.iter() {
                 // Strip off outer border
                 if p.x != x_range.0 && p.x != x_range.1 && p.y != y_range.0 && p.y != y_range.1 {
                     self.combined_pixels.insert(base_point + p);
@@ -658,19 +648,42 @@ impl Image {
     }
 
     fn find_sea_monsters(&self) -> usize {
-        let sea_monster = "                  #
-#    ##    ##    ###
- #  #  #  #  #  #   ";
-        let mut sea_monster_pixels = HashSet::new();
-        for (y, line) in sea_monster.lines().enumerate() {
-            for (x, c) in line.chars().enumerate() {
-                if c == '#' {
-                    let p = (x as i32, y as i32).into();
-                    sea_monster_pixels.insert(p);
+        #[derive(PartialEq)]
+        enum PixelTile {
+            Empty,
+            Wave,
+            Monster,
+        }
+
+        impl TileChar for PixelTile {
+            fn to_char(&self) -> char {
+                match self {
+                    Self::Empty => '.',
+                    Self::Wave => '#',
+                    Self::Monster => 'O',
                 }
             }
+
+            fn from_char(c: char) -> Option<Self> {
+                Some(match c {
+                    '.' => Self::Empty,
+                    '#' => Self::Wave,
+                    'O' => Self::Monster,
+                    _ => return None,
+                })
+            }
+
+            fn all_chars() -> Vec<char> {
+                vec!['.', '#', 'O']
+            }
         }
-        let (sea_x_range, sea_y_range) = Point::get_range(&sea_monster_pixels).unwrap();
+
+        let sea_monster = "\
+..................#.
+#....##....##....###
+.#..#..#..#..#..#...";
+        let sea_monster_pixels = TileSet::from_string(sea_monster, '#');
+        let (sea_x_range, sea_y_range) = sea_monster_pixels.get_range().unwrap();
         let sea_x_width = sea_x_range.1 - sea_x_range.0;
         let sea_y_width = sea_y_range.1 - sea_y_range.0;
 
@@ -679,13 +692,13 @@ impl Image {
             for rotation in 0.. {
                 let orientation = TileOrientation { rotation, flipped };
                 let input = transform(&self.combined_pixels, orientation);
-                let mut pixels_highlighted: HashMap<Point, char> =
-                    input.iter().map(|p| (*p, '#')).collect();
-                let (x_range, y_range) = Point::get_range(&input).unwrap();
+                let mut pixels_highlighted =
+                    TileMap::new().with_tiles(input.iter().map(|p| (p, PixelTile::Wave)));
+                let (x_range, y_range) = input.get_range().unwrap();
                 for y in y_range.0..=y_range.1 - sea_y_width {
                     for x in x_range.0..=x_range.1 - sea_x_width {
                         let mut found_monster = true;
-                        for sea_p in &sea_monster_pixels {
+                        for sea_p in sea_monster_pixels.iter() {
                             let offset_p = Point { x, y } + sea_p;
                             if input.contains(&offset_p) == false {
                                 found_monster = false;
@@ -694,28 +707,26 @@ impl Image {
                         }
 
                         if found_monster == true {
-                            for sea_p in &sea_monster_pixels {
+                            for sea_p in sea_monster_pixels.iter() {
                                 let offset_p = Point { x, y } + sea_p;
-                                pixels_highlighted.insert(offset_p, 'O');
+                                pixels_highlighted.insert(offset_p, PixelTile::Monster);
                             }
                         }
                     }
                 }
 
-                if pixels_highlighted.values().filter(|&&c| c == 'O').count() != 0 {
+                if pixels_highlighted
+                    .values()
+                    .filter(|c| c == &&PixelTile::Monster)
+                    .count()
+                    != 0
+                {
                     // Found the answer!
-                    /*let (x_range, y_range) = Point::get_range(pixels_highlighted.keys()).unwrap();
-                    for y in y_range.0..=y_range.1 {
-                        for x in x_range.0..=x_range.1 {
-                            if let Some(pixel) = pixels_highlighted.get(&Point { x, y }) {
-                                print!("{}", pixel);
-                            } else {
-                                print!(".");
-                            }
-                        }
-                        println!();
-                    }*/
-                    return pixels_highlighted.values().filter(|&&c| c == '#').count();
+                    //println!("{}", pixels_highlighted);
+                    return pixels_highlighted
+                        .values()
+                        .filter(|c| c == &&PixelTile::Wave)
+                        .count();
                 }
             }
         }
@@ -725,18 +736,7 @@ impl Image {
 
 impl std::fmt::Display for Image {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let (x_range, y_range) = Point::get_range(&self.combined_pixels).unwrap();
-        for y in y_range.0..=y_range.1 {
-            for x in x_range.0..=x_range.1 {
-                if self.combined_pixels.contains(&Point { x, y }) == true {
-                    write!(f, "#")?;
-                } else {
-                    write!(f, ".")?;
-                }
-            }
-            writeln!(f)?;
-        }
-        Ok(())
+        write!(f, "{}", self.combined_pixels)
     }
 }
 
@@ -954,13 +954,13 @@ Tile 3079:
 
     #[test]
     fn test_transform() {
-        let mut a: HashSet<Point> = HashSet::new();
-        a.insert((-2, -1).into());
-        a.insert((2, -1).into());
-        a.insert((2, 3).into());
-        a.insert((-2, 3).into());
+        let tiles: Vec<Point> = vec![(-2, -1), (2, -1), (2, 3), (-2, 3)]
+            .into_iter()
+            .map(|p| p.into())
+            .collect();
+        let expected = TileSet::new().with_tiles(&tiles);
 
-        let transformed = a.clone();
+        let transformed = expected.clone();
         let orientation = TileOrientation {
             rotation: 1,
             flipped: false,
@@ -969,25 +969,25 @@ Tile 3079:
         let transformed = transform(&transformed, orientation);
         let transformed = transform(&transformed, orientation);
         let transformed = transform(&transformed, orientation);
-        assert_eq!(a, transformed);
+        assert_eq!(expected, transformed);
 
-        let transformed = a.clone();
+        let transformed = expected.clone();
         let orientation = TileOrientation {
             rotation: 2,
             flipped: false,
         };
         let transformed = transform(&transformed, orientation);
         let transformed = transform(&transformed, orientation);
-        assert_eq!(a, transformed);
+        assert_eq!(expected, transformed);
 
-        let transformed = a.clone();
+        let transformed = expected.clone();
         let orientation = TileOrientation {
             rotation: 0,
             flipped: true,
         };
         let transformed = transform(&transformed, orientation);
         let transformed = transform(&transformed, orientation);
-        assert_eq!(a, transformed);
+        assert_eq!(expected, transformed);
     }
 
     #[test]

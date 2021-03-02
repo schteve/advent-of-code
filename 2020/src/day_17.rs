@@ -391,7 +391,8 @@
     Starting with your given initial configuration, simulate six cycles in a 4-dimensional space. How many cubes are left in the active state after the sixth cycle?
 */
 
-use std::collections::{HashMap, HashSet};
+use crate::common::TileSet;
+use std::collections::HashMap;
 
 type Point2D = (i32, i32);
 type Point3D = (i32, i32, i32);
@@ -523,34 +524,15 @@ impl State {
         }
     }
 }
-
-pub struct PocketDimension2D {
-    squares: HashSet<Point2D>,
-}
-
-impl PocketDimension2D {
-    fn from_string(input: &str) -> Self {
-        let mut squares = HashSet::new();
-        for (y, line) in input.trim().lines().enumerate() {
-            for (x, c) in line.chars().enumerate() {
-                if c == '#' {
-                    squares.insert((x as i32, y as i32));
-                }
-            }
-        }
-        Self { squares }
-    }
-}
-
 struct PocketDimension3D {
     cubes: HashMap<Point3D, State>,
 }
 
 impl PocketDimension3D {
-    fn from_2d(pd: &PocketDimension2D) -> Self {
+    fn from_2d(tileset: &TileSet) -> Self {
         let mut cubes = HashMap::new();
-        for sq in &pd.squares {
-            Self::set_active(&mut cubes, &(sq.0, sq.1, 0));
+        for p in tileset.iter() {
+            Self::set_active(&mut cubes, &(p.x, p.y, 0));
         }
         Self { cubes }
     }
@@ -652,10 +634,10 @@ struct PocketDimension4D {
 }
 
 impl PocketDimension4D {
-    fn from_2d(pd: &PocketDimension2D) -> Self {
+    fn from_2d(tileset: &TileSet) -> Self {
         let mut hypercubes = HashMap::new();
-        for sq in &pd.squares {
-            Self::set_active(&mut hypercubes, &(sq.0, sq.1, 0, 0));
+        for p in tileset.iter() {
+            Self::set_active(&mut hypercubes, &(p.x, p.y, 0, 0));
         }
 
         Self { hypercubes }
@@ -767,12 +749,12 @@ impl std::fmt::Display for PocketDimension4D {
 }
 
 #[aoc_generator(day17)]
-pub fn input_generator(input: &str) -> PocketDimension2D {
-    PocketDimension2D::from_string(input)
+pub fn input_generator(input: &str) -> TileSet {
+    TileSet::from_string(input, '#')
 }
 
 #[aoc(day17, part1)]
-pub fn part1(input: &PocketDimension2D) -> usize {
+pub fn part1(input: &TileSet) -> usize {
     let mut pocket_dimension = PocketDimension3D::from_2d(input);
     pocket_dimension.simulate(6);
     let active_cubes = pocket_dimension.count_active_cubes();
@@ -781,7 +763,7 @@ pub fn part1(input: &PocketDimension2D) -> usize {
 }
 
 #[aoc(day17, part2)]
-pub fn part2(input: &PocketDimension2D) -> usize {
+pub fn part2(input: &TileSet) -> usize {
     let mut pocket_dimension = PocketDimension4D::from_2d(input);
     pocket_dimension.simulate(6);
     let active_cubes = pocket_dimension.count_active_cubes();

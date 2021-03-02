@@ -66,31 +66,21 @@
     What do you get if you multiply together the number of trees encountered on each of the listed slopes?
 */
 
-use crate::common::{modulo, Point};
-use std::collections::HashSet;
+use crate::common::{modulo, Point, TileSet};
 
 pub struct Map {
-    tiles: HashSet<Point>,
+    tileset: TileSet,
     x_max: i32,
     y_max: i32,
 }
 
 impl Map {
     fn from_string(input: &str) -> Self {
-        let mut tiles = HashSet::new();
-        for (y, line) in input.lines().enumerate() {
-            for (x, c) in line.chars().enumerate() {
-                if c == '#' {
-                    let p = (x as i32, y as i32).into();
-                    tiles.insert(p);
-                }
-            }
-        }
-
-        let range = Point::get_range(&tiles).unwrap();
+        let tileset = TileSet::from_string(input, '#');
+        let range = tileset.get_range().unwrap();
 
         Self {
-            tiles,
+            tileset,
             x_max: range.0 .1,
             y_max: range.1 .1,
         }
@@ -101,7 +91,7 @@ impl Map {
         let mut tree_count = 0;
 
         while p.y <= self.y_max {
-            if self.tiles.get(&p).is_some() {
+            if self.tileset.contains(&p) {
                 tree_count += 1;
             }
 
