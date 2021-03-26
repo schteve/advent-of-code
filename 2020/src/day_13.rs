@@ -150,7 +150,7 @@ impl Schedule {
         struct Req {
             offset: u64,
             bus_id: u64,
-        };
+        }
 
         // Each bus needs to leave i minutes after the base time, which is the same as bus_id - i (with values mod'd to keep them in range)
         let mut reqs: Vec<Req> = self

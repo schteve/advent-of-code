@@ -377,7 +377,7 @@ impl ImageTile {
                 }
                 acc
             })
-        };
+        }
         let top_a = make_side_id(
             &pixels,
             (x_range.0..=x_range.1).map(|x| Point { x, y: y_range.0 }),
