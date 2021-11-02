@@ -64,7 +64,7 @@ struct MemoryGame {
 
 impl MemoryGame {
     fn from_slice(input: &[usize], max_rounds: usize) -> Self {
-        assert_eq!(input.is_empty(), false);
+        assert!(input.is_empty() == false);
         assert!(max_rounds < u32::MAX as usize);
 
         Self {

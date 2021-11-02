@@ -578,12 +578,12 @@ impl PocketDimension3D {
             if state.is_active == true {
                 // Active. 2 or 3 to stay alive, otherwise die.
                 if state.active_neighbors == 2 || state.active_neighbors == 3 {
-                    Self::set_active(&mut new_cubes, &cube);
+                    Self::set_active(&mut new_cubes, cube);
                 }
             } else {
                 // Inactive. 3 to become alive, otherwise stay dead.
                 if state.active_neighbors == 3 {
-                    Self::set_active(&mut new_cubes, &cube);
+                    Self::set_active(&mut new_cubes, cube);
                 }
             }
         }
@@ -695,12 +695,12 @@ impl PocketDimension4D {
             if state.is_active == true {
                 // Active. 2 or 3 to stay alive, otherwise die.
                 if state.active_neighbors == 2 || state.active_neighbors == 3 {
-                    Self::set_active(&mut new_hypercubes, &hypercube);
+                    Self::set_active(&mut new_hypercubes, hypercube);
                 }
             } else {
                 // Inactive. 3 to become alive, otherwise stay dead.
                 if state.active_neighbors == 3 {
-                    Self::set_active(&mut new_hypercubes, &hypercube);
+                    Self::set_active(&mut new_hypercubes, hypercube);
                 }
             }
         }

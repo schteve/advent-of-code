@@ -132,7 +132,7 @@ pub fn input_generator(input: &str) -> GameConsole {
 pub fn part1(input: &GameConsole) -> i32 {
     let mut console = input.clone(); // aoc-runner can only give an immutable reference, so to get mutable I have to clone
     let (is_infinite_loop, acc_value) = console.execute();
-    assert_eq!(is_infinite_loop, true);
+    assert!(is_infinite_loop);
     assert_eq!(acc_value, 1939);
     acc_value
 }

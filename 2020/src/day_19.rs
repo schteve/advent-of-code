@@ -216,7 +216,7 @@ impl<'a> FrameStack<'a> {
             Some(Frame::RulesIter(ref mut rules_iter)) => {
                 if let Some(rule_id) = rules_iter.next() {
                     // This frame has more rule IDs to process
-                    new_frame_stacks = self.process_rule(&rules[&rule_id]);
+                    new_frame_stacks = self.process_rule(&rules[rule_id]);
                 } else {
                     // This frame is done being processed. Remove it from the stack, but keep the stack on the frontier so its next frame can be processed.
                     self.stack.pop();

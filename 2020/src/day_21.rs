@@ -118,7 +118,7 @@ impl FoodList {
         // First, find all ingredients that have no possible allergens
         let mut no_allergens: HashSet<Ingredient> = self.ingredients.clone();
         for a in &self.allergens {
-            for i in self.possible_ingredients(&a) {
+            for i in self.possible_ingredients(a) {
                 no_allergens.remove(&i);
             }
         }

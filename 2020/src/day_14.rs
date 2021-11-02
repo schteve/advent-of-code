@@ -117,7 +117,7 @@ impl Mask {
     }
 
     fn parser(input: &str) -> IResult<&str, Self> {
-        let (input, mask) = trim_start(fold_many1(one_of("01X"), Mask::new(), |mut acc, bit| {
+        let (input, mask) = trim_start(fold_many1(one_of("01X"), Mask::new, |mut acc, bit| {
             acc <<= 1;
             match bit {
                 '0' => acc.clear |= 1,
@@ -150,7 +150,7 @@ impl Mask {
 
     fn apply_address(&self, addr: usize) -> MaskAddrIterator {
         MaskAddrIterator {
-            mask: &self,
+            mask: self,
             addr,
             count: 0,
         }

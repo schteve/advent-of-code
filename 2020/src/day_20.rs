@@ -318,7 +318,7 @@ enum TileSide {
 }
 
 impl TileSide {
-    fn to_unit_point(&self) -> Point {
+    fn to_unit_point(self) -> Point {
         match self {
             Self::Top => (0, -1),
             Self::Right => (1, 0),
@@ -514,7 +514,7 @@ impl Image {
                 TileSide::iter()
                     .filter(|&side| {
                         let side_id =
-                            self.tiles[&tile_id].get_side_id(side, TileOrientation::default());
+                            self.tiles[tile_id].get_side_id(side, TileOrientation::default());
                         let mut possible_tiles: Vec<u64> = self.possibilities[&side_id]
                             .iter()
                             .map(|&(t, ..)| t)

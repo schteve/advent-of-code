@@ -222,7 +222,7 @@ impl Tile {
         }
     }
 
-    fn to_char(&self) -> char {
+    fn to_char(self) -> char {
         match self {
             Self::Floor => '.',
             Self::Empty => 'L',
@@ -339,7 +339,7 @@ impl WaitingArea {
         let idx = point_to_idx(p, self.x_size);
         self.neighbors_direct[idx]
             .iter()
-            .filter(|adj| self.get_tile(&adj) == Tile::Occupied)
+            .filter(|adj| self.get_tile(adj) == Tile::Occupied)
             .count()
     }
 
@@ -347,36 +347,36 @@ impl WaitingArea {
         let idx = point_to_idx(p, self.x_size);
         self.neighbors_visible[idx]
             .iter()
-            .filter(|adj| self.get_tile(&adj) == Tile::Occupied)
+            .filter(|adj| self.get_tile(adj) == Tile::Occupied)
             .count()
     }
 
     fn step(&mut self, mode: Mode) -> bool {
         let mut changes: Vec<(Point, Tile)> = Vec::new();
         for p in self.active.iter() {
-            match (mode, self.get_tile(&p)) {
+            match (mode, self.get_tile(p)) {
                 (_, Tile::Floor) => (),
                 (Mode::M1, Tile::Empty) => {
                     // Become occupied if there are no direct neighbors occupied
-                    if self.count_neighbors_direct(&p) == 0 {
+                    if self.count_neighbors_direct(p) == 0 {
                         changes.push((*p, Tile::Occupied));
                     }
                 }
                 (Mode::M1, Tile::Occupied) => {
                     // Become empty if four or more direct neighbors are also occupied
-                    if self.count_neighbors_direct(&p) >= 4 {
+                    if self.count_neighbors_direct(p) >= 4 {
                         changes.push((*p, Tile::Empty));
                     }
                 }
                 (Mode::M2, Tile::Empty) => {
                     // Become occupied if there are no visible neighbors occupied
-                    if self.count_neighbors_visible(&p) == 0 {
+                    if self.count_neighbors_visible(p) == 0 {
                         changes.push((*p, Tile::Occupied));
                     }
                 }
                 (Mode::M2, Tile::Occupied) => {
                     // Become empty if five or more visible neighbors are also occupied
-                    if self.count_neighbors_visible(&p) >= 5 {
+                    if self.count_neighbors_visible(p) >= 5 {
                         changes.push((*p, Tile::Empty));
                     }
                 }
