@@ -173,7 +173,7 @@
     What is the largest magnitude of any sum of two different snailfish numbers from the homework assignment?
 */
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Element {
     Number(u32),
     PairOpen,
@@ -204,7 +204,7 @@ impl std::fmt::Display for Element {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Line {
     data: Vec<Element>,
 }

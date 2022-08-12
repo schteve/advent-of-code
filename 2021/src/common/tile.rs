@@ -2,7 +2,7 @@ use crate::common::{Point2, Range2};
 use nom::IResult;
 use std::collections::{HashMap, HashSet};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TileSet {
     tiles: HashSet<Point2>,
     active_char: char,
@@ -108,7 +108,7 @@ where
     fn all_chars() -> Vec<char>;
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TileMap<T> {
     tiles: HashMap<Point2, T>,
 }
