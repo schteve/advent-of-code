@@ -131,7 +131,7 @@ impl Diagnostic {
         for bit in (0..self.valid_bits).rev() {
             // Find the prefix's location in the vector, or the first location greater than its value
             let prefix_split = prefix | (1 << bit);
-            let mid_idx = (&self.numbers[low_idx..=hi_idx])
+            let mid_idx = self.numbers[low_idx..=hi_idx]
                 .iter()
                 .position(|x| *x >= prefix_split as u32)
                 .unwrap()
