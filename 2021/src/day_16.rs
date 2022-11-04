@@ -277,29 +277,17 @@ impl Operator {
             5 => {
                 // Greater than
                 assert_eq!(self.inner_packets.len(), 2);
-                if self.inner_packets[0].value() > self.inner_packets[1].value() {
-                    1
-                } else {
-                    0
-                }
+                u64::from(self.inner_packets[0].value() > self.inner_packets[1].value())
             }
             6 => {
                 // Less than
                 assert_eq!(self.inner_packets.len(), 2);
-                if self.inner_packets[0].value() < self.inner_packets[1].value() {
-                    1
-                } else {
-                    0
-                }
+                u64::from(self.inner_packets[0].value() < self.inner_packets[1].value())
             }
             7 => {
                 // Equal to
                 assert_eq!(self.inner_packets.len(), 2);
-                if self.inner_packets[0].value() == self.inner_packets[1].value() {
-                    1
-                } else {
-                    0
-                }
+                u64::from(self.inner_packets[0].value() == self.inner_packets[1].value())
             }
             x => panic!("Invalid type id: {}", x),
         }

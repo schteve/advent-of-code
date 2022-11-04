@@ -276,7 +276,7 @@ impl Alu {
                         Operand::Num(num) => *num,
                     };
                     let a = self.reg_mut(r);
-                    *a = if *a == b { 1 } else { 0 };
+                    *a = i64::from(*a == b);
                 }
             }
         }

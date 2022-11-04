@@ -274,11 +274,7 @@ impl Image {
         for y in [-1, 0, 1] {
             for x in [-1, 0, 1] {
                 n <<= 1;
-                n |= if self.value(&(p.x + x, p.y + y).into()) == true {
-                    1
-                } else {
-                    0
-                };
+                n |= usize::from(self.value(&(p.x + x, p.y + y).into()));
             }
         }
         n
