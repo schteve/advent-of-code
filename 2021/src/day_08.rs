@@ -209,7 +209,7 @@ fn count_1478(entries: &[Entry]) -> usize {
 }
 
 fn solve_entries(entries: &[Entry]) -> usize {
-    entries.iter().map(|e| e.value()).sum()
+    entries.iter().map(Entry::value).sum()
 }
 
 #[aoc_generator(day8)]

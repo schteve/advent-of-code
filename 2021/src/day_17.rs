@@ -169,17 +169,17 @@ impl Probe {
             highest_y = max(highest_y, self.position.y);
             if target.contains(self.position) {
                 return Some(highest_y);
-            } else {
-                self.position.x += self.velocity.x;
-                match self.velocity.x.cmp(&0) {
-                    Ordering::Less => self.velocity.x += 1,
-                    Ordering::Greater => self.velocity.x -= 1,
-                    _ => (),
-                }
-
-                self.position.y += self.velocity.y;
-                self.velocity.y -= 1;
             }
+
+            self.position.x += self.velocity.x;
+            match self.velocity.x.cmp(&0) {
+                Ordering::Less => self.velocity.x += 1,
+                Ordering::Greater => self.velocity.x -= 1,
+                Ordering::Equal => (),
+            }
+
+            self.position.y += self.velocity.y;
+            self.velocity.y -= 1;
         }
         None
     }

@@ -132,7 +132,7 @@ impl Polymerization {
         let mut counts: HashMap<char, u64> = HashMap::new();
         counts.insert(self.start.0, *self.polymers.get(&(self.start)).unwrap());
 
-        for (pair, count) in self.polymers.iter() {
+        for (pair, count) in &self.polymers {
             let entry = counts.entry(pair.1).or_insert(0);
             *entry += count;
         }

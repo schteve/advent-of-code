@@ -110,11 +110,11 @@ impl DeterministicGame {
         loop {
             let winner = self.turn();
             if let Some(who) = winner {
-                if who == false {
-                    return self.p2.1 * self.rolled_count;
+                return if who == false {
+                    self.p2.1 * self.rolled_count
                 } else {
-                    return self.p1.1 * self.rolled_count;
-                }
+                    self.p1.1 * self.rolled_count
+                };
             }
         }
     }
@@ -181,7 +181,7 @@ impl DiracGame {
 
     fn split(&mut self) {
         let mut next = HashMap::new();
-        for (curr_state, curr_count) in self.universes.iter() {
+        for (curr_state, curr_count) in &self.universes {
             for (roll, roll_count) in [(3, 1), (4, 3), (5, 6), (6, 7), (7, 6), (8, 3), (9, 1)] {
                 let mut next_state = curr_state.clone();
                 if let Some(winner) = next_state.turn(roll) {
@@ -203,9 +203,8 @@ impl DiracGame {
         loop {
             if self.universes.is_empty() == true {
                 return max(self.p1_wins, self.p2_wins);
-            } else {
-                self.split();
             }
+            self.split();
         }
     }
 }

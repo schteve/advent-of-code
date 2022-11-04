@@ -84,7 +84,7 @@ impl Cave {
 
     fn find_low_points(&self) -> Vec<Point2> {
         let mut lows = Vec::new();
-        for (p, height) in self.height_map.iter() {
+        for (p, height) in &self.height_map {
             let is_low = p.orthogonals().all(|x| {
                 if let Some(adj_height) = self.height_map.get(&x) {
                     adj_height > height

@@ -153,10 +153,7 @@ impl LinkedListCirc {
     }
 
     pub fn remove(&mut self, offset: i32) -> u32 {
-        if self.head.is_none() {
-            // Special case - list is empty
-            panic!("Tried to remove from empty list");
-        }
+        assert!(self.head.is_some(), "Tried to remove from empty list"); // Special case - list is empty
 
         // Move to the target node's index
         let mut target_idx = self.current_idx.unwrap();

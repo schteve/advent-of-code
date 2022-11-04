@@ -287,7 +287,7 @@ impl Line {
                         Element::Number(right_n),
                         Element::PairClose,
                     ];
-                    self.data.splice(idx..idx + 1, new.into_iter());
+                    self.data.splice(idx..=idx, new.into_iter());
                     return true;
                 }
             }
@@ -367,7 +367,7 @@ impl Line {
 
 fn sum_list(lines: Vec<Line>) -> Line {
     let mut combined = Line::parse("");
-    for line in lines.into_iter() {
+    for line in lines {
         combined.add(line);
         combined.reduce();
     }

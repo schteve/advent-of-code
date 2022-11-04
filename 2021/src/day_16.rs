@@ -252,26 +252,26 @@ impl Operator {
     }
 
     fn version_sum(&self) -> u64 {
-        self.inner_packets.iter().map(|p| p.version_sum()).sum()
+        self.inner_packets.iter().map(Packet::version_sum).sum()
     }
 
     fn value(&self, type_id: u8) -> u64 {
         match type_id {
             0 => {
                 // Sum
-                self.inner_packets.iter().map(|p| p.value()).sum()
+                self.inner_packets.iter().map(Packet::value).sum()
             }
             1 => {
                 // Product
-                self.inner_packets.iter().map(|p| p.value()).product()
+                self.inner_packets.iter().map(Packet::value).product()
             }
             2 => {
                 // Minimum
-                self.inner_packets.iter().map(|p| p.value()).min().unwrap()
+                self.inner_packets.iter().map(Packet::value).min().unwrap()
             }
             3 => {
                 // Maximum
-                self.inner_packets.iter().map(|p| p.value()).max().unwrap()
+                self.inner_packets.iter().map(Packet::value).max().unwrap()
             }
             4 => panic!("Reserved for value packets"),
             5 => {

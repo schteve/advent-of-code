@@ -201,7 +201,7 @@ impl CaveSystem {
         let start = self
             .connections
             .iter()
-            .filter_map(|x| {
+            .find_map(|x| {
                 let start = Cave::Small("start".into());
                 if x.0 == start {
                     Some(&x.0)
@@ -211,7 +211,6 @@ impl CaveSystem {
                     None
                 }
             })
-            .next()
             .unwrap(); // This looks insane, but since it gets inserted in the returned collection it's necessary to reference an existing item rather than create a new one
         let end = Cave::Small("end".into());
         let mut paths_in_progress = vec![vec![start]];
@@ -230,9 +229,8 @@ impl CaveSystem {
                                 // Can revisit only one small cave per path, and not start or end. End is implicit since the path is finished when we hit it.
                                 if revisited == true || name.as_str() == "start" {
                                     continue;
-                                } else {
-                                    revisiting = true;
                                 }
+                                revisiting = true;
                             }
                         }
                     }

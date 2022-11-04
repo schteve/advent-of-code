@@ -168,7 +168,7 @@ impl Paper {
         let mut remove: HashSet<Point2> = HashSet::new();
         if self.folds.is_empty() == false {
             let fold = self.folds.remove(0);
-            for p in self.dots.iter() {
+            for p in &self.dots {
                 match fold {
                     Fold::X(x) if p.x > x => {
                         add.insert(Point2 {

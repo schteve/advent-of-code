@@ -477,11 +477,11 @@ impl Scanner {
                     if (other.beacons.len() - i) < (overlap_criteria - count) as usize {
                         // Not enough beacons left to possibly reach the criteria count
                         break;
-                    } else {
-                        let offset_check = check_p + offset;
-                        if self.beacons.contains(&offset_check) {
-                            count += 1;
-                        }
+                    }
+
+                    let offset_check = check_p + offset;
+                    if self.beacons.contains(&offset_check) {
+                        count += 1;
                     }
                 }
 

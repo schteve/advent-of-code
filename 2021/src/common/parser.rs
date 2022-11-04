@@ -9,7 +9,7 @@ use nom::{
 use std::str::FromStr;
 
 pub fn unsigned<T: FromStr>(input: &str) -> IResult<&str, T> {
-    map_res(digit1, |x: &str| x.parse::<T>())(input)
+    map_res(digit1, str::parse::<T>)(input)
 }
 
 pub fn signed<T: FromStr>(input: &str) -> IResult<&str, T> {
@@ -30,7 +30,7 @@ where
     I: 'a + ToOwned + ?Sized,
     P: Parser<&'a I, &'a I, E>,
 {
-    map(parser, |x: &I| x.to_owned())
+    map(parser, ToOwned::to_owned)
 }
 
 pub fn trim<'a, E, O, P>(parser: P) -> impl FnMut(&'a str) -> IResult<&'a str, O, E>
