@@ -1,7 +1,7 @@
 use nom::{
-    character::complete::{digit1, multispace0, one_of},
+    character::complete::{digit1, line_ending, multispace0, not_line_ending, one_of},
     combinator::{map, map_res, opt, recognize},
-    error::ParseError,
+    error::{ErrorKind, ParseError},
     multi::many1,
     sequence::{delimited, pair, preceded, terminated},
     IResult, Parser,
@@ -23,6 +23,17 @@ pub fn binary(input: &str) -> IResult<&str, u32> {
     map_res(recognize(many1(one_of("01"))), |x: &str| {
         u32::from_str_radix(x, 2)
     })(input)
+}
+
+pub fn one_line(mut input: &str) -> IResult<&str, &str> {
+    let line;
+    (input, line) = not_line_ending::<_, (_, ErrorKind)>(input).unwrap_or(("", input));
+    if !input.is_empty() {
+        (input, _) = opt(line_ending)(input)?;
+    }
+
+    let line = line.trim_end_matches(&['\r', '\n']);
+    Ok((input, line))
 }
 
 pub fn to_owned<'a, E, I, P>(parser: P) -> impl FnMut(&'a I) -> IResult<&'a I, I::Owned, E>
@@ -168,6 +179,64 @@ mod test {
         let (remain, num) = binary(input).unwrap();
         assert_eq!(remain, "234");
         assert_eq!(num, 1);
+    }
+
+    #[test]
+    fn test_one_line() {
+        let input = "";
+        let (remain, line) = one_line(input).unwrap();
+        assert_eq!(remain, "");
+        assert_eq!(line, "");
+
+        let input = "\r\n";
+        let (remain, line) = one_line(input).unwrap();
+        assert_eq!(remain, "");
+        assert_eq!(line, "");
+
+        let input = "\n";
+        let (remain, line) = one_line(input).unwrap();
+        assert_eq!(remain, "");
+        assert_eq!(line, "");
+
+        let input = "\r";
+        let (remain, line) = one_line(input).unwrap();
+        assert_eq!(remain, "");
+        assert_eq!(line, "");
+
+        let input = "abcd";
+        let (remain, line) = one_line(input).unwrap();
+        assert_eq!(remain, "");
+        assert_eq!(line, "abcd");
+
+        let input = "abcd\r\n";
+        let (remain, line) = one_line(input).unwrap();
+        assert_eq!(remain, "");
+        assert_eq!(line, "abcd");
+
+        let input = "abcd\n";
+        let (remain, line) = one_line(input).unwrap();
+        assert_eq!(remain, "");
+        assert_eq!(line, "abcd");
+
+        let input = "abcd\r";
+        let (remain, line) = one_line(input).unwrap();
+        assert_eq!(remain, "");
+        assert_eq!(line, "abcd");
+
+        let input = "abcd\r\nefgh";
+        let (remain, line) = one_line(input).unwrap();
+        assert_eq!(remain, "efgh");
+        assert_eq!(line, "abcd");
+
+        let input = "abcd\nefgh";
+        let (remain, line) = one_line(input).unwrap();
+        assert_eq!(remain, "efgh");
+        assert_eq!(line, "abcd");
+
+        let input = "abcd\refgh";
+        let (remain, line) = one_line(input).unwrap();
+        assert_eq!(remain, "");
+        assert_eq!(line, "abcd\refgh");
     }
 
     #[test]

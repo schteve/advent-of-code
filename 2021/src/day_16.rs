@@ -296,7 +296,7 @@ impl Operator {
 
 #[aoc_generator(day16)]
 pub fn input_generator(input: &str) -> Vec<u8> {
-    hex::decode(input).unwrap()
+    hex::decode(input.trim()).unwrap()
 }
 
 #[aoc(day16, part1)]

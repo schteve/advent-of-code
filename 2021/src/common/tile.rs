@@ -1,4 +1,4 @@
-use crate::common::{Point2, Range2};
+use crate::common::{one_line, Point2, Range2};
 use nom::IResult;
 use std::collections::{HashMap, HashSet};
 
@@ -38,21 +38,24 @@ impl TileSet {
     }
 
     pub fn parser<const ACTIVE_CHAR: char>() -> impl Fn(&str) -> IResult<&str, Self> {
-        move |input: &str| {
-            let (pixels, input) = if let Some(idx) = input.find("\n\n") {
-                input.split_at(idx)
-            } else {
-                (input, "")
-            };
-
+        move |mut input: &str| {
+            input = input.trim_start();
             let mut tiles = HashSet::new();
-            for (y, line) in pixels.lines().enumerate() {
+            let mut y = 0;
+            loop {
+                let line: &str;
+                (input, line) = one_line(input)?;
+                if line.is_empty() {
+                    break;
+                }
+
                 for (x, c) in line.chars().enumerate() {
                     if c == ACTIVE_CHAR {
                         let p = (x as i32, y as i32).into();
                         tiles.insert(p);
                     }
                 }
+                y += 1;
             }
             Ok((
                 input,
