@@ -44,14 +44,18 @@
     How many characters need to be processed before the first start-of-message marker is detected?
 */
 
-use std::collections::HashSet;
-
+// Assume ASCII, lowercase letters only
 fn find_uniq_seq(input: &str, len: usize) -> usize {
+    assert!(input.is_ascii());
     len + input
-        .as_bytes() // Assume ASCII
+        .as_bytes()
         .windows(len)
-        .map(|window| window.iter().copied().collect::<HashSet<u8>>())
-        .position(|set| set.len() == len)
+        .map(|window| {
+            window
+                .iter()
+                .fold(0, |acc: u32, curr| acc | 1 << (curr - b'a'))
+        })
+        .position(|set| set.count_ones() == len as u32)
         .unwrap()
 }
 
