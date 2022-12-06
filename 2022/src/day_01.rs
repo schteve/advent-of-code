@@ -47,51 +47,46 @@
     Find the top three Elves carrying the most Calories. How many Calories are those Elves carrying in total?
 */
 
-fn calc_totals(elves: &[Vec<u64>]) -> Vec<u64> {
-    let mut totals: Vec<u64> = elves.iter().map(|elf| elf.iter().sum()).collect();
-    totals.sort_unstable();
-    totals
-}
+use itertools::Itertools;
 
-fn find_most_calories(elves: &[Vec<u64>]) -> u64 {
-    let totals = calc_totals(elves);
-    *totals.last().unwrap()
-}
-
-fn find_top3_calories(elves: &[Vec<u64>]) -> u64 {
-    let mut totals = calc_totals(elves);
-    (0..3).map(|_| totals.pop().unwrap()).sum()
+// There's no k_largest() in Itertools currently (PR pending) so we use k_smallest().
+// Also manually reverse (and un-reverse) the ordering since Reverse doesn't have any way to get the inner value.
+fn find_top_calories(elves: &[Vec<u64>], n: usize) -> u64 {
+    elves
+        .iter()
+        .map(|elf| elf.iter().sum::<u64>())
+        .map(|x| u64::MAX - x)
+        .k_smallest(n)
+        .map(|x| u64::MAX - x)
+        .sum()
 }
 
 #[aoc_generator(day1)]
 pub fn input_generator(input: &str) -> Vec<Vec<u64>> {
-    let mut elves = Vec::new();
-    let mut elf = Vec::new();
-    for line in input.lines() {
-        let line = line.trim();
-        if line.is_empty() {
-            elves.push(elf);
-            elf = Vec::new();
-        } else {
-            elf.push(line.parse::<u64>().unwrap())
-        }
-    }
-    if !elf.is_empty() {
-        elves.push(elf);
-    }
-    elves
+    input
+        .lines()
+        .group_by(|line| line.is_empty())
+        .into_iter()
+        .filter(|(empty, _)| !empty)
+        .map(|(_, group)| {
+            group
+                .into_iter()
+                .map(|line| line.parse::<u64>().unwrap())
+                .collect()
+        })
+        .collect()
 }
 
 #[aoc(day1, part1)]
 pub fn part1(input: &[Vec<u64>]) -> u64 {
-    let most = find_most_calories(input);
+    let most = find_top_calories(input, 1);
     assert_eq!(most, 67633);
     most
 }
 
 #[aoc(day1, part2)]
 pub fn part2(input: &[Vec<u64>]) -> u64 {
-    let top3 = find_top3_calories(input);
+    let top3 = find_top_calories(input, 3);
     assert_eq!(top3, 199628);
     top3
 }
@@ -120,14 +115,14 @@ mod test {
     #[test]
     fn test_find_most_calories() {
         let input = input_generator(EXAMPLE_INPUT);
-        let most = find_most_calories(&input);
+        let most = find_top_calories(&input, 1);
         assert_eq!(most, 24000);
     }
 
     #[test]
     fn test_find_top3_calories() {
         let input = input_generator(EXAMPLE_INPUT);
-        let top3 = find_top3_calories(&input);
+        let top3 = find_top_calories(&input, 3);
         assert_eq!(top3, 45000);
     }
 }

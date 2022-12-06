@@ -56,7 +56,7 @@
     Find the item type that corresponds to the badges of each three-Elf group. What is the sum of the priorities of those item types?
 */
 
-use std::{array, collections::HashSet};
+use std::collections::HashSet;
 
 use itertools::Itertools;
 
@@ -73,45 +73,20 @@ fn priority(c: char) -> u64 {
 fn total_priority(rucksacks: &[(HashSet<char>, HashSet<char>)]) -> u64 {
     rucksacks
         .iter()
-        .map(|(left, right)| {
-            let mut x = left.intersection(right);
-            let c = x.next().expect("No commonality between rucksack halves");
-            assert_eq!(x.next(), None);
-            priority(*c)
-        })
+        .map(|(left, right)| *left.intersection(right).exactly_one().unwrap())
+        .map(priority)
         .sum()
 }
 
 fn group_priority(rucksacks: &[(HashSet<char>, HashSet<char>)]) -> u64 {
     rucksacks
         .iter()
-        .batching(|it| {
-            let group = it.take(3);
-            if group.len() == 3 {
-                let x: [HashSet<char>; 3] =
-                    array::from_fn(|_| it.next().unwrap()).map(|rucksack| {
-                        rucksack
-                            .0
-                            .union(&rucksack.1)
-                            .copied()
-                            .collect::<HashSet<_>>()
-                    });
-                Some(x)
-            } else {
-                None
-            }
-        })
-        .map(|group| {
-            let x = group
-                .into_iter()
-                .reduce(|acc, item| acc.intersection(&item).copied().collect())
-                .unwrap();
-            let c = x
-                .into_iter()
-                .next()
-                .expect("No commonality between rucksack halves");
-            priority(c)
-        })
+        .map(|rucksack| &rucksack.0 | &rucksack.1)
+        .chunks(3)
+        .into_iter()
+        .map(|group| group.into_iter().reduce(|acc, item| &acc & &item).unwrap())
+        .map(|group_set| group_set.into_iter().exactly_one().unwrap())
+        .map(priority)
         .sum()
 }
 
