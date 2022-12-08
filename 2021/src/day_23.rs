@@ -308,7 +308,7 @@
     Using the initial configuration from the full diagram, what is the least energy required to organize the amphipods?
 */
 
-use crate::common::Point2;
+use common::Point2;
 use std::{
     cmp::Reverse,
     collections::{BinaryHeap, HashMap},

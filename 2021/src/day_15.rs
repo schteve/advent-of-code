@@ -153,7 +153,7 @@
     Using the full map, what is the lowest total risk of any path from the top left to the bottom right?
 */
 
-use crate::common::{modulo, Point2, Range2};
+use common::{modulo, Point2, Range2};
 use std::collections::HashMap;
 
 #[derive(Clone)]

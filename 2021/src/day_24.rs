@@ -61,7 +61,7 @@
     What is the smallest model number accepted by MONAD?
 */
 
-use crate::common::signed;
+use common::signed;
 use nom::{
     branch::alt,
     bytes::complete::tag,

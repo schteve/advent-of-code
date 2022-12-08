@@ -1,4 +1,4 @@
-use crate::common::Point3;
+use crate::Point3;
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Range3 {

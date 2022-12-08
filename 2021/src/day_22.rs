@@ -176,7 +176,7 @@
     Starting again with all cubes off, execute all reboot steps. Afterward, considering all cubes, how many cubes are on?
 */
 
-use crate::common::{signed, Point3, Range3};
+use common::{signed, Point3, Range3};
 use nom::{
     bytes::complete::tag,
     character::complete::{alpha1, char, multispace0},

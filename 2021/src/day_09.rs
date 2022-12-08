@@ -61,7 +61,7 @@
     What do you get if you multiply together the sizes of the three largest basins?
 */
 
-use crate::common::Point2;
+use common::Point2;
 use nom::IResult;
 use std::collections::HashMap;
 

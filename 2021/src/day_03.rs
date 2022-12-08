@@ -63,7 +63,7 @@
     Use the binary numbers in your diagnostic report to calculate the oxygen generator rating and CO2 scrubber rating, then multiply them together. What is the life support rating of the submarine? (Be sure to represent your answer in decimal, not binary.)
 */
 
-use crate::common::binary;
+use common::binary;
 use nom::{
     character::complete::{multispace0, one_of},
     multi::{many1, many1_count},

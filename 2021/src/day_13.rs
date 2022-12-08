@@ -108,7 +108,7 @@
     What code do you use to activate the infrared thermal imaging camera system?
 */
 
-use crate::common::{unsigned, Point2};
+use common::{unsigned, Point2};
 use nom::{
     bytes::complete::tag,
     character::complete::{alpha1, char, multispace0},

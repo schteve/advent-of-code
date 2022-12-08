@@ -1,4 +1,4 @@
-use crate::common::{one_line, Point2, Range2};
+use crate::{one_line, Point2, Range2};
 use nom::IResult;
 use std::collections::{HashMap, HashSet};
 

@@ -1,6 +1,6 @@
 use std::cmp::{max, min};
 
-use crate::common::Point2;
+use crate::Point2;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Range2 {

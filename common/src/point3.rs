@@ -1,4 +1,4 @@
-use crate::common::{signed, Range3};
+use crate::{signed, Range3};
 use auto_ops::{impl_op_ex, impl_op_ex_commutative};
 use nom::{
     character::complete::{char, space0},

@@ -118,7 +118,7 @@
     For each entry, determine all of the wire/segment connections and decode the four-digit output values. What do you get if you add up all of the output values?
 */
 
-use crate::common::trim_start;
+use common::trim_start;
 use nom::{
     bytes::complete::tag,
     character::complete::{alpha1, char},

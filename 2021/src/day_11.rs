@@ -336,7 +336,7 @@
     If you can calculate the exact moments when the octopuses will all flash simultaneously, you should be able to navigate through the cavern. What is the first step during which all octopuses flash?
 */
 
-use crate::common::Point2;
+use common::Point2;
 use nom::IResult;
 use std::collections::{HashMap, HashSet};
 

@@ -64,7 +64,7 @@
     Figure out which board will win last. Once it wins, what would its final score be?
 */
 
-use crate::common::{trim_start, unsigned};
+use common::{trim_start, unsigned};
 use nom::{
     character::complete::char,
     multi::{many1, many_m_n, separated_list1},

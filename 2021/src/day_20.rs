@@ -210,7 +210,7 @@
     Start again with the original input image and apply the image enhancement algorithm 50 times. How many pixels are lit in the resulting image?
 */
 
-use crate::common::{Point2, Range2};
+use common::{Point2, Range2};
 use std::collections::HashSet;
 
 #[derive(Clone)]

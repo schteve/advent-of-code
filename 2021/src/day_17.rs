@@ -123,7 +123,7 @@
     How many distinct initial velocity values cause the probe to be within the target area after any step?
 */
 
-use crate::common::{signed, Point2, Range2};
+use common::{signed, Point2, Range2};
 use nom::{bytes::complete::tag, sequence::tuple, IResult};
 use std::cmp::{max, Ordering};
 

@@ -294,7 +294,7 @@
     Only 49 stars to go.
 */
 
-use crate::common::{Point2, Range2, TileChar, TileMap};
+use common::{Point2, Range2, TileChar, TileMap};
 
 #[derive(Clone, Debug, PartialEq)]
 enum Cuke {

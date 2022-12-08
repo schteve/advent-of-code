@@ -48,7 +48,7 @@
     Using your given starting positions, determine every possible outcome. Find the player that wins in more universes; in how many universes does that player win?
 */
 
-use crate::common::{modulo, unsigned};
+use common::{modulo, unsigned};
 use nom::{bytes::complete::tag, character::complete::multispace0, sequence::tuple, IResult};
 use std::{cmp::max, collections::HashMap};
 

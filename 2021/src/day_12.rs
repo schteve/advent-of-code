@@ -139,7 +139,7 @@
     Given these new rules, how many paths through this cave system are there?
 */
 
-use crate::common::{to_owned, trim_start, Mode};
+use common::{to_owned, trim_start, Mode};
 use nom::{
     character::complete::{alpha1, char},
     combinator::map,

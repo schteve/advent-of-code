@@ -62,7 +62,7 @@
     Consider all of the lines. At how many points do at least two lines overlap?
 */
 
-use crate::common::{trim_start, Mode, Point2};
+use common::{trim_start, Mode, Point2};
 use nom::{bytes::complete::tag, multi::many1, sequence::separated_pair, IResult};
 use std::{cmp::Ordering, collections::HashMap};
 

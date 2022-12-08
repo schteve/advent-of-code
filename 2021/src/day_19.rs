@@ -362,7 +362,7 @@
     What is the largest Manhattan distance between any two scanners?
 */
 
-use crate::common::{unsigned, Point3};
+use common::{unsigned, Point3};
 use nom::{
     bytes::complete::tag,
     character::complete::multispace0,

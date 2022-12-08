@@ -57,7 +57,7 @@
     How many lanternfish would there be after 256 days?
 */
 
-use crate::common::unsigned;
+use common::unsigned;
 use nom::{character::complete::char, multi::separated_list1, IResult};
 
 #[derive(Clone)]
