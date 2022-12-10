@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 mod cardinal;
 mod linked_list_circ;
 mod mode;
