@@ -68,7 +68,6 @@ use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct Polymerization {
-    template: Vec<char>,
     rules: HashMap<(char, char), char>,
     start: (char, char),
     polymers: HashMap<(char, char), u64>,
@@ -97,7 +96,6 @@ impl Polymerization {
         Ok((
             input,
             Self {
-                template,
                 rules,
                 start,
                 polymers,
@@ -194,7 +192,6 @@ CN -> C
     #[test]
     fn test_poly() {
         let mut poly = input_generator(EXAMPLE_INPUT);
-        assert_eq!(poly.template, "NNCB".chars().collect::<Vec<_>>());
         assert_eq!(poly.score(), 1);
 
         poly.expand(1);

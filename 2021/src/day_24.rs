@@ -118,39 +118,6 @@ pub enum Op {
 }
 
 impl Op {
-    fn many_from_string(input: &str) -> Vec<Self> {
-        let mut output = Vec::new();
-        for line in input.lines() {
-            let mut parts = line.split(' ');
-            let kind = parts.next().unwrap();
-            let reg = parts.next().unwrap();
-            let operand = parts.next();
-
-            let reg = Reg::from_char(reg.chars().next().unwrap());
-            let operand = if let Some(o) = operand {
-                if let Ok(x) = o.parse::<i64>() {
-                    Some(Operand::Num(x))
-                } else {
-                    Some(Operand::Reg(Reg::from_char(o.chars().next().unwrap())))
-                }
-            } else {
-                None
-            };
-
-            let me = match kind {
-                "inp" => Self::Input(reg),
-                "add" => Self::Add(reg, operand.unwrap()),
-                "mul" => Self::Mul(reg, operand.unwrap()),
-                "div" => Self::Div(reg, operand.unwrap()),
-                "mod" => Self::Mod(reg, operand.unwrap()),
-                "eql" => Self::Eql(reg, operand.unwrap()),
-                _ => panic!("Invalid op: \"{}\"", kind),
-            };
-            output.push(me);
-        }
-        output
-    }
-
     fn parser(input: &str) -> IResult<&str, Self> {
         let (input, me) = preceded(
             multispace0,

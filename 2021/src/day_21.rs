@@ -53,7 +53,6 @@ use nom::{bytes::complete::tag, character::complete::multispace0, sequence::tupl
 use std::{cmp::max, collections::HashMap};
 
 struct DeterministicGame {
-    start: (u8, u8),
     p1: (u8, u32),    // Current pawn, score
     p2: (u8, u32),    // Current pawn, score
     whose_turn: bool, // false = p1, true = p2
@@ -64,7 +63,6 @@ struct DeterministicGame {
 impl DeterministicGame {
     fn from_starting(start: &(u8, u8)) -> Self {
         Self {
-            start: *start,
             p1: (start.0, 0),
             p2: (start.1, 0),
             whose_turn: false,
@@ -153,7 +151,6 @@ impl DiracState {
 }
 
 struct DiracGame {
-    start: (u8, u8),
     universes: HashMap<DiracState, u64>,
     p1_wins: u64,
     p2_wins: u64,
@@ -172,7 +169,6 @@ impl DiracGame {
         );
 
         Self {
-            start: *start,
             universes,
             p1_wins: 0,
             p2_wins: 0,
