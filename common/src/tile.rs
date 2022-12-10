@@ -72,6 +72,12 @@ impl TileSet {
     }
 }
 
+impl Default for TileSet {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl std::fmt::Display for TileSet {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let range = self.get_range().unwrap();
@@ -157,6 +163,12 @@ impl<T: TileChar> TileMap<T> {
 
     pub fn get_range(&self) -> Option<Range2> {
         Point2::get_range(self.tiles.keys())
+    }
+}
+
+impl<T: TileChar> Default for TileMap<T> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
