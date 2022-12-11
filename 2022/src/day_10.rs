@@ -428,12 +428,7 @@ pub fn part2(input: &[Instruction]) -> String {
 mod test {
     use super::*;
 
-    static EXAMPLE_INPUT1: &str = "\
-noop
-addx 3
-addx -5";
-
-    static EXAMPLE_INPUT2: &str = "\
+    static EXAMPLE_INPUT: &str = "\
 addx 15
 addx -11
 addx 6
@@ -583,7 +578,7 @@ noop";
 
     #[test]
     fn test_six_strengths() {
-        let input = input_generator(EXAMPLE_INPUT2);
+        let input = input_generator(EXAMPLE_INPUT);
         let signal = Signal::emit(&input);
         for (cycle, expect) in [
             (20, 420),
@@ -602,7 +597,7 @@ noop";
 
     #[test]
     fn test_crt_image() {
-        let input = input_generator(EXAMPLE_INPUT2);
+        let input = input_generator(EXAMPLE_INPUT);
         let signal = Signal::emit(&input);
         let image = signal.crt_image();
         println!("Image:\n{image}");
