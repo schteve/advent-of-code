@@ -13,4 +13,5 @@ common = { version = "0.1.0", path = "../common" }
 itertools = "0.10.5"
 lazy_static = "1.4.0"
 nom = "7.1.1"
+rayon = "1.6.1"
 regex = "1.7.0"

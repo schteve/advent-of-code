@@ -105,10 +105,10 @@
     Find the only possible position for the distress beacon. What is its tuning frequency?
 */
 
+use common::Point2;
 use itertools::Itertools;
 use lazy_static::lazy_static;
-
-use common::Point2;
+use rayon::prelude::*;
 use regex::Regex;
 
 #[derive(Clone, Debug)]
@@ -181,41 +181,36 @@ impl Line {
     }
 }
 
-fn calc_lines_at_y(sensors: &[Sensor], y: i32, scratch: &mut Vec<Line>, output: &mut Vec<Line>) {
-    scratch.clear();
-    output.clear();
+fn calc_lines_at_y(sensors: &[Sensor], y: i32) -> Vec<Line> {
+    let lines: Vec<Line> = sensors
+        .iter()
+        .filter_map(|sensor| sensor.intersect_horizontal(y))
+        .sorted_by_key(|line| line.left)
+        .collect();
 
-    let lines = scratch;
-    lines.extend(
-        sensors
-            .iter()
-            .filter_map(|sensor| sensor.intersect_horizontal(y)),
-    );
-    lines.sort_by_key(|line| line.left);
-
+    let mut output = Vec::new();
     let mut line_merge: Option<Line> = None;
     for line in lines {
         if let Some(l) = &line_merge {
-            if let Some(u) = l.union(line) {
+            if let Some(u) = l.union(&line) {
                 // Union worked, save it
                 line_merge = Some(u);
             } else {
                 // Union didn't work, push the completed
                 output.push(*l);
-                line_merge = Some(*line);
+                line_merge = Some(line);
             }
         } else {
             // First one
-            line_merge = Some(*line);
+            line_merge = Some(line);
         }
     }
     output.push(line_merge.unwrap());
+    output
 }
 
 fn count_visible(sensors: &[Sensor], y: i32) -> usize {
-    let mut lines = Vec::new();
-    let mut scratch = Vec::new();
-    calc_lines_at_y(sensors, y, &mut scratch, &mut lines);
+    let lines = calc_lines_at_y(sensors, y);
 
     let beacons: Vec<Point2> = sensors.iter().map(|s| s.beacon).sorted().dedup().collect();
     lines
@@ -233,17 +228,14 @@ fn count_visible(sensors: &[Sensor], y: i32) -> usize {
 // For each horizontal line, generate the line segments that are seen by the sensors. Merge them and look for any place
 // there's a gap and assume that's the target. There's gotta be a better way but this is fast enough for now.
 fn tuning_frequency(sensors: &[Sensor], max: i32) -> usize {
-    let mut scratch: Vec<Line> = Vec::new();
-    let mut lines: Vec<Line> = Vec::new();
-    for y in 0..=max {
-        calc_lines_at_y(sensors, y, &mut scratch, &mut lines);
-        if lines.len() == 2 {
-            assert_eq!(lines[0].right + 1, lines[1].left - 1);
-            let x = lines[0].right + 1;
-            return x as usize * 4_000_000 + y as usize;
-        }
-    }
-    panic!("Nothing found");
+    let (y, lines) = (0..=max)
+        .into_par_iter()
+        .map(|y| (y, calc_lines_at_y(sensors, y)))
+        .find_any(|(_, lines)| lines.len() == 2)
+        .expect("Nothing found");
+    assert_eq!(lines[0].right + 1, lines[1].left - 1);
+    let x = lines[0].right + 1;
+    x as usize * 4_000_000 + y as usize
 }
 
 #[aoc_generator(day15)]
