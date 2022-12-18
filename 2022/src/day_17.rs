@@ -340,7 +340,9 @@
     How tall will the tower be after 1000000000000 rocks have stopped?
 */
 
-use std::fmt::Display;
+use std::{fmt::Display, iter};
+
+use itertools::Itertools;
 
 // Bitwise pattern for the shape.
 // Represent it as 8 bits wide (highest bit unused) and 4 rows tall so it matches the tower.
@@ -461,38 +463,54 @@ const SQUARE: Shape = Shape(0b0_0000000_0_0000000_0_0011000_0_0011000);
 
 const SHAPES: [Shape; 5] = [HORIZ, PLUS, CORNER, VERT, SQUARE];
 
-fn tetris(jets: &str) -> usize {
-    let mut tower: Vec<u8> = vec![0x7F]; // Make things simple - the tower always starts with one solid row
-    let mut jets_stream = jets.chars().cycle();
+struct Tetris<J, S> {
+    tower: Vec<u8>,
+    jet_stream: J,
+    shape_stream: S,
+}
 
-    for mut piece in SHAPES.into_iter().cycle().take(2022) {
+impl<J, S> Tetris<J, S>
+where
+    J: Iterator<Item = char>,
+    S: Iterator<Item = Shape>,
+{
+    fn new(jet_stream: J, shape_stream: S) -> Self {
+        Self {
+            tower: vec![0x7F], // Make things simple - the tower always starts with one solid row. Could chain 0x7F to the end of any tower row iteration instead.
+            jet_stream,
+            shape_stream,
+        }
+    }
+
+    fn fall_piece(&mut self) {
+        let mut piece = self.shape_stream.next().unwrap();
         let mut overlap: i32 = -3; // Positive values indicate the piece overlaps the tower by some amount
 
         loop {
-            let candidate = match jets_stream.next().unwrap() {
+            let candidate = match self.jet_stream.next().unwrap() {
                 '>' => piece.move_right(),
                 '<' => piece.move_left(),
                 x => panic!("Invalid jet {x}"),
             };
 
-            let next_piece = if candidate.collides_with(&tower, overlap) {
+            let next_piece = if candidate.collides_with(&self.tower, overlap) {
                 piece
             } else {
                 candidate
             };
 
             // Try to move down
-            if next_piece.collides_with(&tower, overlap + 1) {
-                let overlap_idx = tower.len() - overlap as usize;
+            if next_piece.collides_with(&self.tower, overlap + 1) {
+                let overlap_idx = self.tower.len() - overlap as usize;
                 // Merge the piece with any existing rows
                 for row in (0..overlap as usize).take(4) {
-                    tower[overlap_idx + row] |= next_piece.row(row);
+                    self.tower[overlap_idx + row] |= next_piece.row(row);
                 }
                 // Add new rows
                 for row in overlap as usize..4 {
                     let next_row = next_piece.row(row);
                     if next_row != 0 {
-                        tower.push(next_row);
+                        self.tower.push(next_row);
                     }
                 }
                 break;
@@ -504,7 +522,87 @@ fn tetris(jets: &str) -> usize {
         }
     }
 
-    tower.len() - 1
+    fn height(&self) -> usize {
+        self.tower.len() - 1
+    }
+
+    // Using just 8 rows (64 bits) works for test code but not the real input.
+    // Using 4 chunks of 8 rows and xoring them together works for real input although isn't the most robust in general.
+    // Better would be checking down to a height determined by the amount of open space in each column, but this works so ¯\_(ツ)_/¯
+    fn token(&self) -> u64 {
+        self.tower
+            .iter()
+            .copied()
+            .rev()
+            .chain(iter::repeat(0x7F))
+            .chunks(8)
+            .into_iter()
+            .map(|chunk| chunk.fold(0, |acc, item| (acc << 8) | item as u64))
+            .take(4)
+            .fold(0, |acc, item| acc ^ item)
+    }
+}
+
+// Use Floyd's Tortoise and Hare
+fn tetris_with_cycles(jets: &str, n_pieces: usize) -> usize {
+    let mut tortoise = Tetris::new(jets.chars().cycle(), SHAPES.into_iter().cycle());
+    let mut hare = Tetris::new(jets.chars().cycle(), SHAPES.into_iter().cycle());
+
+    tortoise.fall_piece();
+    hare.fall_piece();
+    hare.fall_piece();
+    while tortoise.token() != hare.token() {
+        tortoise.fall_piece();
+        hare.fall_piece();
+        hare.fall_piece();
+    }
+
+    // Now...
+    // Tortoise is at: i = m + k + a * n
+    // Hare is at: 2 * i = m + k + b * n
+    // where m is the non-cyclic portion
+    //       k is a slice of the cycling portion
+    //       n is the cycling portion
+    // and a represents the number of cycles the tortoise made
+    // and b represents the number of cycles the hare made
+    // Combine the two expressions to get i = (b - a) * n,
+    // which you can see is a multiple of the cycling portion.
+    // Reset the hare back to 0 and run him slowly till they meet, which is m steps because
+    // the tortoise is at i + m => (b - a) * n + m, and since (b - a) * n is a multiple
+    //  of the cycle, this reduces to m meaning the hare and tortoise meet at m.
+
+    let mut hare = Tetris::new(jets.chars().cycle(), SHAPES.into_iter().cycle());
+    let mut prefix_length = 0usize;
+    while tortoise.token() != hare.token() {
+        tortoise.fall_piece();
+        hare.fall_piece();
+        prefix_length += 1;
+    }
+    let prefix_height = hare.height();
+
+    // Now...
+    // We know m but only know a multiple of n. Keep one still and run the other slowly until they meet, which is one full cycle (n).
+    let height_before_cycle = tortoise.height();
+    let mut cycle_length = 1usize;
+    tortoise.fall_piece();
+    while tortoise.token() != hare.token() {
+        tortoise.fall_piece();
+        cycle_length += 1;
+    }
+    let cycle_height = tortoise.height() - height_before_cycle;
+
+    // Determine how far we can jump and how much is left to go
+    let n_cycles = (n_pieces - prefix_length) / cycle_length;
+    let remainder_length = (n_pieces - prefix_length) % cycle_length;
+
+    // We could run either one at this point since they're both at the beginning of the cycle
+    let height_before_remainder = hare.height();
+    for _ in 0..remainder_length {
+        hare.fall_piece();
+    }
+    let remainder_height = hare.height() - height_before_remainder;
+
+    prefix_height + cycle_height * n_cycles + remainder_height
 }
 
 /*fn print_tower(tower: &[u8]) {
@@ -516,18 +614,17 @@ fn tetris(jets: &str) -> usize {
 
 #[aoc(day17, part1)]
 pub fn part1(input: &str) -> usize {
-    let height = tetris(input);
+    let height = tetris_with_cycles(input, 2022);
     assert_eq!(height, 3130);
     height
 }
 
-/*#[aoc(day17, part2)]
-pub fn part2(input: &str) -> u64 {
-    todo!()
-    /*let x = x(input);
-    assert_eq!(x, 123);
-    x*/
-}*/
+#[aoc(day17, part2)]
+pub fn part2(input: &str) -> usize {
+    let height = tetris_with_cycles(input, 1_000_000_000_000);
+    assert_eq!(height, 1556521739139);
+    height
+}
 
 #[cfg(test)]
 mod test {
@@ -536,8 +633,11 @@ mod test {
     static EXAMPLE_INPUT: &str = ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>";
 
     #[test]
-    fn test_tetris() {
-        let height = tetris(EXAMPLE_INPUT);
+    fn test_tetris_with_cycles() {
+        let height = tetris_with_cycles(EXAMPLE_INPUT, 2022);
         assert_eq!(height, 3068);
+
+        let height = tetris_with_cycles(EXAMPLE_INPUT, 1_000_000_000_000);
+        assert_eq!(height, 1514285714288);
     }
 }
