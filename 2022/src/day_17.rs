@@ -490,7 +490,7 @@ where
             let candidate = match self.jet_stream.next().unwrap() {
                 '>' => piece.move_right(),
                 '<' => piece.move_left(),
-                x => panic!("Invalid jet {x}"),
+                x => panic!("Invalid jet {:#x}", x as u32),
             };
 
             let next_piece = if candidate.collides_with(&self.tower, overlap) {
@@ -611,6 +611,11 @@ fn tetris_with_cycles(jets: &str, n_pieces: usize) -> usize {
         println!("{}", print_row(row));
     }
 }*/
+
+#[aoc_generator(day17)]
+pub fn input_generator(input: &str) -> String {
+    input.trim().to_owned()
+}
 
 #[aoc(day17, part1)]
 pub fn part1(input: &str) -> usize {
