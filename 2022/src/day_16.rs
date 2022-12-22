@@ -281,7 +281,7 @@ impl<'a> ValveNode<'a> {
 #[derive(Debug)]
 struct Network<'a> {
     nodes: Vec<ValveNode<'a>>,
-    shortest_paths: Vec<Vec<Option<u32>>>,
+    shortest_paths: Vec<Vec<u32>>,
     n_valves_with_flow: usize,
 }
 
@@ -310,29 +310,28 @@ impl<'a> Network<'a> {
         }
 
         // Calculate adjacency matrix from the graph as this is the starting point for Floyd-Warshall
-        let mut adjacency_matrix: Vec<Vec<Option<u32>>> =
-            vec![vec![None; nodes.len()]; nodes.len()];
+        let mut adjacency_matrix: Vec<Vec<u32>> =
+            vec![vec![u32::MAX; nodes.len()]; nodes.len()];
         for (i, node) in nodes.iter().enumerate() {
-            adjacency_matrix[i][i] = Some(0); // Not clear if this should be 0, None, or if it even matters
+            adjacency_matrix[i][i] = 0; // Not clear if this should be 0, None, or if it even matters
             for tunnel in &node.tunnels {
-                adjacency_matrix[i][*tunnel] = Some(1); // All distances are 1 by definition
+                adjacency_matrix[i][*tunnel] = 1; // All distances are 1 by definition
             }
         }
 
         // Floyd-Warshall to get shortest distance between each node pair
-        let mut shortest_paths = adjacency_matrix; // TODO: collect the option out, after fw all items are Some in a fully connected graph
+        let mut shortest_paths = adjacency_matrix;
         for k in 0..nodes.len() {
             for i in 0..nodes.len() {
                 for j in 0..nodes.len() {
-                    shortest_paths[i][j] = match (
-                        shortest_paths[i][j],
-                        shortest_paths[i][k],
-                        shortest_paths[k][j],
-                    ) {
-                        (None, Some(ik), Some(kj)) => Some(ik + kj), // No existing path, use new one
-                        (Some(curr), Some(ik), Some(kj)) => Some(curr.min(ik + kj)), // Shorter of existing path and new one
-                        (x, _, _) => x, // No new path, use existing (if any)
-                    };
+                    let ij = shortest_paths[i][j];
+                    let ik = shortest_paths[i][k];
+                    let kj = shortest_paths[k][j];
+
+                    // Use shorter of existing path and new one, if no new one then keep existing as-is
+                    if ik != u32::MAX && kj != u32::MAX {
+                        shortest_paths[i][j] = ij.min(ik + kj)
+                    }
                 }
             }
         }
@@ -360,7 +359,7 @@ impl<'a> Network<'a> {
             .position(|n| n.name == "AA")
             .expect("No AA??");
         for valve_id in 0..self.n_valves_with_flow {
-            let next_time = self.shortest_paths[aa_id][valve_id].unwrap() as usize + 1; // Time to travel to the valve + 1 to turn it on
+            let next_time = self.shortest_paths[aa_id][valve_id] as usize + 1; // Time to travel to the valve + 1 to turn it on
             let next_value = (max_time - next_time) as u64 * self.nodes[valve_id].flow_rate;
             /*println!(
                 "Seed DP[{next_time}][{valve_id}][{}] = {next_value}",
@@ -393,7 +392,7 @@ impl<'a> Network<'a> {
                         let bit = 1 << valve_id;
                         if bitmask & bit == 0 {
                             let next_time = curr_time
-                                + self.shortest_paths[node_id][valve_id].unwrap() as usize
+                                + self.shortest_paths[node_id][valve_id] as usize
                                 + 1; // Time to travel to the valve + 1 to turn it on
                             if next_time < max_time {
                                 let next_value = dp[curr_time][node_id][bitmask].map(|v| {
