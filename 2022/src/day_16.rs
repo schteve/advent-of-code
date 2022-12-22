@@ -230,7 +230,7 @@ use regex::Regex;
 
 pub struct Valve {
     name: String,
-    flow_rate: u64,
+    flow_rate: i32,
     tunnels: Vec<String>,
 }
 
@@ -259,17 +259,16 @@ impl Valve {
 
 // TODO: try the DP in reverse to reduce the work. Instead of setting future cells,
 // refer exclusively to past ones (path A, path B, and do-nothing).
-// TODO: make DP not use option as this may be a big CPU cycle burner
 
 #[derive(Debug)]
 struct ValveNode<'a> {
     name: &'a str,
-    flow_rate: u64,
+    flow_rate: i32,
     tunnels: Vec<usize>,
 }
 
 impl<'a> ValveNode<'a> {
-    fn new(name: &'a str, flow_rate: u64) -> Self {
+    fn new(name: &'a str, flow_rate: i32) -> Self {
         Self {
             name,
             flow_rate,
@@ -346,10 +345,10 @@ impl<'a> Network<'a> {
         }
     }
 
-    fn find_max_pressures(&self, max_time: usize) -> Vec<Vec<Vec<Option<u64>>>> {
+    fn find_max_pressures(&self, max_time: usize) -> Vec<Vec<Vec<i32>>> {
         // Time left, current node, state
-        let mut dp: Vec<Vec<Vec<Option<u64>>>> =
-            vec![vec![vec![None; 1 << self.n_valves_with_flow]; self.n_valves_with_flow]; max_time];
+        let mut dp: Vec<Vec<Vec<i32>>> =
+            vec![vec![vec![i32::MIN; 1 << self.n_valves_with_flow]; self.n_valves_with_flow]; max_time];
         // TODO: make this a flat vec
 
         // Seed first moves from AA since AA isn't in the DP matrix (due to no flow)
@@ -360,23 +359,13 @@ impl<'a> Network<'a> {
             .expect("No AA??");
         for valve_id in 0..self.n_valves_with_flow {
             let next_time = self.shortest_paths[aa_id][valve_id] as usize + 1; // Time to travel to the valve + 1 to turn it on
-            let next_value = (max_time - next_time) as u64 * self.nodes[valve_id].flow_rate;
+            let next_value = (max_time - next_time) as i32 * self.nodes[valve_id].flow_rate;
             /*println!(
                 "Seed DP[{next_time}][{valve_id}][{}] = {next_value}",
                 1 << valve_id
             );*/
-            dp[next_time][valve_id][1 << valve_id] = Some(next_value);
+            dp[next_time][valve_id][1 << valve_id] = next_value;
         }
-
-        let set_if_higher = |curr_val: &mut Option<u64>, new_val: Option<u64>| {
-            if let Some(curr) = curr_val {
-                if let Some(new) = new_val {
-                    *curr = (*curr).max(new);
-                }
-            } else {
-                *curr_val = new_val;
-            }
-        };
 
         // DP
         for curr_time in 0..max_time {
@@ -395,18 +384,13 @@ impl<'a> Network<'a> {
                                 + self.shortest_paths[node_id][valve_id] as usize
                                 + 1; // Time to travel to the valve + 1 to turn it on
                             if next_time < max_time {
-                                let next_value = dp[curr_time][node_id][bitmask].map(|v| {
-                                    v + (max_time - next_time) as u64
-                                        * self.nodes[valve_id].flow_rate
-                                });
+                                let next_value = dp[curr_time][node_id][bitmask] + (max_time - next_time) as i32
+                                        * self.nodes[valve_id].flow_rate;
                                 /*println!(
                                     "Open DP[{next_time}][{valve_id}][{}] = {next_value:?}",
                                     bitmask | bit
                                 );*/
-                                set_if_higher(
-                                    &mut dp[next_time][valve_id][bitmask | bit],
-                                    next_value,
-                                );
+                                dp[next_time][valve_id][bitmask | bit] = dp[next_time][valve_id][bitmask | bit].max(next_value);
                             }
                         }
                     }
@@ -416,7 +400,7 @@ impl<'a> Network<'a> {
                     if next_time < max_time {
                         let next_value = dp[curr_time][node_id][bitmask];
                         //println!("Wait DP[{next_time}][{node_id}][{bitmask}] = {next_value:?}");
-                        set_if_higher(&mut dp[next_time][node_id][bitmask], next_value);
+                        dp[next_time][node_id][bitmask] = dp[next_time][node_id][bitmask].max(next_value);
                     }
                 }
             }
@@ -449,17 +433,16 @@ impl<'a> Network<'a> {
         dp
     }
 
-    fn release_pressure(&self, max_time: usize) -> u64 {
+    fn release_pressure(&self, max_time: usize) -> i32 {
         let dp = self.find_max_pressures(max_time);
-        dp[max_time - 1]
+        *dp[max_time - 1]
             .iter()
             .flat_map(|x| x.iter())
             .max()
             .unwrap()
-            .unwrap()
     }
 
-    fn release_pressure_with_help(&self, max_time: usize) -> u64 {
+    fn release_pressure_with_help(&self, max_time: usize) -> i32 {
         let dp = self.find_max_pressures(max_time);
         let mut max = 0;
         for me_bitmask in 0..(1 << self.n_valves_with_flow) {
@@ -469,10 +452,9 @@ impl<'a> Network<'a> {
                         if me_bitmask & (1 << me_node) != 0 {
                             for elephant_node in 0..self.n_valves_with_flow {
                                 if elephant_bitmask & (1 << elephant_node) != 0 {
-                                    if let (Some(a), Some(b)) = (
-                                        dp[max_time - 1][me_node][me_bitmask],
-                                        dp[max_time - 1][elephant_node][elephant_bitmask],
-                                    ) {
+                                    let a = dp[max_time - 1][me_node][me_bitmask];
+                                    let b = dp[max_time - 1][elephant_node][elephant_bitmask];
+                                    if a >= 0 && b >= 0 {
                                         max = max.max(a + b);
                                     }
                                 }
@@ -514,7 +496,7 @@ pub fn input_generator(input: &str) -> Vec<Valve> {
 }
 
 #[aoc(day16, part1)]
-pub fn part1(input: &[Valve]) -> u64 {
+pub fn part1(input: &[Valve]) -> i32 {
     let network = Network::from_valves(input);
     let max = network.release_pressure(30);
     assert_eq!(max, 1947);
@@ -522,7 +504,7 @@ pub fn part1(input: &[Valve]) -> u64 {
 }
 
 #[aoc(day16, part2)]
-pub fn part2(input: &[Valve]) -> u64 {
+pub fn part2(input: &[Valve]) -> i32 {
     let network = Network::from_valves(input);
     let max = network.release_pressure_with_help(26);
     assert_eq!(max, 2556);
