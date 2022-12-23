@@ -117,12 +117,14 @@ where
     fn all_chars() -> Vec<char>;
 }
 
+const DEFAULT_BACKGROUND_CHAR: char = '.';
+
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct TileMap<T> {
+pub struct TileMap<T, const B: char = DEFAULT_BACKGROUND_CHAR> {
     tiles: HashMap<Point2, T>,
 }
 
-impl<T: TileChar> TileMap<T> {
+impl<T: TileChar, const B: char> TileMap<T, B> {
     pub fn new() -> Self {
         Self {
             tiles: HashMap::new(),
@@ -166,13 +168,13 @@ impl<T: TileChar> TileMap<T> {
     }
 }
 
-impl<T: TileChar> Default for TileMap<T> {
+impl<T: TileChar, const B: char> Default for TileMap<T, B> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T: TileChar> std::fmt::Display for TileMap<T> {
+impl<T: TileChar, const B: char> std::fmt::Display for TileMap<T, B> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let range = self.get_range().unwrap();
         for y in range.y.0..=range.y.1 {
@@ -180,7 +182,7 @@ impl<T: TileChar> std::fmt::Display for TileMap<T> {
                 if let Some(t) = self.tiles.get(&Point2 { x, y }) {
                     write!(f, "{}", t.to_char())?;
                 } else {
-                    write!(f, ".")?;
+                    write!(f, "{}", B)?;
                 }
             }
             writeln!(f)?;
@@ -189,14 +191,14 @@ impl<T: TileChar> std::fmt::Display for TileMap<T> {
     }
 }
 
-impl<T: TileChar> std::ops::Deref for TileMap<T> {
+impl<T: TileChar, const B: char> std::ops::Deref for TileMap<T, B> {
     type Target = HashMap<Point2, T>;
     fn deref(&self) -> &Self::Target {
         &self.tiles
     }
 }
 
-impl<T: TileChar> std::ops::DerefMut for TileMap<T> {
+impl<T: TileChar, const B: char> std::ops::DerefMut for TileMap<T, B> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.tiles
     }
@@ -382,7 +384,7 @@ X..
 ABC
 A.A
 CBA";
-        let tilemap = TileMap::from_string(input);
+        let tilemap: TileMap<MyTile> = TileMap::from_string(input);
         let expected: HashMap<Point2, MyTile> = [
             ((0, 0), MyTile::A),
             ((1, 0), MyTile::B),
@@ -404,7 +406,7 @@ AA
 
 BB
 BB";
-        let tilemap = TileMap::from_string(input);
+        let tilemap: TileMap<MyTile> = TileMap::from_string(input);
         let expected: HashMap<Point2, MyTile> = [
             ((0, 0), MyTile::A),
             ((1, 0), MyTile::A),
