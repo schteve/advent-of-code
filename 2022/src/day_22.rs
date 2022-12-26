@@ -222,10 +222,10 @@ impl Board {
         let bounds = self.map.get_range().unwrap();
 
         // Wrap rows
-        for y in bounds.y.0 ..= bounds.y.1 {
+        for y in bounds.y.0..=bounds.y.1 {
             let mut x_first = None;
             let mut x_last = None;
-            for x in bounds.x.0-1 ..= bounds.x.1+1 {
+            for x in bounds.x.0 - 1..=bounds.x.1 + 1 {
                 let p = Point2 { x, y };
                 if self.map.get(&p).is_some() {
                     if x_first.is_none() {
@@ -235,17 +235,23 @@ impl Board {
                 }
             }
 
-            let first = Point2 { x: x_first.unwrap(), y };
-            let last = Point2 { x: x_last.unwrap(), y };
-            wrap_pairs.insert((first, first + (-1, 0)), (last,  Cardinal::West));
-            wrap_pairs.insert((last, last + (1, 0)), (first,  Cardinal::East));
+            let first = Point2 {
+                x: x_first.unwrap(),
+                y,
+            };
+            let last = Point2 {
+                x: x_last.unwrap(),
+                y,
+            };
+            wrap_pairs.insert((first, first + (-1, 0)), (last, Cardinal::West));
+            wrap_pairs.insert((last, last + (1, 0)), (first, Cardinal::East));
         }
 
         // Wrap columns
-        for x in bounds.x.0 ..= bounds.x.1 {
+        for x in bounds.x.0..=bounds.x.1 {
             let mut y_first = None;
             let mut y_last = None;
-            for y in bounds.y.0-1 ..= bounds.y.1+1 {
+            for y in bounds.y.0 - 1..=bounds.y.1 + 1 {
                 let p = Point2 { x, y };
                 if self.map.get(&p).is_some() {
                     if y_first.is_none() {
@@ -255,10 +261,16 @@ impl Board {
                 }
             }
 
-            let first = Point2 { x, y: y_first.unwrap() };
-            let last = Point2 { x, y: y_last.unwrap() };
-            wrap_pairs.insert((first, first + (0, -1)), (last,  Cardinal::North));
-            wrap_pairs.insert((last, last + (0, 1)), (first,  Cardinal::South));
+            let first = Point2 {
+                x,
+                y: y_first.unwrap(),
+            };
+            let last = Point2 {
+                x,
+                y: y_last.unwrap(),
+            };
+            wrap_pairs.insert((first, first + (0, -1)), (last, Cardinal::North));
+            wrap_pairs.insert((last, last + (0, 1)), (first, Cardinal::South));
         }
 
         wrap_pairs
@@ -338,8 +350,13 @@ impl Board {
         for corner in concave_corners {
             // Go clockwise (a) and counter-clockwise (b)
             let corner_idx = perimeter.iter().position(|(p, _)| *p == corner).unwrap();
-            let a_iter = perimeter[corner_idx+1..].iter().chain(perimeter[..corner_idx].iter());
-            let b_iter = perimeter[..corner_idx].iter().rev().chain(perimeter[corner_idx..].iter().rev());
+            let a_iter = perimeter[corner_idx + 1..]
+                .iter()
+                .chain(perimeter[..corner_idx].iter());
+            let b_iter = perimeter[..corner_idx]
+                .iter()
+                .rev()
+                .chain(perimeter[corner_idx..].iter().rev());
             for ((a_pt, a_dir), (b_pt, b_dir)) in iter::zip(a_iter, b_iter) {
                 // Store the wrapped pairs
                 let a_left = a_pt.step(a_dir.turn(Turn::Left), 1);
@@ -353,7 +370,7 @@ impl Board {
                 assert!(!self.map.contains_key(&b_left));
 
                 // If both points are convex corners then don't continue further
-                if convex_corners.contains(&a_pt) && convex_corners.contains(&b_pt) {
+                if convex_corners.contains(a_pt) && convex_corners.contains(b_pt) {
                     break;
                 }
             }
