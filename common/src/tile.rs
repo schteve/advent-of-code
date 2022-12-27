@@ -25,10 +25,10 @@ impl TileSet {
 
     pub fn with_tiles<'a, I>(self, tiles: I) -> Self
     where
-        I: std::iter::IntoIterator<Item = &'a Point2>,
+        I: IntoIterator<Item = Point2>,
     {
         Self {
-            tiles: tiles.into_iter().copied().collect(),
+            tiles: tiles.into_iter().collect(),
             ..self
         }
     }
@@ -133,10 +133,10 @@ impl<T: TileChar, const B: char> TileMap<T, B> {
 
     pub fn with_tiles<'a, I>(self, tiles: I) -> Self
     where
-        I: std::iter::IntoIterator<Item = (&'a Point2, T)>,
+        I: IntoIterator<Item = (Point2, T)>,
     {
         Self {
-            tiles: tiles.into_iter().map(|(p, t)| (*p, t)).collect(),
+            tiles: tiles.into_iter().collect(),
         }
     }
 

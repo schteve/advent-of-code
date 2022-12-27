@@ -71,6 +71,10 @@ impl Cardinal {
             Self::West => Self::East,
         }
     }
+
+    pub fn all() -> impl Iterator<Item = Self> {
+        [Self::North, Self::South, Self::East, Self::West].into_iter() // Would be nice if this was based on the enum definition
+    }
 }
 
 impl std::fmt::Display for Cardinal {
@@ -81,6 +85,20 @@ impl std::fmt::Display for Cardinal {
             Self::East => write!(f, "East"),
             Self::West => write!(f, "West"),
         }
+    }
+}
+
+impl TryFrom<u8> for Cardinal {
+    type Error = ();
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        Ok(match value {
+            0 => Self::North,
+            1 => Self::South,
+            2 => Self::East,
+            3 => Self::West,
+            _ => return Err(()),
+        })
     }
 }
 

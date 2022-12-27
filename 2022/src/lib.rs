@@ -28,7 +28,7 @@ mod day_20;
 mod day_21;
 mod day_22;
 mod day_23;
-/*mod day_24;
-mod day_25;*/
+mod day_24;
+//mod day_25;
 
 aoc_lib! { year = 2022 }
