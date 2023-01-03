@@ -373,7 +373,7 @@ use nom::{
 use std::{cmp::Ordering, collections::HashSet};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-enum XYZ {
+enum Xyz {
     X,
     Y,
     Z,
@@ -384,14 +384,14 @@ enum XYZ {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct Orientation {
-    facing: XYZ,
+    facing: Xyz,
     n: u32,
 }
 
 impl Orientation {
     fn new() -> Self {
         Self {
-            facing: XYZ::NZ,
+            facing: Xyz::NZ,
             n: 0,
         }
     }
@@ -445,12 +445,12 @@ impl Scanner {
         let mut beacons = Vec::new();
         for p in &self.beacons {
             let new_p = match orientation.facing {
-                XYZ::X => rotate_point_around_axis(p, XYZ::Y, 3),
-                XYZ::Y => rotate_point_around_axis(p, XYZ::X, 1),
-                XYZ::Z => rotate_point_around_axis(p, XYZ::Y, 2),
-                XYZ::NX => rotate_point_around_axis(p, XYZ::Y, 1),
-                XYZ::NY => rotate_point_around_axis(p, XYZ::X, 3),
-                XYZ::NZ => *p,
+                Xyz::X => rotate_point_around_axis(p, Xyz::Y, 3),
+                Xyz::Y => rotate_point_around_axis(p, Xyz::X, 1),
+                Xyz::Z => rotate_point_around_axis(p, Xyz::Y, 2),
+                Xyz::NX => rotate_point_around_axis(p, Xyz::Y, 1),
+                Xyz::NY => rotate_point_around_axis(p, Xyz::X, 3),
+                Xyz::NZ => *p,
             };
             let new_p = rotate_point_around_axis(&new_p, orientation.facing, orientation.n);
             beacons.push(new_p);
@@ -497,7 +497,7 @@ impl Scanner {
     }
 
     fn check_overlap_oriented(&self, other: &Self, overlap_criteria: u32) -> Option<Self> {
-        for facing in [XYZ::X, XYZ::Y, XYZ::Z, XYZ::NX, XYZ::NY, XYZ::NZ] {
+        for facing in [Xyz::X, Xyz::Y, Xyz::Z, Xyz::NX, Xyz::NY, Xyz::NZ] {
             for n in 0..4 {
                 let oriented = other.orient(Orientation { facing, n });
                 if let Some(s) = self.check_overlap(&oriented, overlap_criteria) {
@@ -516,37 +516,37 @@ impl Scanner {
     }
 }
 
-fn rotate_point_around_axis(p: &Point3, axis: XYZ, n: u32) -> Point3 {
+fn rotate_point_around_axis(p: &Point3, axis: Xyz, n: u32) -> Point3 {
     assert!(n < 4);
     let mut new_p = *p;
     for _ in 0..n {
         new_p = match axis {
-            XYZ::X => Point3 {
+            Xyz::X => Point3 {
                 x: new_p.x,
                 y: -new_p.z,
                 z: new_p.y,
             },
-            XYZ::Y => Point3 {
+            Xyz::Y => Point3 {
                 x: new_p.z,
                 y: new_p.y,
                 z: -new_p.x,
             },
-            XYZ::Z => Point3 {
+            Xyz::Z => Point3 {
                 x: -new_p.y,
                 y: new_p.x,
                 z: new_p.z,
             },
-            XYZ::NX => Point3 {
+            Xyz::NX => Point3 {
                 x: new_p.x,
                 y: new_p.z,
                 z: -new_p.y,
             },
-            XYZ::NY => Point3 {
+            Xyz::NY => Point3 {
                 x: -new_p.z,
                 y: new_p.y,
                 z: new_p.x,
             },
-            XYZ::NZ => Point3 {
+            Xyz::NZ => Point3 {
                 x: new_p.y,
                 y: -new_p.x,
                 z: new_p.z,
@@ -853,31 +853,31 @@ mod test {
         let scanners = input_generator(EXAMPLE_INPUT2);
 
         let orientation = Orientation {
-            facing: XYZ::NZ,
+            facing: Xyz::NZ,
             n: 0,
         };
         assert_eq!(scanners[0].orient(orientation).beacons, scanners[0].beacons);
 
         let orientation = Orientation {
-            facing: XYZ::Y,
+            facing: Xyz::Y,
             n: 2,
         };
         assert_eq!(scanners[0].orient(orientation).beacons, scanners[1].beacons);
 
         let orientation = Orientation {
-            facing: XYZ::X,
+            facing: Xyz::X,
             n: 0,
         };
         assert_eq!(scanners[0].orient(orientation).beacons, scanners[2].beacons);
 
         let orientation = Orientation {
-            facing: XYZ::NX,
+            facing: Xyz::NX,
             n: 2,
         };
         assert_eq!(scanners[0].orient(orientation).beacons, scanners[3].beacons);
 
         let orientation = Orientation {
-            facing: XYZ::NY,
+            facing: Xyz::NY,
             n: 3,
         };
         assert_eq!(scanners[0].orient(orientation).beacons, scanners[4].beacons);

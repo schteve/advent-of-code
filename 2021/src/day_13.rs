@@ -130,8 +130,8 @@ impl Fold {
             tuple((multispace0, tag("fold along "), alpha1, char('='), unsigned))(input)?;
 
         let fold = match dim {
-            "x" => Self::X(val as i32),
-            "y" => Self::Y(val as i32),
+            "x" => Self::X(val),
+            "y" => Self::Y(val),
             _ => panic!("Invalid dimension: {}", dim),
         };
 
