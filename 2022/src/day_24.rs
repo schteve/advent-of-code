@@ -243,18 +243,16 @@
     What is the fewest number of minutes required to reach the goal, go back to the start, then reach the goal again?
 */
 
-use std::{
-    cmp::Reverse,
-    collections::{HashMap, HashSet},
-    iter,
-};
+use std::iter;
 
-use common::{Cardinal, Mode, Point2, TileChar, TileMap};
+use common::{Cardinal, Point2, TileChar, TileMap};
+use itertools::Itertools;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Tile {
     Wall,
     Blizzard(u8), // Cardinal bitmask, 0 means the ground is clear
+    Elf,
 }
 
 impl TileChar for Tile {
@@ -275,11 +273,19 @@ impl TileChar for Tile {
                     }
                 }
             },
+            Tile::Elf => 'E',
         }
     }
 
-    fn from_char(_c: char) -> Option<Self> {
-        unimplemented!()
+    fn from_char(c: char) -> Option<Self> {
+        Some(match c {
+            '#' => Tile::Wall,
+            '.' => Tile::Blizzard(0),
+            _ => {
+                let cardinal = Cardinal::from_arrow(c);
+                Tile::Blizzard(1 << cardinal as u8)
+            }
+        })
     }
 
     fn all_chars() -> Vec<char> {
@@ -299,46 +305,28 @@ pub struct Valley {
 
 impl Valley {
     fn from_str(s: &str) -> Self {
-        let mut tiles = HashMap::new();
-        let mut start = None;
-        let mut end = None;
-        let mut width = 0;
-        let mut height = 0;
-        for (y, line) in s.lines().enumerate() {
-            height = y;
-            for (x, c) in line.chars().enumerate() {
-                width = width.max(x);
+        let sim = TileMap::from_string(s);
 
-                let pt = Point2 {
-                    x: x as i32,
-                    y: y as i32,
-                };
-                let tile = match c {
-                    '#' => Tile::Wall,
-                    '.' => {
-                        if start.is_none() {
-                            start = Some(pt);
-                        }
-                        end = Some(pt);
-                        Tile::Blizzard(0)
-                    }
-                    _ => {
-                        let cardinal = Cardinal::from_arrow(c);
-                        Tile::Blizzard(1 << cardinal as u8)
-                    }
-                };
-                tiles.insert(pt, tile);
-            }
-        }
+        let blizz_pts: Vec<Point2> = (*sim)
+            .iter()
+            .filter(|(_, v)| matches!(v, Tile::Blizzard(_)))
+            .map(|(k, _)| *k)
+            .sorted()
+            .collect();
+        let start = *blizz_pts.first().unwrap();
+        let end = *blizz_pts.last().unwrap();
 
-        let sim = TileMap::new().with_tiles(tiles.into_iter());
+        let range = sim.get_range().unwrap();
+        let width = i32::abs_diff(range.x.0, range.x.1) as usize + 1;
+        let height = i32::abs_diff(range.y.0, range.y.1) as usize + 1;
+
         Self {
             sim,
             time: 0,
-            start: start.unwrap(),
-            end: end.unwrap(),
-            width: width + 1,
-            height: height + 1,
+            start,
+            end,
+            width,
+            height,
         }
     }
 
@@ -348,10 +336,11 @@ impl Valley {
         for tile in new_sim.values_mut() {
             *tile = match tile {
                 Tile::Wall => Tile::Wall,
-                Tile::Blizzard(_) => Tile::Blizzard(0),
+                Tile::Blizzard(_) | Tile::Elf => Tile::Blizzard(0),
             }
         }
 
+        // Handle blizzards first
         for (pt, tile) in &*self.sim {
             if let Tile::Blizzard(blizz) = tile {
                 for cardinal in Cardinal::all() {
@@ -365,17 +354,12 @@ impl Valley {
                         } else {
                             // Assume no blizzards move / wrap into the start or end location (for the example and my input this isn't possible)
                             let adj_pt = match cardinal {
-                                Cardinal::North => Point2 {
-                                    x: pt.x,
-                                    y: self.height as i32 - 2,
-                                },
-                                Cardinal::South => Point2 { x: pt.x, y: 1 },
-                                Cardinal::East => Point2 { x: 1, y: pt.y },
-                                Cardinal::West => Point2 {
-                                    x: self.width as i32 - 2,
-                                    y: pt.y,
-                                },
-                            };
+                                Cardinal::North => (pt.x, self.height as i32 - 2),
+                                Cardinal::South => (pt.x, 1),
+                                Cardinal::East => (1, pt.y),
+                                Cardinal::West => (self.width as i32 - 2, pt.y),
+                            }
+                            .into();
                             let Tile::Blizzard(adj_blizz) = new_sim.entry(adj_pt).or_insert(Tile::Blizzard(0)) else { panic!("Should be blizzard") };
                             *adj_blizz |= bit;
                         }
@@ -383,67 +367,41 @@ impl Valley {
                 }
             }
         }
-        self.sim = new_sim;
-        self.time += 1;
-    }
 
-    fn find_end(&mut self, mode: Mode) -> usize {
-        #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-        enum Goal {
-            End,
-            Snacks,
-            EndAgain,
-        }
-
-        let mut frontier: Vec<(usize, Point2, Goal)> = vec![(0, self.start, Goal::End)]; // Time, location, goal
-        let mut visited: HashSet<(usize, Point2, Goal)> = HashSet::new();
-        while let Some((time, curr_pt, state)) = frontier.pop() {
-            while time >= self.time {
-                self.advance_sim();
-            }
-
-            for next_pt in curr_pt.orthogonals().chain(iter::once(curr_pt)) {
-                if Some(&Tile::Blizzard(0)) == self.sim.get(&next_pt) {
-                    // It's OK to break early when reaching the goal for each stage, because it'll never be shorter
-                    // to take longer to get to the goal (we could always get there as fast as possible and then sit there doing nothing)
-                    match state {
-                        Goal::End if next_pt == self.end => {
-                            if mode == Mode::M1 {
-                                return time + 1;
-                            }
-
-                            let next = (time + 1, next_pt, Goal::Snacks);
-                            visited.clear();
-                            frontier.clear();
-                            visited.insert(next);
-                            frontier.push(next);
-                            break;
-                        }
-                        Goal::Snacks if next_pt == self.start => {
-                            let next = (time + 1, next_pt, Goal::EndAgain);
-                            visited.clear();
-                            frontier.clear();
-                            visited.insert(next);
-                            frontier.push(next);
-                            break;
-                        }
-                        Goal::EndAgain if next_pt == self.end => {
-                            return time + 1;
-                        }
-                        _ => {
-                            let next = (time + 1, next_pt, state);
-                            if !visited.contains(&next) {
-                                visited.insert(next);
-                                frontier.push(next);
-                            }
+        // Handle elves last since we need all blizzards to be known before trying to move elves
+        for (pt, tile) in &*self.sim {
+            if *tile == Tile::Elf {
+                for adj_pt in pt.orthogonals().chain(iter::once(*pt)) {
+                    if let Some(adj_tile) = new_sim.get_mut(&adj_pt) {
+                        if *adj_tile == Tile::Blizzard(0) {
+                            *adj_tile = Tile::Elf;
                         }
                     }
                 }
             }
-
-            frontier.sort_unstable_by_key(|(time, _, _)| Reverse(*time));
         }
-        panic!("Couldn't find the goal");
+
+        self.sim = new_sim;
+        self.time += 1;
+    }
+
+    fn find_goals(&mut self, goals: &[Point2]) -> usize {
+        self.sim.insert(self.start, Tile::Elf);
+
+        for goal in goals {
+            while self.sim.get(goal) != Some(&Tile::Elf) {
+                self.advance_sim();
+            }
+
+            // Clean the sim to remove all but the goal elf
+            for (pt, tile) in self.sim.iter_mut() {
+                if *tile == Tile::Elf && pt != goal {
+                    *tile = Tile::Blizzard(0);
+                }
+            }
+        }
+
+        self.time
     }
 }
 
@@ -455,7 +413,7 @@ pub fn input_generator(input: &str) -> Valley {
 #[aoc(day24, part1)]
 pub fn part1(input: &Valley) -> usize {
     let mut valley = input.clone();
-    let end = valley.find_end(Mode::M1);
+    let end = valley.find_goals(&[valley.end]);
     assert_eq!(end, 232);
     end
 }
@@ -463,7 +421,7 @@ pub fn part1(input: &Valley) -> usize {
 #[aoc(day24, part2)]
 pub fn part2(input: &Valley) -> usize {
     let mut valley = input.clone();
-    let end = valley.find_end(Mode::M2);
+    let end = valley.find_goals(&[valley.end, valley.start, valley.end]);
     assert_eq!(end, 715);
     end
 }
@@ -481,15 +439,15 @@ mod test {
 ######.#";
 
     #[test]
-    fn test_find_goal() {
+    fn test_find_goals() {
         let input = input_generator(EXAMPLE_INPUT);
 
         let mut valley = input.clone();
-        let end = valley.find_end(Mode::M1);
+        let end = valley.find_goals(&[valley.end]);
         assert_eq!(end, 18);
 
         let mut valley = input.clone();
-        let end = valley.find_end(Mode::M2);
+        let end = valley.find_goals(&[valley.end, valley.start, valley.end]);
         assert_eq!(end, 54);
     }
 }
