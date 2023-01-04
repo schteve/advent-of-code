@@ -39,12 +39,12 @@ def bench(days_parts):
     for line in readme_text.splitlines():
         result = table_time_regex.match(line)
         if result:
-            day = result.group(1)
-            part = result.group(2)
-            time = result.group(3)
+            day = int(result.group(1))
+            part = int(result.group(2))
+            time = float(result.group(3))
             unit = result.group(4)
 
-            time_adjusted = float(time) / unit_factors[unit]
+            time_adjusted = time / unit_factors[unit]
             time_db[(day, part)] = time_adjusted
 
     for (day, part) in days_parts:

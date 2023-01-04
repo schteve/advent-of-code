@@ -520,7 +520,7 @@ impl Blueprint {
             })
             .into();
 
-        self.most_geodes_recurse(time, inventory, robots, max_costs)
+        self.most_geodes_recurse(time, inventory, robots, max_costs, 0)
     }
 
     fn most_geodes_recurse(
@@ -529,51 +529,62 @@ impl Blueprint {
         inventory: ItemCount,
         robots: ItemCount,
         max_costs: ItemCount,
+        best_so_far: u64,
     ) -> u64 {
         if time == 0 {
             return inventory.0[3] as u64;
         }
 
-        // TODO: add more early return conditions
-        (0..4)
-            .map(|i| {
-                // Skip this if we generate enough to make any robot every minute (no point in making more if we already have more than enough)
-                // Note: this doesn't apply to geodes since you can never have enough of them
-                if i < 3 && robots.0[i] >= max_costs.0[i] {
-                    return 0;
-                }
+        // Skip this if it doesn't have a chance to be better than the best we've seen so far.
+        // Assume best case - if we bought a geode robot every minute for the remaining time (ignoring whether that's actually possible).
+        // With t time left we only get to produce on t - 1 of those minutes, so in total we could get t * (t - 1) / 2 geodes from new robots.
+        let max_possible =
+            inventory.0[3] as usize + time * robots.0[3] as usize + time * (time - 1) / 2;
+        if max_possible as u64 <= best_so_far {
+            return inventory.0[3] as u64;
+        }
 
-                // Fast forward to when we can build this robot. This only handles the time we're skipping,
-                // the usual 1 minute time step is handled afterwards since that always needs to happen. Note we
-                // only skip down to time == 1 because building in the last minute is pointless and it
-                // keeps the logic simple to always step 1 minute at the recursive step.
-                let mut next_time = time;
-                let mut next_inventory = inventory;
-                while next_time > 1 && next_inventory < self.costs[i] {
-                    next_inventory += robots;
-                    next_time -= 1;
-                }
+        let mut max_geodes = 0;
+        for i in 0..4 {
+            // Skip this if we generate enough to make any robot every minute (no point in making more if we already have more than enough)
+            // Note: this doesn't apply to geodes since you can never have enough of them
+            if i < 3 && robots.0[i] >= max_costs.0[i] {
+                continue;
+            }
 
-                let next_robots = if next_inventory >= self.costs[i] {
-                    // We were able to save up to build a robot
-                    next_inventory -= self.costs[i];
-                    let mut new_robot = [0, 0, 0, 0];
-                    new_robot[i] = 1;
-                    robots + ItemCount::from(new_robot)
-                } else {
-                    // We ran out of time and couldn't build the robot
-                    robots
-                };
+            // Fast forward to when we can build this robot. This only handles the time we're skipping,
+            // the usual 1 minute time step is handled afterwards since that always needs to happen. Note we
+            // only skip down to time == 1 because building in the last minute is pointless and it
+            // keeps the logic simple to always step 1 minute at the recursive step.
+            let mut next_time = time;
+            let mut next_inventory = inventory;
+            while next_time > 1 && next_inventory < self.costs[i] {
+                next_inventory += robots;
+                next_time -= 1;
+            }
 
-                self.most_geodes_recurse(
-                    next_time - 1,
-                    next_inventory + robots,
-                    next_robots,
-                    max_costs,
-                )
-            })
-            .max()
-            .unwrap()
+            let next_robots = if next_inventory >= self.costs[i] {
+                // We were able to save up to build a robot
+                next_inventory -= self.costs[i];
+                let mut new_robot = [0, 0, 0, 0];
+                new_robot[i] = 1;
+                robots + ItemCount::from(new_robot)
+            } else {
+                // We ran out of time and couldn't build the robot
+                robots
+            };
+
+            let geodes = self.most_geodes_recurse(
+                next_time - 1,
+                next_inventory + robots,
+                next_robots,
+                max_costs,
+                best_so_far.max(max_geodes),
+            );
+            max_geodes = max_geodes.max(geodes);
+        }
+
+        max_geodes
     }
 
     fn quality_level(&self, time: usize) -> u64 {
