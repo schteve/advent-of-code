@@ -67,8 +67,8 @@ def bench(days_parts):
     total = sum(time_db.values())
 
     # Insert the total time into the readme
-    print(f'Total time: {total:.5} s')
-    readme_text = re.sub(r'^Total:.*?$', rf'Total: {total:.5} s', readme_text, flags=re.MULTILINE)
+    print(f'Total time: {total:0.4f} s')
+    readme_text = re.sub(r'^Total:.*?$', rf'Total: {total:.4f} s', readme_text, flags=re.MULTILINE)
 
     with open('README.md', 'w') as readme:
         readme.write(readme_text)
