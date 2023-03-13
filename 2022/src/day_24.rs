@@ -446,7 +446,7 @@ mod test {
         let end = valley.find_goals(&[valley.end]);
         assert_eq!(end, 18);
 
-        let mut valley = input.clone();
+        let mut valley = input;
         let end = valley.find_goals(&[valley.end, valley.start, valley.end]);
         assert_eq!(end, 54);
     }

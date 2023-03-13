@@ -61,9 +61,9 @@ use std::collections::HashSet;
 use itertools::Itertools;
 
 fn priority(c: char) -> u64 {
-    if ('a'..='z').contains(&c) {
+    if c.is_ascii_lowercase() {
         c as u64 - 'a' as u64 + 1
-    } else if ('A'..='Z').contains(&c) {
+    } else if c.is_ascii_uppercase() {
         c as u64 - 'A' as u64 + 27
     } else {
         panic!("Invalid char: {c}");

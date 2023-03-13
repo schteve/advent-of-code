@@ -254,7 +254,7 @@ hmdt: 32";
         assert_eq!(Yell::Add(s.clone(), s.clone()).inverse_b(8, 5), 3); // 5 + x = 8
         assert_eq!(Yell::Sub(s.clone(), s.clone()).inverse_b(8, 5), -3); // 5 - x = 8
         assert_eq!(Yell::Mul(s.clone(), s.clone()).inverse_b(8, 2), 4); // 2 * x = 8
-        assert_eq!(Yell::Div(s.clone(), s.clone()).inverse_b(8, 24), 3); // 24 / x = 8
+        assert_eq!(Yell::Div(s.clone(), s).inverse_b(8, 24), 3); // 24 / x = 8
     }
 
     #[test]

@@ -530,7 +530,7 @@ Monkey 3:
         let mb = barrel.monkey_business();
         assert_eq!(mb, 10605);
 
-        let mut barrel = input.clone();
+        let mut barrel = input;
         barrel.rounds(10_000, Mode::M2);
         let mb = barrel.monkey_business();
         assert_eq!(mb, 2713310158);

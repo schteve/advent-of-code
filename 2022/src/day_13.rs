@@ -237,7 +237,6 @@ impl fmt::Display for Packet {
 fn score_pairs_in_order(packets: &[Packet]) -> u64 {
     packets
         .chunks(2)
-        .into_iter()
         .enumerate()
         .filter_map(|(idx, pair)| {
             if pair[0] <= pair[1] {

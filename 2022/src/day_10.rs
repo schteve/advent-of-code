@@ -375,7 +375,6 @@ impl Signal {
         // Purposely alternate line endings rather than joining so the final result prints nicer (start with line ending)
         self.data
             .chunks(40)
-            .into_iter()
             .map(|line| {
                 line.iter().enumerate().map(|(crt, sig)| {
                     if (-1..=1).contains(&(sig - crt as i64)) {
