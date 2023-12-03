@@ -360,7 +360,11 @@ impl Valley {
                                 Cardinal::West => (self.width as i32 - 2, pt.y),
                             }
                             .into();
-                            let Tile::Blizzard(adj_blizz) = new_sim.entry(adj_pt).or_insert(Tile::Blizzard(0)) else { panic!("Should be blizzard") };
+                            let Tile::Blizzard(adj_blizz) =
+                                new_sim.entry(adj_pt).or_insert(Tile::Blizzard(0))
+                            else {
+                                panic!("Should be blizzard")
+                            };
                             *adj_blizz |= bit;
                         }
                     }
