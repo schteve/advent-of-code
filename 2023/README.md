@@ -1,7 +1,7 @@
-# Advent of Code 2022
-This repository contains my solutions for the [Advent of Code 2022](https://adventofcode.com/2022) programming puzzles, written in Rust 🦀.
+# Advent of Code 2023
+This repository contains my solutions for the [Advent of Code 2023](https://adventofcode.com/2023) programming puzzles, written in Rust 🦀.
 
-This was my fifth Advent of Code and I am doing it "live", starting on December 1st and generally trying to complete each puzzle on the day it is released.
+This was my sixth Advent of Code and I am doing it "live"-ish.
 
 # Goals
 I've done a few of these now and I have a solid grasp on Rust so I'm not trying for too much here.
@@ -35,54 +35,4 @@ If the individual times are instead entered manually in this document, total tim
 
 Day | Part | Time
 :--:| :--: | :-------:
-1   | 1    | 544.55 ns
-1   | 2    | 671.41 ns
-2   | 1    | 3.8260 us
-2   | 2    | 2.1966 us
-3   | 1    | 26.418 us
-3   | 2    | 228.90 us
-4   | 1    | 1.2454 us
-4   | 2    | 1.1179 us
-5   | 1    | 9.8009 us
-5   | 2    | 26.362 us
-6   | 1    | 4.6908 us
-6   | 2    | 16.262 us
-7   | 1    | 172.66 us
-7   | 2    | 182.44 us
-8   | 1    | 65.629 us
-8   | 2    | 215.74 us
-9   | 1    | 378.86 us
-9   | 2    | 503.15 us
-10  | 1    | 831.61 ns
-10  | 2    | 1.3200 us
-11  | 1    | 10.470 us
-11  | 2    | 4.4792 ms
-12  | 1    | 1.7031 ms
-12  | 2    | 1.0767 ms
-13  | 1    | 4.7133 us
-13  | 2    | 103.11 us
-14  | 1    | 216.63 us
-14  | 2    | 3.4410 ms
-15  | 1    | 540.85 ns
-15  | 2    | 45.123 ms
-16  | 1    | 700.17 ms
-16  | 2    | 2.7871 s
-17  | 1    | 1.2703 ms
-17  | 2    | 1.2470 ms
-18  | 1    | 554.95 us
-18  | 2    | 1.4255 ms
-19  | 1    | 5.4414 ms
-19  | 2    | 4.4941 ms
-20  | 1    | 60.348 ms
-20  | 2    | 983.45 ms
-21  | 1    | 309.79 us
-21  | 2    | 1.5119 ms
-22  | 1    | 1.4744 ms
-22  | 2    | 612.70 us
-23  | 1    | 8.2622 ms
-23  | 2    | 458.50 ms
-24  | 1    | 41.327 ms
-24  | 2    | 129.68 ms
-25  | 1    | 527.37 ns
 
-Total: 5.2452 s
