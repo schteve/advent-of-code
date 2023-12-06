@@ -109,6 +109,8 @@
     Consider all of the initial seed numbers listed in the ranges on the first line of the almanac. What is the lowest location number that corresponds to any of the initial seed numbers?
 */
 
+use std::ops::Range;
+
 use nom::{
     self,
     bytes::complete::tag,
@@ -120,13 +122,13 @@ use nom::{
 
 use common::{to_owned, trim, unsigned};
 
-struct Range {
+struct MapRange {
     dst: u64,
     src: u64,
     len: u64,
 }
 
-impl Range {
+impl MapRange {
     fn parser(input: &str) -> IResult<&str, Self> {
         let (input, (dst, src, len)) =
             tuple((trim(unsigned), trim(unsigned), trim(unsigned)))(input)?;
@@ -143,22 +145,48 @@ impl Range {
         }
         None
     }
+
+    fn intersect(&self, range: Range<u64>) -> (Option<Range<u64>>, [Option<Range<u64>>; 2]) {
+        if (range.start < (self.src + self.len)) && (range.end > self.src) {
+            let start_offset = std::cmp::max(range.start, self.src) - self.src;
+            let end_offset = std::cmp::min(range.end, self.src + self.len) - self.src;
+            let start = self.dst + start_offset;
+            let end = self.dst + end_offset;
+            let intersection = Some(start..end);
+
+            let before = if range.start < self.src {
+                Some(range.start..self.src)
+            } else {
+                None
+            };
+
+            let after = if range.end > (self.src + self.len) {
+                Some(self.src + self.len..range.end)
+            } else {
+                None
+            };
+
+            (intersection, [before, after])
+        } else {
+            (None, [Some(range), None])
+        }
+    }
 }
 
 struct Map {
     _from: String,
     _to: String,
-    ranges: Vec<Range>,
+    map_ranges: Vec<MapRange>,
 }
 
 impl Map {
     fn parser(input: &str) -> IResult<&str, Self> {
-        let (input, (from, _, to, _, ranges)) = trim(tuple((
+        let (input, (from, _, to, _, map_ranges)) = trim(tuple((
             to_owned(alpha1),
             tag("-to-"),
             to_owned(alpha1),
             tag(" map:"),
-            many1(Range::parser),
+            many1(MapRange::parser),
         )))(input)?;
 
         Ok((
@@ -166,18 +194,40 @@ impl Map {
             Self {
                 _from: from,
                 _to: to,
-                ranges,
+                map_ranges,
             },
         ))
     }
 
     fn convert(&self, other: u64) -> u64 {
-        for range in &self.ranges {
+        for range in &self.map_ranges {
             if let Some(mapped) = range.convert(other) {
                 return mapped;
             }
         }
         other
+    }
+
+    fn convert_ranges(&self, ranges: Vec<Range<u64>>) -> Vec<Range<u64>> {
+        let mut done_ranges = Vec::new();
+        for range in ranges {
+            let mut curr_ranges = vec![range];
+
+            for map_range in &self.map_ranges {
+                let mut tmp_ranges = Vec::new();
+
+                for curr in curr_ranges.drain(..) {
+                    let (done, not_done) = map_range.intersect(curr);
+                    done_ranges.extend(done.into_iter());
+                    tmp_ranges.extend(not_done.into_iter().flatten());
+                }
+
+                curr_ranges.append(&mut tmp_ranges);
+            }
+
+            done_ranges.extend(curr_ranges);
+        }
+        done_ranges
     }
 }
 
@@ -205,12 +255,18 @@ impl Almanac {
     }
 
     fn lowest_location_hard(&self) -> u64 {
-        self.seeds
+        let mut ranges: Vec<Range<u64>> = self
+            .seeds
             .chunks_exact(2)
-            .flat_map(|chunk| (chunk[0]..chunk[0] + chunk[1]))
-            .map(|seed| self.maps.iter().fold(seed, |acc, map| map.convert(acc)))
-            .min()
-            .unwrap()
+            .map(|chunk| chunk[0]..chunk[0] + chunk[1])
+            .collect();
+
+        for map in &self.maps {
+            ranges = map.convert_ranges(ranges);
+        }
+
+        // All conversions have been done, the lowest value in each range is always the start of the range
+        ranges.into_iter().map(|range| range.start).min().unwrap()
     }
 }
 
@@ -284,5 +340,22 @@ humidity-to-location map:
         let input = input_generator(EXAMPLE_INPUT);
         let value = input.lowest_location_hard();
         assert_eq!(value, 46);
+    }
+
+    #[test]
+    fn test_maprange_intersect() {
+        let m0 = MapRange {
+            dst: 20,
+            src: 10,
+            len: 5,
+        };
+        assert_eq!(m0.intersect(0..5), (None, [Some(0..5), None]));
+        assert_eq!(m0.intersect(10..15), (Some(20..25), [None, None]));
+        assert_eq!(m0.intersect(5..15), (Some(20..25), [Some(5..10), None]));
+        assert_eq!(m0.intersect(10..20), (Some(20..25), [None, Some(15..20)]));
+        assert_eq!(
+            m0.intersect(0..20),
+            (Some(20..25), [Some(0..10), Some(15..20)])
+        );
     }
 }
