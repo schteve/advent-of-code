@@ -122,7 +122,7 @@ impl From<char> for Turn {
         match value {
             'L' => Self::Left,
             'R' => Self::Right,
-            _ => panic!("Invalid Turn: {value}")
+            _ => panic!("Invalid Turn: {value}"),
         }
     }
 }

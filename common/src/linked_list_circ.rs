@@ -16,10 +16,7 @@ pub struct LlIter<'a, T> {
 impl<'a, T> LlIter<'a, T> {
     fn new(list: &'a LinkedListCirc<T>) -> Self {
         let index = list.head;
-        Self {
-            list,
-            index,
-        }
+        Self { list, index }
     }
 }
 
@@ -56,10 +53,7 @@ pub struct LlIterMut<'a, T> {
 impl<'a, T> LlIterMut<'a, T> {
     fn new(list: &'a mut LinkedListCirc<T>) -> Self {
         let index = list.head;
-        Self {
-            list,
-            index,
-        }
+        Self { list, index }
     }
 }
 
