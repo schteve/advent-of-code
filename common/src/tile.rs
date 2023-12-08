@@ -23,7 +23,7 @@ impl TileSet {
         }
     }
 
-    pub fn with_tiles<'a, I>(self, tiles: I) -> Self
+    pub fn with_tiles<I>(self, tiles: I) -> Self
     where
         I: IntoIterator<Item = Point2>,
     {
@@ -51,7 +51,7 @@ impl TileSet {
 
                 for (x, c) in line.chars().enumerate() {
                     if c == ACTIVE_CHAR {
-                        let p = (x as i32, y as i32).into();
+                        let p = (x as i32, y).into();
                         tiles.insert(p);
                     }
                 }
@@ -131,7 +131,7 @@ impl<T: TileChar, const B: char> TileMap<T, B> {
         }
     }
 
-    pub fn with_tiles<'a, I>(self, tiles: I) -> Self
+    pub fn with_tiles<I>(self, tiles: I) -> Self
     where
         I: IntoIterator<Item = (Point2, T)>,
     {

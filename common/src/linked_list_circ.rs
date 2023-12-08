@@ -110,6 +110,10 @@ impl<T: Default> LinkedListCirc<T> {
         self.iter().count()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     fn allocate_node(&mut self) -> usize {
         // If there are any free indexes, use those. Otherwise create a new index.
         if let Some(free_idx) = self.free_list {
