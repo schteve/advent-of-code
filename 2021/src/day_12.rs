@@ -191,9 +191,9 @@ impl CaveSystem {
         let mut cave_exits: HashMap<&Cave, Vec<&Cave>> = HashMap::new();
         for (a, b) in &self.connections {
             // Assume there are no duplicates in the connections list
-            let entry = cave_exits.entry(a).or_insert_with(Vec::new);
+            let entry = cave_exits.entry(a).or_default();
             entry.push(b);
-            let entry = cave_exits.entry(b).or_insert_with(Vec::new);
+            let entry = cave_exits.entry(b).or_default();
             entry.push(a);
         }
 

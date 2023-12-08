@@ -326,7 +326,7 @@ fn restrict_range_50(cuboids: &mut Vec<Cuboid>) {
         Cuboid { range: Range3 { x: (-1_000_000, 1_000_000), y: (51, 1_000_000), z: (-1_000_000, 1_000_000) }, on_off: false },
         Cuboid { range: Range3 { x: (-1_000_000, 1_000_000), y: (-1_000_000, 1_000_000), z: (51, 1_000_000) }, on_off: false },
     ];
-    cuboids.extend(range_50.into_iter());
+    cuboids.extend(range_50);
 }
 
 #[aoc_generator(day22)]
