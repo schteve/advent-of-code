@@ -292,7 +292,7 @@ impl Comms {
 
         for msg_char in message.chars() {
             // First, process each frame stack until its current frame is at a value.
-            let mut frontier_frame_stacks: Vec<FrameStack> = frame_stacks.drain(..).collect();
+            let mut frontier_frame_stacks: Vec<FrameStack> = std::mem::take(&mut frame_stacks);
             while let Some(frame_stack) = frontier_frame_stacks.last_mut() {
                 let (done, mut new_frame_stacks) = frame_stack.advance_to_value(&self.rules);
                 match done {

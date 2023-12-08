@@ -425,8 +425,8 @@ impl Game {
     }
 
     fn new_game(&self, player_card: u8, crab_card: u8) -> Self {
-        let new_player_cards = (&self.player.cards[0..player_card as usize]).to_vec();
-        let new_crab_cards = (&self.crab.cards[0..crab_card as usize]).to_vec();
+        let new_player_cards = self.player.cards[0..player_card as usize].to_vec();
+        let new_crab_cards = self.crab.cards[0..crab_card as usize].to_vec();
         Self {
             player: Deck {
                 cards: new_player_cards,

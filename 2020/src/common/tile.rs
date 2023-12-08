@@ -52,7 +52,7 @@ impl TileSet {
 
                 for (x, c) in line.chars().enumerate() {
                     if c == active_char {
-                        let p = (x as i32, y as i32).into();
+                        let p = (x as i32, y).into();
                         tiles.insert(p);
                     }
                 }

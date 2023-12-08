@@ -109,7 +109,7 @@ impl LinkedListCirc {
 
     pub fn insert(&mut self, value: u32, offset: i32) {
         // Special case - list is empty
-        if self.head == None {
+        if self.head.is_none() {
             let new_node_idx = self.allocate_node();
 
             self.data[new_node_idx].prev = new_node_idx;
@@ -153,7 +153,7 @@ impl LinkedListCirc {
     }
 
     pub fn remove(&mut self, offset: i32) -> u32 {
-        if self.head == None {
+        if self.head.is_none() {
             // Special case - list is empty
             panic!("Tried to remove from empty list");
         }
@@ -195,7 +195,7 @@ impl LinkedListCirc {
         self.free_node(target_idx);
 
         // If we are removing the last node,
-        if self.head == None {
+        if self.head.is_none() {
             self.current_idx = None;
         } else {
             self.data[before_idx].next = after_idx;

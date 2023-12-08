@@ -129,9 +129,7 @@ impl BagCookBook {
         let mut reverse_lookup: HashMap<String, Vec<String>> = HashMap::new();
         for (k, v) in self.recipes_map.iter() {
             for ingredient in v {
-                let e = reverse_lookup
-                    .entry(ingredient.color.clone())
-                    .or_insert_with(Vec::new);
+                let e = reverse_lookup.entry(ingredient.color.clone()).or_default();
                 e.push(k.clone());
             }
         }
