@@ -384,10 +384,10 @@ use regex::Regex;
 
 // Ore, Clay, Obsidian, Geode
 #[derive(Clone, Copy, Debug, Eq)]
-struct ItemCount([u8; 4]);
+struct ItemCount([u16; 4]);
 
-impl From<[u8; 4]> for ItemCount {
-    fn from(value: [u8; 4]) -> Self {
+impl From<[u16; 4]> for ItemCount {
+    fn from(value: [u16; 4]) -> Self {
         Self(value)
     }
 }
@@ -430,10 +430,10 @@ impl SubAssign for ItemCount {
     }
 }
 
-impl Mul<u8> for ItemCount {
+impl Mul<u16> for ItemCount {
     type Output = Self;
 
-    fn mul(self, rhs: u8) -> Self::Output {
+    fn mul(self, rhs: u16) -> Self::Output {
         Self(self.0.map(|v| v * rhs))
     }
 }
