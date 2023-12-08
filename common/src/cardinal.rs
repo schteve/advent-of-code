@@ -102,7 +102,7 @@ impl TryFrom<u8> for Cardinal {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum Turn {
     Left,
     Right,
@@ -113,6 +113,16 @@ impl std::fmt::Display for Turn {
         match *self {
             Self::Left => write!(f, "L"),
             Self::Right => write!(f, "R"),
+        }
+    }
+}
+
+impl From<char> for Turn {
+    fn from(value: char) -> Self {
+        match value {
+            'L' => Self::Left,
+            'R' => Self::Right,
+            _ => panic!("Invalid Turn: {value}")
         }
     }
 }
