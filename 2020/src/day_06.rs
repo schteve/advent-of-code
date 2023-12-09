@@ -73,7 +73,7 @@
     For each group, count the number of questions to which everyone answered "yes". What is the sum of those counts?
 */
 
-use crate::common::{to_owned, trim_start};
+use common::{to_owned, trim_start};
 use nom::{
     character::complete::{alpha1, line_ending},
     multi::{many1, separated_list1},

@@ -105,7 +105,7 @@
     What is the earliest timestamp such that all of the listed bus IDs depart at offsets matching their positions in the list?
 */
 
-use crate::common::{modulo, trim_start, unsigned};
+use common::{modulo, trim_start, unsigned};
 use nom::{
     character::complete::{alphanumeric1, char},
     multi::separated_list1,

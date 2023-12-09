@@ -129,7 +129,7 @@
     After updating rules 8 and 11, how many messages completely match rule 0?
 */
 
-use crate::common::{to_owned, trim_start, unsigned};
+use common::{to_owned, trim_start, unsigned};
 use nom::{
     branch::alt,
     bytes::complete::tag,

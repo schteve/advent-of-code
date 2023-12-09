@@ -370,7 +370,7 @@
     Defend your honor as Raft Captain by playing the small crab in a game of Recursive Combat using the same two decks as before. What is the winning player's score?
 */
 
-use crate::common::{trim_start, unsigned};
+use common::{trim_start, unsigned};
 use nom::{
     bytes::complete::tag,
     multi::many1,

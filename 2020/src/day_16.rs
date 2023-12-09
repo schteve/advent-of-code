@@ -61,7 +61,7 @@
     Once you work out which field is which, look for the six fields on your ticket that start with the word departure. What do you get if you multiply those six values together?
 */
 
-use crate::common::{to_owned, trim, trim_start, unsigned};
+use common::{to_owned, trim, trim_start, unsigned};
 use nom::{
     bytes::complete::{tag, take_while1},
     character::{

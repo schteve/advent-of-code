@@ -56,7 +56,7 @@
     How many individual bags are required inside your single shiny gold bag?
 */
 
-use crate::common::{to_owned, trim_start, unsigned};
+use common::{to_owned, trim_start, unsigned};
 use nom::{
     branch::alt,
     bytes::complete::tag,

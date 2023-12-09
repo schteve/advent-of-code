@@ -76,7 +76,7 @@
     How many tiles will be black after 100 days?
 */
 
-use crate::common::trim_start;
+use common::trim_start;
 use nom::{branch::alt, bytes::complete::tag, combinator::value, multi::many1, IResult};
 use std::collections::{HashMap, HashSet};
 

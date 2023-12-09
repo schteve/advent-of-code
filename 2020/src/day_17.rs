@@ -391,7 +391,7 @@
     Starting with your given initial configuration, simulate six cycles in a 4-dimensional space. How many cubes are left in the active state after the sixth cycle?
 */
 
-use crate::common::TileSet;
+use common::TileSet;
 use std::collections::HashMap;
 
 type Point2D = (i32, i32);
@@ -750,7 +750,7 @@ impl std::fmt::Display for PocketDimension4D {
 
 #[aoc_generator(day17)]
 pub fn input_generator(input: &str) -> TileSet {
-    TileSet::from_string(input, '#')
+    TileSet::from_string::<'#'>(input)
 }
 
 #[aoc(day17, part1)]

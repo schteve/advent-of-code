@@ -51,7 +51,7 @@
     Looks like you only needed 49 stars after all.
 */
 
-use crate::common::{trim_start, unsigned};
+use common::{trim_start, unsigned};
 use nom::{sequence::pair, IResult};
 
 pub struct Handshake {

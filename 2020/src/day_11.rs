@@ -203,7 +203,7 @@
     Given the new visibility method and the rule change for occupied seats becoming empty, once equilibrium is reached, how many seats end up occupied?
 */
 
-use crate::common::{Mode, Point};
+use common::{Mode, Point2, Range2};
 
 #[derive(Clone, Copy, PartialEq)]
 enum Tile {
@@ -231,7 +231,7 @@ impl Tile {
     }
 }
 
-fn get_tile_flat(p: &Point, x_size: usize, y_size: usize, tiles: &[Tile]) -> Tile {
+fn get_tile_flat(p: &Point2, x_size: usize, y_size: usize, tiles: &[Tile]) -> Tile {
     if p.x >= 0 && p.x < x_size as i32 && p.y >= 0 && p.y < y_size as i32 {
         let idx = point_to_idx(p, x_size);
         tiles[idx]
@@ -240,14 +240,14 @@ fn get_tile_flat(p: &Point, x_size: usize, y_size: usize, tiles: &[Tile]) -> Til
     }
 }
 
-fn point_to_idx(p: &Point, x_size: usize) -> usize {
+fn point_to_idx(p: &Point2, x_size: usize) -> usize {
     p.y as usize * x_size + p.x as usize
 }
 
-fn idx_to_point(idx: usize, x_size: usize) -> Point {
+fn idx_to_point(idx: usize, x_size: usize) -> Point2 {
     let x = (idx % x_size) as i32;
     let y = (idx / x_size) as i32;
-    Point { x, y }
+    Point2 { x, y }
 }
 
 #[derive(Clone)]
@@ -255,9 +255,9 @@ pub struct WaitingArea {
     tiles: Vec<Tile>,
     x_size: usize,
     y_size: usize,
-    active: Vec<Point>,
-    neighbors_direct: Vec<Vec<Point>>,
-    neighbors_visible: Vec<Vec<Point>>,
+    active: Vec<Point2>,
+    neighbors_direct: Vec<Vec<Point2>>,
+    neighbors_visible: Vec<Vec<Point2>>,
 }
 
 impl WaitingArea {
@@ -284,7 +284,7 @@ impl WaitingArea {
             .map(|(i, _seat)| {
                 let x = (i % x_size) as i32;
                 let y = (i / x_size) as i32;
-                Point { x, y }
+                Point2 { x, y }
             })
             .collect();
 
@@ -301,10 +301,14 @@ impl WaitingArea {
         // Build index of non-floor neighbors visible from each tile
         let mut neighbors_visible = Vec::new();
         for i in 0..tiles.len() {
-            let mut visible_dirs: Vec<Point> = Vec::new();
-            for dir in Point::origin().adjacents() {
+            let mut visible_dirs: Vec<Point2> = Vec::new();
+            for dir in Point2::origin().adjacents() {
                 let mut walk = idx_to_point(i, x_size);
-                while walk.in_range(((0, x_size as i32 + 1), (0, y_size as i32 + 1))) {
+                let range = Range2 {
+                    x: (0, x_size as i32 + 1),
+                    y: (0, y_size as i32 + 1),
+                };
+                while range.contains(walk) {
                     walk += dir;
                     if get_tile_flat(&walk, x_size, y_size, &tiles) == Tile::Empty {
                         visible_dirs.push(walk);
@@ -326,16 +330,16 @@ impl WaitingArea {
         }
     }
 
-    fn get_tile(&self, p: &Point) -> Tile {
+    fn get_tile(&self, p: &Point2) -> Tile {
         get_tile_flat(p, self.x_size, self.y_size, &self.tiles)
     }
 
-    fn set_tile(&mut self, p: &Point, tile: Tile) {
+    fn set_tile(&mut self, p: &Point2, tile: Tile) {
         let idx = point_to_idx(p, self.x_size);
         self.tiles[idx] = tile;
     }
 
-    fn count_neighbors_direct(&self, p: &Point) -> usize {
+    fn count_neighbors_direct(&self, p: &Point2) -> usize {
         let idx = point_to_idx(p, self.x_size);
         self.neighbors_direct[idx]
             .iter()
@@ -343,7 +347,7 @@ impl WaitingArea {
             .count()
     }
 
-    fn count_neighbors_visible(&self, p: &Point) -> usize {
+    fn count_neighbors_visible(&self, p: &Point2) -> usize {
         let idx = point_to_idx(p, self.x_size);
         self.neighbors_visible[idx]
             .iter()
@@ -352,7 +356,7 @@ impl WaitingArea {
     }
 
     fn step(&mut self, mode: Mode) -> bool {
-        let mut changes: Vec<(Point, Tile)> = Vec::new();
+        let mut changes: Vec<(Point2, Tile)> = Vec::new();
         for p in self.active.iter() {
             match (mode, self.get_tile(p)) {
                 (_, Tile::Floor) => (),
@@ -405,7 +409,7 @@ impl std::fmt::Display for WaitingArea {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for y in 0..self.y_size as i32 {
             for x in 0..self.x_size as i32 {
-                let p = Point { x, y };
+                let p = Point2 { x, y };
                 write!(f, "{}", self.get_tile(&p).to_char())?;
             }
             writeln!(f)?;

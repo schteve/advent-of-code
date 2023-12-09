@@ -9,6 +9,7 @@ dependencies = [
  "aoc-runner",
  "aoc-runner-derive",
  "auto_ops",
+ "common",
  "nom",
  "num",
 ]
@@ -53,6 +54,15 @@ name = "autocfg"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
+
+[[package]]
+name = "common"
+version = "0.1.0"
+dependencies = [
+ "auto_ops",
+ "nom",
+ "num",
+]
 
 [[package]]
 name = "itoa"

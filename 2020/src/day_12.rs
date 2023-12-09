@@ -59,7 +59,7 @@
     Figure out where the navigation instructions actually lead. What is the Manhattan distance between that location and the ship's starting position?
 */
 
-use crate::common::{trim_start, unsigned, Cardinal, Mode, Point, Turn};
+use common::{trim_start, unsigned, Cardinal, Mode, Point2, Turn};
 use nom::{
     branch::alt, character::complete::char, combinator::value, multi::many1, sequence::pair,
     IResult,
@@ -104,15 +104,15 @@ impl Instruction {
 }
 
 struct Ship {
-    location: Point,
+    location: Point2,
     direction: Cardinal,
-    waypoint: Point,
+    waypoint: Point2,
 }
 
 impl Ship {
     fn new() -> Self {
         Self {
-            location: Point::origin(),
+            location: Point2::origin(),
             direction: Cardinal::East,
             waypoint: (10, -1).into(),
         }
@@ -202,7 +202,7 @@ fn handle_instructions(instructions: &[Instruction], mode: Mode) -> u32 {
         }
     }
 
-    Point::manhattan(Point::origin(), ship.location)
+    Point2::manhattan(Point2::origin(), ship.location)
 }
 
 #[aoc_generator(day12)]

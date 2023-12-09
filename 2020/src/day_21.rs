@@ -33,7 +33,7 @@
     Time to stock your raft with supplies. What is your canonical dangerous ingredient list?
 */
 
-use crate::common::{to_owned, trim_start};
+use common::{to_owned, trim_start};
 use nom::{
     bytes::complete::tag,
     character::complete::{alpha1, char},

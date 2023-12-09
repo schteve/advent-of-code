@@ -66,7 +66,7 @@
     What do you get if you multiply together the number of trees encountered on each of the listed slopes?
 */
 
-use crate::common::{modulo, Point, TileSet};
+use common::{modulo, Point2, TileSet};
 
 pub struct Map {
     tileset: TileSet,
@@ -76,18 +76,18 @@ pub struct Map {
 
 impl Map {
     fn from_string(input: &str) -> Self {
-        let tileset = TileSet::from_string(input, '#');
+        let tileset = TileSet::from_string::<'#'>(input);
         let range = tileset.get_range().unwrap();
 
         Self {
             tileset,
-            x_max: range.0 .1,
-            y_max: range.1 .1,
+            x_max: range.x.1,
+            y_max: range.y.1,
         }
     }
 
     fn ride_toboggan(&self, x_delta: i32, y_delta: i32) -> usize {
-        let mut p = Point::origin();
+        let mut p = Point2::origin();
         let mut tree_count = 0;
 
         while p.y <= self.y_max {

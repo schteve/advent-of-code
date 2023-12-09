@@ -34,7 +34,7 @@
     How many passwords are valid according to the new interpretation of the policies?
 */
 
-use crate::common::{to_owned, trim_start, unsigned};
+use common::{to_owned, trim_start, unsigned};
 use nom::{
     bytes::complete::tag,
     character::{
