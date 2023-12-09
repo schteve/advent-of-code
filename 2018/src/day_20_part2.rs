@@ -137,7 +137,7 @@ impl Map {
 
         let mut steps = 0;
         while frontier.is_empty() == false {
-            for location in frontier.drain(..).collect::<Vec<Point>>() {
+            for location in std::mem::take(&mut frontier) {
                 visited_steps.insert(location, steps);
 
                 let room = self
@@ -146,25 +146,25 @@ impl Map {
                     .expect("Visited room does not exist!");
                 if room.door_north == true {
                     let next_location = location.step(Cardinal::North, 1);
-                    if visited_steps.get(&next_location) == None {
+                    if visited_steps.get(&next_location).is_none() {
                         frontier.push(next_location);
                     }
                 }
                 if room.door_south == true {
                     let next_location = location.step(Cardinal::South, 1);
-                    if visited_steps.get(&next_location) == None {
+                    if visited_steps.get(&next_location).is_none() {
                         frontier.push(next_location);
                     }
                 }
                 if room.door_east == true {
                     let next_location = location.step(Cardinal::East, 1);
-                    if visited_steps.get(&next_location) == None {
+                    if visited_steps.get(&next_location).is_none() {
                         frontier.push(next_location);
                     }
                 }
                 if room.door_west == true {
                     let next_location = location.step(Cardinal::West, 1);
-                    if visited_steps.get(&next_location) == None {
+                    if visited_steps.get(&next_location).is_none() {
                         frontier.push(next_location);
                     }
                 }

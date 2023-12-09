@@ -103,8 +103,8 @@ impl Tile {
         }
     }
 
-    fn to_char(&self) -> char {
-        match *self {
+    fn to_char(self) -> char {
+        match self {
             Self::Empty => '.',
             Self::Wall => '#',
             Self::Goblin(_) => 'G',
@@ -269,7 +269,7 @@ impl BattleMap {
                 }
 
                 let mut found_a_target = false;
-                for frontier_point in frontier.drain(..).collect::<Vec<Point>>() {
+                for frontier_point in std::mem::take(&mut frontier) {
                     if to_set.contains(&frontier_point) == true {
                         found_a_target = true;
                         let path = Path {
@@ -284,7 +284,7 @@ impl BattleMap {
                     let next: Vec<Point> = self
                         .identify_adjacent_empty(&frontier_point)
                         .into_iter()
-                        .filter(|point| visited.get(&point) == None)
+                        .filter(|point| visited.get(point).is_none())
                         .collect();
                     for &n in &next {
                         if frontier.contains(&n) == false {
@@ -446,8 +446,8 @@ impl BattleMap {
     fn calculate_score(&self, rounds: u32) -> u32 {
         let total_hit_points: u32 = self
             .tiles
-            .iter()
-            .map(|(_point, tile)| match tile {
+            .values()
+            .map(|tile| match tile {
                 &Tile::Goblin(x) | &Tile::Elf(x) => x,
                 _ => 0,
             })
@@ -523,7 +523,7 @@ mod test {
 #########";
         let mut battle_map = BattleMap::from_string(input);
 
-        let results = vec![
+        let results = [
             "
 #########
 #.G...G.#

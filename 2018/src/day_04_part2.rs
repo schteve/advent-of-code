@@ -156,10 +156,7 @@ fn encode_answer(guard_id: u32, minute: u32) -> u32 {
 
 #[aoc(day4, part2)]
 pub fn solve(input: &str) -> u32 {
-    let mut records: Vec<Record> = input
-        .lines()
-        .map(|line| Record::from_string(line))
-        .collect();
+    let mut records: Vec<Record> = input.lines().map(Record::from_string).collect();
     records.sort_by_key(|r| r.timestamp.get_u32());
     //records.iter().for_each(|r| println!("{:?}", r));
 
@@ -195,10 +192,7 @@ mod test {
 [1518-11-05 00:03] Guard #99 begins shift
 [1518-11-05 00:45] falls asleep
 [1518-11-05 00:55] wakes up";
-        let records: Vec<Record> = input
-            .lines()
-            .map(|line| Record::from_string(line))
-            .collect();
+        let records: Vec<Record> = input.lines().map(Record::from_string).collect();
 
         let schedule = Schedule::from_records(&records);
         let answer = schedule.strategy_2();

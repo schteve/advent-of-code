@@ -298,7 +298,7 @@ impl RegionType {
         }
     }
 
-    fn to_char(&self) -> char {
+    fn to_char(self) -> char {
         match self {
             Self::Rocky => '.',
             Self::Wet => '=',

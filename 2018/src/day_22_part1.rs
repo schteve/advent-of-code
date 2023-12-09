@@ -76,7 +76,7 @@ impl RegionType {
         }
     }
 
-    fn to_char(&self) -> char {
+    fn to_char(self) -> char {
         match self {
             Self::Rocky => '.',
             Self::Wet => '=',
@@ -84,7 +84,7 @@ impl RegionType {
         }
     }
 
-    fn to_risk_level(&self) -> u32 {
+    fn to_risk_level(self) -> u32 {
         match self {
             Self::Rocky => 0,
             Self::Wet => 1,

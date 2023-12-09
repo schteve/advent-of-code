@@ -174,8 +174,8 @@ impl Tile {
         }
     }
 
-    fn to_char(&self) -> char {
-        match *self {
+    fn to_char(self) -> char {
+        match self {
             Self::OpenGround => '.',
             Self::Trees => '|',
             Self::Lumberyard => '#',
@@ -223,7 +223,7 @@ impl Construction {
             .map(|adj| self.tiles.get(adj))
             .filter(|&t| t == Some(&Tile::Lumberyard))
             .count();
-        match self.tiles.get(&point) {
+        match self.tiles.get(point) {
             Some(Tile::OpenGround) => {
                 if trees_count >= 3 {
                     return Some(Tile::Trees);

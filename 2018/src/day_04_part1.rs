@@ -235,10 +235,7 @@ mod test {
 [1518-11-05 00:03] Guard #99 begins shift
 [1518-11-05 00:45] falls asleep
 [1518-11-05 00:55] wakes up";
-        let records: Vec<Record> = input
-            .lines()
-            .map(|line| Record::from_string(line))
-            .collect();
+        let records: Vec<Record> = input.lines().map(Record::from_string).collect();
 
         let schedule = Schedule::from_records(&records);
         let answer = schedule.strategy_1();

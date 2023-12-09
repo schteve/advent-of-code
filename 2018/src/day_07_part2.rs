@@ -72,7 +72,7 @@ impl Instructions {
 
         // Find the end step(s) - any children that are not also parents
         let children: Vec<char> = graph.keys().copied().collect();
-        let mut parents: Vec<char> = graph.values().cloned().flatten().collect();
+        let mut parents: Vec<char> = graph.values().flatten().cloned().collect();
         parents.sort_unstable();
         parents.dedup();
         let mut root: Vec<char> = children

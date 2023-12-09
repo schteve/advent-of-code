@@ -169,8 +169,8 @@ enum Tile {
 }
 
 impl Tile {
-    fn to_char(&self) -> char {
-        match *self {
+    fn to_char(self) -> char {
+        match self {
             Self::Sand => '.',
             Self::Clay => '#',
             Self::Water => '~',
@@ -339,7 +339,7 @@ impl GeologicMap {
         let mut sources: Vec<Point> = vec![self.spring];
         let mut snapshot = self.to_string();
         loop {
-            for source in sources.drain(..).collect::<Vec<Point>>() {
+            for source in std::mem::take(&mut sources) {
                 sources.extend(self.source_flow(&source));
             }
             sources.sort(); // This is on balance faster than using a HashSet or BTreeSet to perform deduplication

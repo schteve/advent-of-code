@@ -111,7 +111,7 @@ impl Fabric {
 
 #[aoc(day3, part1)]
 pub fn solve(input: &str) -> u32 {
-    let claims: Vec<Claim> = input.lines().map(|line| Claim::from_string(line)).collect();
+    let claims: Vec<Claim> = input.lines().map(Claim::from_string).collect();
 
     let fabric = Fabric::from_claims(&claims);
     let overlap = fabric.count_overlap();
