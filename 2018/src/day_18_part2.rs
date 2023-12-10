@@ -5,7 +5,7 @@
     What will the total resource value of the lumber collection area be after 1000000000 minutes?
 */
 
-use crate::common::Point;
+use common::Point2;
 use std::collections::HashMap;
 use std::fmt;
 
@@ -36,14 +36,14 @@ impl Tile {
 }
 
 struct Construction {
-    tiles: HashMap<Point, Tile>,
+    tiles: HashMap<Point2, Tile>,
     size: usize,
 }
 
 impl Construction {
     fn from_string(input: &str) -> Self {
         let mut tiles = HashMap::new();
-        let mut p = Point::new();
+        let mut p = Point2::origin();
         for line in input.trim().lines() {
             for c in line.chars() {
                 tiles.insert(p, Tile::from_char(c));
@@ -53,9 +53,9 @@ impl Construction {
             p.y += 1;
         }
 
-        let range = Point::get_range(tiles.keys()).unwrap();
-        let size = (range.0).1 - (range.0).0 + 1;
-        assert_eq!(size, (range.1).1 - (range.1).0 + 1);
+        let range = Point2::get_range(tiles.keys()).unwrap();
+        let size = range.x.1 - range.x.0 + 1;
+        assert_eq!(size, range.y.1 - range.y.0 + 1);
 
         Self {
             tiles,
@@ -63,16 +63,15 @@ impl Construction {
         }
     }
 
-    fn determine_next_tile(&self, point: &Point) -> Option<Tile> {
-        let adjacents = point.adjacents();
-        let trees_count = adjacents
-            .iter()
-            .map(|adj| self.tiles.get(adj))
+    fn determine_next_tile(&self, point: &Point2) -> Option<Tile> {
+        let trees_count = point
+            .adjacents()
+            .map(|adj| self.tiles.get(&adj))
             .filter(|&t| t == Some(&Tile::Trees))
             .count();
-        let lumberyard_count = adjacents
-            .iter()
-            .map(|adj| self.tiles.get(adj))
+        let lumberyard_count = point
+            .adjacents()
+            .map(|adj| self.tiles.get(&adj))
             .filter(|&t| t == Some(&Tile::Lumberyard))
             .count();
         match self.tiles.get(point) {
@@ -99,7 +98,7 @@ impl Construction {
 
     fn sim(&mut self, minutes: u32) {
         let mut states: HashMap<String, u32> = HashMap::new();
-        let mut new_tiles: HashMap<Point, Tile> = HashMap::new();
+        let mut new_tiles: HashMap<Point2, Tile> = HashMap::new();
         let mut i = 0;
         while i < minutes {
             if let Some(old_minute) = states.insert(self.to_string(), i) {
@@ -138,10 +137,10 @@ impl Construction {
 
 impl fmt::Display for Construction {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let range = Point::get_range(self.tiles.keys()).unwrap();
-        for y in (range.1).0..=(range.1).1 {
-            for x in (range.0).0..=(range.0).1 {
-                if let Some(tile) = self.tiles.get(&Point { x, y }) {
+        let range = Point2::get_range(self.tiles.keys()).unwrap();
+        for y in range.y.0..=range.y.1 {
+            for x in range.x.0..=range.x.1 {
+                if let Some(tile) = self.tiles.get(&Point2 { x, y }) {
                     write!(f, "{}", tile.to_char())?;
                 } else {
                     write!(f, " ")?;

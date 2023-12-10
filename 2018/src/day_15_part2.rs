@@ -78,7 +78,7 @@
     After increasing the Elves' attack power until it is just barely enough for them to win without any Elves dying, what is the outcome of the combat described in your puzzle input?
 */
 
-use crate::common::Point;
+use common::Point2;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::fmt;
@@ -128,14 +128,14 @@ impl fmt::Display for Tile {
 
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 struct Path {
-    first: Point,
-    last: Point,
+    first: Point2,
+    last: Point2,
     length: usize,
 }
 
 #[derive(Clone)]
 struct BattleMap {
-    tiles: BTreeMap<Point, Tile>,
+    tiles: BTreeMap<Point2, Tile>,
     goblin_atk: u32,
     elf_atk: u32,
 }
@@ -143,7 +143,7 @@ struct BattleMap {
 impl BattleMap {
     fn from_string(input: &str) -> Self {
         let mut tiles = BTreeMap::new();
-        let mut p = Point::new();
+        let mut p = Point2::origin();
         for line in input.trim().lines() {
             for c in line.chars() {
                 tiles.insert(p, Tile::from_char(c));
@@ -183,7 +183,7 @@ impl BattleMap {
         for y in (range.1).0..=(range.1).1 {
             let mut unit_strings = Vec::new();
             for x in (range.0).0..=(range.0).1 {
-                if let Some(tile) = self.tiles.get(&Point { x, y }) {
+                if let Some(tile) = self.tiles.get(&Point2 { x, y }) {
                     write!(output, "{}", tile.to_char()).unwrap();
                     if with_details == true {
                         match tile {
@@ -204,19 +204,19 @@ impl BattleMap {
     }
 
     // Returns in reading order
-    fn identify_units(&self) -> Vec<Point> {
-        let mut units: Vec<Point> = self
+    fn identify_units(&self) -> Vec<Point2> {
+        let mut units: Vec<Point2> = self
             .tiles
             .iter()
             .filter(|&(_point, tile)| matches!(tile, Tile::Goblin(_) | Tile::Elf(_)))
             .map(|(&point, &_tile)| point)
             .collect();
-        units.sort_by(Point::cmp_y_x);
+        units.sort_by(Point2::cmp_yx);
         units
     }
 
-    fn identify_enemies(&self, am_goblin: bool) -> Vec<Point> {
-        let units: Vec<Point> = self
+    fn identify_enemies(&self, am_goblin: bool) -> Vec<Point2> {
+        let units: Vec<Point2> = self
             .tiles
             .iter()
             .filter(|&(_point, tile)| match tile {
@@ -229,16 +229,14 @@ impl BattleMap {
         units
     }
 
-    fn identify_adjacent_empty(&self, unit: &Point) -> Vec<Point> {
+    fn identify_adjacent_empty(&self, unit: &Point2) -> Vec<Point2> {
         unit.orthogonals()
-            .into_iter()
             .filter(|&p| self.tiles.get(&p) == Some(&Tile::Empty))
             .collect()
     }
 
-    fn identify_adjacent_enemies(&self, unit: &Point, am_goblin: bool) -> Vec<Point> {
+    fn identify_adjacent_enemies(&self, unit: &Point2, am_goblin: bool) -> Vec<Point2> {
         unit.orthogonals()
-            .into_iter()
             .filter(|&point| match self.tiles.get(&point) {
                 Some(Tile::Goblin(_)) => am_goblin == false,
                 Some(Tile::Elf(_)) => am_goblin == true,
@@ -247,18 +245,18 @@ impl BattleMap {
             .collect()
     }
 
-    fn find_paths(&self, from: &Point, to: &[Point]) -> Vec<Path> {
+    fn find_paths(&self, from: &Point2, to: &[Point2]) -> Vec<Path> {
         let mut paths: BTreeSet<Path> = BTreeSet::new();
         let mut shortest_path = None;
-        let to_set: BTreeSet<Point> = to.iter().cloned().collect();
+        let to_set: BTreeSet<Point2> = to.iter().cloned().collect();
 
-        let starts: Vec<Point> = self.identify_adjacent_empty(from);
+        let starts: Vec<Point2> = self.identify_adjacent_empty(from);
         for start in starts {
-            let mut visited: BTreeSet<Point> = BTreeSet::new();
+            let mut visited: BTreeSet<Point2> = BTreeSet::new();
             visited.insert(*from);
             visited.insert(start);
 
-            let mut frontier: Vec<Point> = vec![start];
+            let mut frontier: Vec<Point2> = vec![start];
             let mut distance = 0;
             while frontier.is_empty() == false {
                 distance += 1;
@@ -281,7 +279,7 @@ impl BattleMap {
                     }
                     visited.insert(frontier_point);
 
-                    let next: Vec<Point> = self
+                    let next: Vec<Point2> = self
                         .identify_adjacent_empty(&frontier_point)
                         .into_iter()
                         .filter(|point| visited.get(point).is_none())
@@ -339,11 +337,11 @@ impl BattleMap {
                     // No more enemies, end immediately
                     return false;
                 }
-                let mut adjacents: Vec<Point> = enemies
+                let mut adjacents: Vec<Point2> = enemies
                     .into_iter()
                     .flat_map(|enemy| self.identify_adjacent_empty(&enemy))
                     .collect();
-                adjacents.sort_by(Point::cmp_y_x);
+                adjacents.sort_by(Point2::cmp_yx);
                 adjacents.dedup();
                 if adjacents.is_empty() == true {
                     // No possible targets
@@ -366,9 +364,9 @@ impl BattleMap {
                     .collect();
 
                 // Take the first step in reading order
-                let mut steps: Vec<Point> =
+                let mut steps: Vec<Point2> =
                     paths_to_target.into_iter().map(|path| path.first).collect();
-                steps.sort_by(Point::cmp_y_x);
+                steps.sort_by(Point2::cmp_yx);
                 unit_location = steps[0];
 
                 // Step by overwriting current space and new space
@@ -378,7 +376,7 @@ impl BattleMap {
             }
 
             // Check again if there are adjacent enemies (we may have moved). Attack if possible.
-            let enemies_can_attack: Vec<Point> =
+            let enemies_can_attack: Vec<Point2> =
                 self.identify_adjacent_enemies(&unit_location, am_goblin);
             if enemies_can_attack.is_empty() == false {
                 // Find enemies with lowest HP
@@ -391,7 +389,7 @@ impl BattleMap {
                     })
                     .min()
                     .unwrap();
-                let mut enemies_least_hp: Vec<Point> = enemies_can_attack
+                let mut enemies_least_hp: Vec<Point2> = enemies_can_attack
                     .into_iter()
                     .filter(|&enemy| match self.tiles.get(&enemy) {
                         Some(&Tile::Goblin(x)) => x == least_hp,
@@ -399,7 +397,7 @@ impl BattleMap {
                         _ => panic!("Unexpected tile"),
                     })
                     .collect();
-                enemies_least_hp.sort_by(Point::cmp_y_x);
+                enemies_least_hp.sort_by(Point2::cmp_yx);
 
                 // Attack first enemy in the list
                 if enemies_least_hp.is_empty() == false {

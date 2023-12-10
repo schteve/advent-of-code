@@ -275,11 +275,12 @@
     What is the fewest number of minutes you can take to reach the target?
 */
 
-use crate::common::modulo;
-use crate::common::Point;
+use common::modulo;
+use common::Point2;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::fmt;
+use std::str::FromStr;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum RegionType {
@@ -346,25 +347,25 @@ impl Tool {
 
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 struct Node {
-    location: Point,
+    location: Point2,
     tool: Tool,
 }
 
 struct Cave {
     depth: u32,
-    target: Point,
+    target: Point2,
 
     // For memoization only
-    memo_geologic_index: HashMap<Point, u32>,
-    memo_erosion_level: HashMap<Point, u32>,
-    memo_region_type: HashMap<Point, RegionType>,
+    memo_geologic_index: HashMap<Point2, u32>,
+    memo_erosion_level: HashMap<Point2, u32>,
+    memo_region_type: HashMap<Point2, RegionType>,
 }
 
 impl Cave {
     fn new() -> Self {
         Self {
             depth: 0,
-            target: Point::new(),
+            target: Point2::origin(),
             memo_geologic_index: HashMap::new(),
             memo_erosion_level: HashMap::new(),
             memo_region_type: HashMap::new(),
@@ -380,13 +381,14 @@ impl Cave {
             .expect("Depth not found")
             .parse::<u32>()
             .expect("Invalid depth");
-        let target = Point::from_string(
+        let target = Point2::from_str(
             lines
                 .next()
                 .expect("Input terminated early")
                 .strip_prefix("target: ")
                 .expect("Target not found"),
-        );
+        )
+        .unwrap();
 
         Self {
             depth,
@@ -397,21 +399,21 @@ impl Cave {
         }
     }
 
-    fn geologic_index(&mut self, p: Point) -> u32 {
+    fn geologic_index(&mut self, p: Point2) -> u32 {
         if let Some(&gi) = self.memo_geologic_index.get(&p) {
             // If we already know the value, use it
             gi
         } else {
             // Otherwise, calculate it
-            let gi = if p == Point::new() || p == self.target {
+            let gi = if p == Point2::origin() || p == self.target {
                 0
             } else if p.y == 0 {
                 p.x as u32 * 16807
             } else if p.x == 0 {
                 p.y as u32 * 48271
             } else {
-                let e1 = self.erosion_level(Point { x: p.x - 1, y: p.y });
-                let e2 = self.erosion_level(Point { x: p.x, y: p.y - 1 });
+                let e1 = self.erosion_level(Point2 { x: p.x - 1, y: p.y });
+                let e2 = self.erosion_level(Point2 { x: p.x, y: p.y - 1 });
                 e1 * e2
             };
             self.memo_geologic_index.insert(p, gi);
@@ -419,7 +421,7 @@ impl Cave {
         }
     }
 
-    fn erosion_level(&mut self, p: Point) -> u32 {
+    fn erosion_level(&mut self, p: Point2) -> u32 {
         if let Some(&el) = self.memo_erosion_level.get(&p) {
             // If we already know the value, use it
             el
@@ -431,7 +433,7 @@ impl Cave {
         }
     }
 
-    fn region_type(&mut self, p: Point) -> RegionType {
+    fn region_type(&mut self, p: Point2) -> RegionType {
         if let Some(&rt) = self.memo_region_type.get(&p) {
             // If we already know the value, use it
             rt
@@ -448,7 +450,7 @@ impl Cave {
         let mut minutes: HashMap<Node, u32> = HashMap::new();
 
         let start = Node {
-            location: Point::new(),
+            location: Point2::origin(),
             tool: Tool::Torch,
         };
         let mut frontier: Vec<(Node, u32)> = vec![(start, 0)];
@@ -539,8 +541,8 @@ impl fmt::Display for Cave {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for y in 0..=self.target.y {
             for x in 0..=self.target.x {
-                let p = Point { x, y };
-                if p == Point::new() {
+                let p = Point2 { x, y };
+                if p == Point2::origin() {
                     write!(f, "M")?;
                 } else if p == self.target {
                     write!(f, "T")?;
@@ -574,9 +576,9 @@ mod test {
     fn test_region_type() {
         let mut cave = Cave::new();
         cave.depth = 510;
-        cave.target = Point { x: 10, y: 10 };
+        cave.target = Point2 { x: 10, y: 10 };
 
-        let p = Point { x: 0, y: 0 };
+        let p = Point2 { x: 0, y: 0 };
         let gi = cave.geologic_index(p);
         let el = cave.erosion_level(p);
         let rt = RegionType::from_erosion_level(el);
@@ -584,7 +586,7 @@ mod test {
         assert_eq!(el, 510);
         assert_eq!(rt, RegionType::Rocky);
 
-        let p = Point { x: 1, y: 0 };
+        let p = Point2 { x: 1, y: 0 };
         let gi = cave.geologic_index(p);
         let el = cave.erosion_level(p);
         let rt = RegionType::from_erosion_level(el);
@@ -592,7 +594,7 @@ mod test {
         assert_eq!(el, 17317);
         assert_eq!(rt, RegionType::Wet);
 
-        let p = Point { x: 0, y: 1 };
+        let p = Point2 { x: 0, y: 1 };
         let gi = cave.geologic_index(p);
         let el = cave.erosion_level(p);
         let rt = RegionType::from_erosion_level(el);
@@ -600,7 +602,7 @@ mod test {
         assert_eq!(el, 8415);
         assert_eq!(rt, RegionType::Rocky);
 
-        let p = Point { x: 1, y: 1 };
+        let p = Point2 { x: 1, y: 1 };
         let gi = cave.geologic_index(p);
         let el = cave.erosion_level(p);
         let rt = RegionType::from_erosion_level(el);
@@ -608,7 +610,7 @@ mod test {
         assert_eq!(el, 1805);
         assert_eq!(rt, RegionType::Narrow);
 
-        let p = Point { x: 10, y: 10 };
+        let p = Point2 { x: 10, y: 10 };
         let gi = cave.geologic_index(p);
         let el = cave.erosion_level(p);
         let rt = RegionType::from_erosion_level(el);
@@ -621,7 +623,7 @@ mod test {
     fn test_find_fastest_time_to_target() {
         let mut cave = Cave::new();
         cave.depth = 510;
-        cave.target = Point { x: 10, y: 10 };
+        cave.target = Point2 { x: 10, y: 10 };
         let fastest_time = cave.find_fastest_time_to_target();
         assert_eq!(fastest_time, 45);
     }

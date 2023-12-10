@@ -141,7 +141,7 @@
     What message will eventually appear in the sky?
 */
 
-use crate::common::Point;
+use common::Point2;
 use nom::{
     bytes::complete::tag,
     sequence::{delimited, pair},
@@ -150,14 +150,14 @@ use nom::{
 use std::fmt;
 
 struct StarMap {
-    stars: Vec<Point>,
-    velocity: Vec<Point>,
+    stars: Vec<Point2>,
+    velocity: Vec<Point2>,
 }
 
 impl StarMap {
     fn from_string(input: &str) -> Self {
-        let mut stars: Vec<Point> = Vec::new();
-        let mut velocity: Vec<Point> = Vec::new();
+        let mut stars: Vec<Point2> = Vec::new();
+        let mut velocity: Vec<Point2> = Vec::new();
 
         for line in input.lines() {
             let (star, vel) = Self::parser(line).unwrap().1;
@@ -168,10 +168,10 @@ impl StarMap {
         Self { stars, velocity }
     }
 
-    fn parser(input: &str) -> IResult<&str, (Point, Point)> {
+    fn parser(input: &str) -> IResult<&str, (Point2, Point2)> {
         let (input, (star, velocity)) = pair(
-            delimited(tag("position=<"), Point::parser, tag(">")),
-            delimited(tag(" velocity=<"), Point::parser, tag(">")),
+            delimited(tag("position=<"), Point2::parser, tag(">")),
+            delimited(tag(" velocity=<"), Point2::parser, tag(">")),
         )(input)?;
 
         Ok((input, (star, velocity)))
@@ -244,7 +244,7 @@ impl fmt::Display for StarMap {
         let (x_range, y_range) = self.get_range();
         for y in y_range.0..=y_range.1 {
             for x in x_range.0..=x_range.1 {
-                let p = Point { x, y };
+                let p = Point2 { x, y };
                 if self.stars.contains(&p) == true {
                     write!(f, "#")?;
                 } else {

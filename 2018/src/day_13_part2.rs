@@ -42,9 +42,9 @@
     What is the location of the last cart at the end of the first tick where it is the only cart left?
 */
 
-use crate::common::Cardinal;
-use crate::common::Point;
-use crate::common::Turn;
+use common::Cardinal;
+use common::Point2;
+use common::Turn;
 use std::collections::HashMap;
 use std::fmt;
 
@@ -55,7 +55,7 @@ enum NextTurn {
 }
 
 struct Cart {
-    location: Point,
+    location: Point2,
     orientation: Cardinal,
     next_turn: NextTurn,
     crashed: bool,
@@ -64,14 +64,14 @@ struct Cart {
 impl Cart {
     fn from_char(c: char) -> Self {
         Self {
-            location: Point::new(),
+            location: Point2::origin(),
             orientation: Cardinal::from_arrow(c),
             next_turn: NextTurn::Left,
             crashed: false,
         }
     }
 
-    fn set_location(mut self, p: Point) -> Self {
+    fn set_location(mut self, p: Point2) -> Self {
         self.location = p;
         self
     }
@@ -113,7 +113,7 @@ impl Track {
 }
 
 struct TrackMap {
-    tracks: HashMap<Point, Track>,
+    tracks: HashMap<Point2, Track>,
     carts: Vec<Cart>,
 }
 
@@ -122,7 +122,7 @@ impl TrackMap {
         let mut tracks = HashMap::new();
         let mut carts = Vec::new();
 
-        let mut p = Point::new();
+        let mut p = Point2::origin();
         for line in input.lines() {
             p.x = 0;
             for c in line.chars() {
@@ -145,7 +145,7 @@ impl TrackMap {
     fn tick(&mut self) {
         // Carts must be processed in order. Sort them by row and then by column.
         self.carts
-            .sort_by(|a, b| Point::cmp_y_x(&a.location, &b.location));
+            .sort_by(|a, b| Point2::cmp_yx(&a.location, &b.location));
 
         for i in 0..self.carts.len() {
             if self.carts[i].crashed == true {
@@ -202,7 +202,7 @@ impl TrackMap {
         }
     }
 
-    fn run_until_last_crash(&mut self) -> Point {
+    fn run_until_last_crash(&mut self) -> Point2 {
         while self
             .carts
             .iter()
@@ -244,7 +244,7 @@ impl fmt::Display for TrackMap {
         let range = self.get_range();
         for y in (range.1).0..(range.1).1 {
             for x in (range.0).0..(range.0).1 {
-                let p = Point { x, y };
+                let p = Point2 { x, y };
                 if let Some(cart) = self.carts.iter().find(|c| c.location == p) {
                     write!(f, "{}", cart.orientation.to_arrow())?;
                 } else if let Some(track) = self.tracks.get(&p) {
@@ -260,12 +260,12 @@ impl fmt::Display for TrackMap {
 }
 
 #[aoc(day13, part2)]
-pub fn solve(input: &str) -> Point {
+pub fn solve(input: &str) -> Point2 {
     let mut track_map = TrackMap::from_string(input);
     //println!("{}", track_map);
     let last_cart = track_map.run_until_last_crash();
     println!("Last cart: {}", last_cart);
-    assert_eq!(last_cart, Point { x: 88, y: 64 });
+    assert_eq!(last_cart, Point2 { x: 88, y: 64 });
     last_cart
 }
 
@@ -284,6 +284,6 @@ mod test {
   \<->/";
         let mut track_map = TrackMap::from_string(input);
         let crash_site = track_map.run_until_last_crash();
-        assert_eq!(crash_site, Point { x: 6, y: 4 });
+        assert_eq!(crash_site, Point2 { x: 6, y: 4 });
     }
 }

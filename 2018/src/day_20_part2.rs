@@ -5,8 +5,8 @@
     How many rooms have a shortest path from your current location that pass through at least 1000 doors?
 */
 
-use crate::common::Cardinal;
-use crate::common::Point;
+use common::Cardinal;
+use common::Point2;
 use std::collections::HashMap;
 use std::fmt;
 
@@ -47,12 +47,12 @@ impl Room {
 }
 
 struct Frame {
-    start: Vec<Point>,           // Tracks the routes available at the frame start
-    finished_routes: Vec<Point>, // The routes in this frame that already ended in this frame
+    start: Vec<Point2>,           // Tracks the routes available at the frame start
+    finished_routes: Vec<Point2>, // The routes in this frame that already ended in this frame
 }
 
 struct Map {
-    rooms: HashMap<Point, Room>,
+    rooms: HashMap<Point2, Room>,
 }
 
 impl Map {
@@ -67,10 +67,10 @@ impl Map {
     fn find_routes(&mut self, regex_str: &str) {
         let mut frames: Vec<Frame> = Vec::new(); // The frame stack
         let mut current_frame = Frame {
-            start: vec![Point::new()],
+            start: vec![Point2::origin()],
             finished_routes: Vec::new(),
         };
-        let mut routes = vec![Point::new()]; // The routes currently under consideration
+        let mut routes = vec![Point2::origin()]; // The routes currently under consideration
 
         for c in regex_str.chars() {
             match c {
@@ -117,7 +117,7 @@ impl Map {
     }
 
     fn add_route(&mut self, route: &str) {
-        let mut current_point = Point::new();
+        let mut current_point = Point2::origin();
         for c in route.chars() {
             let dir = Cardinal::from_char(c);
             self.add_room(current_point, dir); // First add a door for the room we are leaving
@@ -126,14 +126,14 @@ impl Map {
         }
     }
 
-    fn add_room(&mut self, point: Point, from_dir: Cardinal) {
+    fn add_room(&mut self, point: Point2, from_dir: Cardinal) {
         let room = self.rooms.entry(point).or_insert_with(Room::new);
         room.set_door(from_dir, true);
     }
 
     fn count_far_rooms(&self) -> usize {
-        let mut visited_steps: HashMap<Point, u32> = HashMap::new(); // Track which rooms were visited, indicating how many steps to each one
-        let mut frontier: Vec<Point> = vec![Point::new()];
+        let mut visited_steps: HashMap<Point2, u32> = HashMap::new(); // Track which rooms were visited, indicating how many steps to each one
+        let mut frontier: Vec<Point2> = vec![Point2::origin()];
 
         let mut steps = 0;
         while frontier.is_empty() == false {
@@ -185,43 +185,43 @@ impl Map {
 impl fmt::Display for Map {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // First, create a map of the pixels for each room (one room consists of a 3x3 grid of pixels)
-        let mut pixels: HashMap<Point, char> = HashMap::new();
+        let mut pixels: HashMap<Point2, char> = HashMap::new();
         for (p, r) in &self.rooms {
-            let draw_p = Point {
+            let draw_p = Point2 {
                 x: p.x * 2,
                 y: p.y * 2,
             };
 
             // First, the four corners
             let mut next_char = '#';
-            if let Some(prev) = pixels.insert(draw_p + Point { x: -1, y: -1 }, next_char) {
+            if let Some(prev) = pixels.insert(draw_p + Point2 { x: -1, y: -1 }, next_char) {
                 assert_eq!(prev, next_char);
             }
-            if let Some(prev) = pixels.insert(draw_p + Point { x: -1, y: 1 }, next_char) {
+            if let Some(prev) = pixels.insert(draw_p + Point2 { x: -1, y: 1 }, next_char) {
                 assert_eq!(prev, next_char);
             }
-            if let Some(prev) = pixels.insert(draw_p + Point { x: 1, y: -1 }, next_char) {
+            if let Some(prev) = pixels.insert(draw_p + Point2 { x: 1, y: -1 }, next_char) {
                 assert_eq!(prev, next_char);
             }
-            if let Some(prev) = pixels.insert(draw_p + Point { x: 1, y: 1 }, next_char) {
+            if let Some(prev) = pixels.insert(draw_p + Point2 { x: 1, y: 1 }, next_char) {
                 assert_eq!(prev, next_char);
             }
 
             // Next, the four walls / doors
             next_char = if r.door_north == true { '-' } else { '#' };
-            if let Some(prev) = pixels.insert(draw_p + Point { x: 0, y: -1 }, next_char) {
+            if let Some(prev) = pixels.insert(draw_p + Point2 { x: 0, y: -1 }, next_char) {
                 assert_eq!(prev, next_char);
             }
             next_char = if r.door_south == true { '-' } else { '#' };
-            if let Some(prev) = pixels.insert(draw_p + Point { x: 0, y: 1 }, next_char) {
+            if let Some(prev) = pixels.insert(draw_p + Point2 { x: 0, y: 1 }, next_char) {
                 assert_eq!(prev, next_char);
             }
             next_char = if r.door_east == true { '|' } else { '#' };
-            if let Some(prev) = pixels.insert(draw_p + Point { x: 1, y: 0 }, next_char) {
+            if let Some(prev) = pixels.insert(draw_p + Point2 { x: 1, y: 0 }, next_char) {
                 assert_eq!(prev, next_char);
             }
             next_char = if r.door_west == true { '|' } else { '#' };
-            if let Some(prev) = pixels.insert(draw_p + Point { x: -1, y: 0 }, next_char) {
+            if let Some(prev) = pixels.insert(draw_p + Point2 { x: -1, y: 0 }, next_char) {
                 assert_eq!(prev, next_char);
             }
 
@@ -244,7 +244,7 @@ impl fmt::Display for Map {
         writeln!(f)?;
         for y in y_min..=y_max {
             for x in x_min..=x_max {
-                if let Some(pixel) = pixels.get(&Point { x, y }) {
+                if let Some(pixel) = pixels.get(&Point2 { x, y }) {
                     write!(f, "{}", pixel)?;
                 } else {
                     write!(f, " ")?;

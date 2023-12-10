@@ -52,11 +52,11 @@
     What is the X,Y coordinate of the top-left fuel cell of the 3x3 square with the largest total power?
 */
 
-use crate::common::Point;
+use common::Point2;
 use std::collections::HashMap;
 
 struct Grid {
-    power: HashMap<Point, i32>,
+    power: HashMap<Point2, i32>,
     size: u32,
 }
 
@@ -68,7 +68,7 @@ impl Grid {
         }
     }
 
-    fn power_level(p: Point, serial: i32) -> i32 {
+    fn power_level(p: Point2, serial: i32) -> i32 {
         let rack_id = p.x + 10;
         let mut power = rack_id * p.y;
         power += serial;
@@ -81,7 +81,7 @@ impl Grid {
     fn fuel_grid(&mut self, serial: i32) {
         for x in 0..self.size {
             for y in 0..self.size {
-                let p = Point {
+                let p = Point2 {
                     x: x as i32,
                     y: y as i32,
                 };
@@ -91,10 +91,10 @@ impl Grid {
         }
     }
 
-    fn total_power(&self, p: Point) -> i32 {
+    fn total_power(&self, p: Point2) -> i32 {
         (0..3)
             .flat_map(|x| {
-                (0..3).map(move |y| Point {
+                (0..3).map(move |y| Point2 {
                     x: p.x + x,
                     y: p.y + y,
                 })
@@ -103,10 +103,10 @@ impl Grid {
             .sum()
     }
 
-    fn max_power_point(&self) -> Point {
+    fn max_power_point(&self) -> Point2 {
         (0..(self.size - 2))
             .flat_map(|x| {
-                (0..(self.size - 2)).map(move |y| Point {
+                (0..(self.size - 2)).map(move |y| Point2 {
                     x: x as i32,
                     y: y as i32,
                 })
@@ -117,7 +117,7 @@ impl Grid {
 }
 
 #[aoc(day11, part1)]
-pub fn solve(input: &str) -> Point {
+pub fn solve(input: &str) -> Point2 {
     let serial = input.trim().parse::<i32>().unwrap();
 
     let mut grid = Grid::new(300);
@@ -125,7 +125,7 @@ pub fn solve(input: &str) -> Point {
 
     let max_power_point = grid.max_power_point();
     println!("Largest total power: {}", max_power_point);
-    assert_eq!(max_power_point, Point { x: 243, y: 68 });
+    assert_eq!(max_power_point, Point2 { x: 243, y: 68 });
     max_power_point
 }
 
@@ -135,22 +135,22 @@ mod test {
 
     #[test]
     fn test_power_level() {
-        let point = Point { x: 3, y: 5 };
+        let point = Point2 { x: 3, y: 5 };
         let serial = 8;
         let power = Grid::power_level(point, serial);
         assert_eq!(power, 4);
 
-        let point = Point { x: 122, y: 79 };
+        let point = Point2 { x: 122, y: 79 };
         let serial = 57;
         let power = Grid::power_level(point, serial);
         assert_eq!(power, -5);
 
-        let point = Point { x: 217, y: 196 };
+        let point = Point2 { x: 217, y: 196 };
         let serial = 39;
         let power = Grid::power_level(point, serial);
         assert_eq!(power, 0);
 
-        let point = Point { x: 101, y: 153 };
+        let point = Point2 { x: 101, y: 153 };
         let serial = 71;
         let power = Grid::power_level(point, serial);
         assert_eq!(power, 4);

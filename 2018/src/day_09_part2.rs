@@ -5,7 +5,7 @@
     What would the new winning Elf's score be if the number of the last marble were 100 times larger?
 */
 
-use crate::common::LinkedListCirc;
+use common::LinkedListCirc;
 use nom::{
     bytes::complete::tag,
     character::complete::digit1,
@@ -17,7 +17,7 @@ use nom::{
 struct Game {
     max_player: u32,
     max_marble: u32,
-    state: LinkedListCirc,
+    state: LinkedListCirc<u32>,
     current_player: u32,
     player_score: Vec<u32>,
 }
@@ -53,11 +53,11 @@ impl Game {
     }
 
     fn place_marble(&mut self, value: u32, offset: i32) {
-        self.state.insert(value, offset);
+        self.state.insert_from_last_op(value, offset);
     }
 
     fn remove_marble(&mut self, offset: i32) -> u32 {
-        self.state.remove(offset)
+        self.state.remove_from_last_op(offset)
     }
 
     fn play(&mut self) -> u32 {
@@ -66,11 +66,11 @@ impl Game {
             // Marble 0 is placed at initialization
             if marble_number % 23 == 0 {
                 // Don't place this marble, remove the one 7 to the left, and add both to the current player's score.
-                let removed = self.state.remove(-7);
+                let removed = self.state.remove_from_last_op(-7);
                 self.player_score[self.current_player as usize] += marble_number + removed;
             } else {
                 // Place this marble 2 to the right
-                self.state.insert(marble_number, 2);
+                self.state.insert_from_last_op(marble_number, 2);
             }
 
             self.current_player += 1;

@@ -49,27 +49,30 @@
     What is the size of the largest area that isn't infinite?
 */
 
-use crate::common::Point;
-use std::collections::HashMap;
+use common::Point2;
+use std::{collections::HashMap, str::FromStr};
 
 struct LandingZone {
-    coordinates: Vec<Point>,
-    area: HashMap<Point, u32>,
+    coordinates: Vec<Point2>,
+    area: HashMap<Point2, u32>,
 }
 
 impl LandingZone {
     fn from_string(input: &str) -> Self {
-        let coordinates: Vec<Point> = input.lines().map(Point::from_string).collect();
+        let coordinates: Vec<Point2> = input
+            .lines()
+            .map(|line| Point2::from_str(line).unwrap())
+            .collect();
         Self {
             coordinates,
             area: HashMap::new(),
         }
     }
 
-    fn total_distance(&self, point: Point) -> u32 {
+    fn total_distance(&self, point: Point2) -> u32 {
         self.coordinates
             .iter()
-            .map(|&coord| Point::manhattan(point, coord))
+            .map(|&coord| Point2::manhattan(point, coord))
             .sum()
     }
 
@@ -98,7 +101,7 @@ impl LandingZone {
         let (x_range, y_range) = self.get_range();
         for y in y_range.0..=y_range.1 {
             for x in x_range.0..=x_range.1 {
-                let p = Point { x, y };
+                let p = Point2 { x, y };
                 let total_distance = self.total_distance(p);
                 self.area.insert(p, total_distance);
             }

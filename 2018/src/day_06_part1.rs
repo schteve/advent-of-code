@@ -49,29 +49,32 @@
     What is the size of the largest area that isn't infinite?
 */
 
-use crate::common::Point;
-use std::collections::HashMap;
+use common::Point2;
+use std::{collections::HashMap, str::FromStr};
 
 struct LandingZone {
-    coordinates: Vec<Point>,
-    area: HashMap<Point, usize>,
+    coordinates: Vec<Point2>,
+    area: HashMap<Point2, usize>,
 }
 
 impl LandingZone {
     fn from_string(input: &str) -> Self {
-        let coordinates: Vec<Point> = input.lines().map(Point::from_string).collect();
+        let coordinates: Vec<Point2> = input
+            .lines()
+            .map(|line| Point2::from_str(line).unwrap())
+            .collect();
         Self {
             coordinates,
             area: HashMap::new(),
         }
     }
 
-    fn closest_coord(&self, point: Point) -> usize {
+    fn closest_coord(&self, point: Point2) -> usize {
         let closest = self
             .coordinates
             .iter()
             .enumerate()
-            .min_by_key(|&(_i, &coord)| Point::manhattan(point, coord))
+            .min_by_key(|&(_i, &coord)| Point2::manhattan(point, coord))
             .unwrap();
         closest.0
     }
@@ -101,7 +104,7 @@ impl LandingZone {
         let (x_range, y_range) = self.get_range();
         for y in y_range.0..=y_range.1 {
             for x in x_range.0..=x_range.1 {
-                let p = Point { x, y };
+                let p = Point2 { x, y };
                 let closest = self.closest_coord(p);
                 self.area.insert(p, closest);
             }
@@ -121,21 +124,21 @@ impl LandingZone {
         let y_range = (y_range.0 - 1, y_range.1 + 1);
         // Top and bottom
         for x in x_range.0..=x_range.1 {
-            let p = Point { x, y: y_range.0 };
+            let p = Point2 { x, y: y_range.0 };
             let closest = self.closest_coord(p);
             self.area.insert(p, closest);
 
-            let p = Point { x, y: y_range.1 };
+            let p = Point2 { x, y: y_range.1 };
             let closest = self.closest_coord(p);
             self.area.insert(p, closest);
         }
         // Left and right
         for y in y_range.0..=y_range.1 {
-            let p = Point { x: x_range.0, y };
+            let p = Point2 { x: x_range.0, y };
             let closest = self.closest_coord(p);
             self.area.insert(p, closest);
 
-            let p = Point { x: x_range.1, y };
+            let p = Point2 { x: x_range.1, y };
             let closest = self.closest_coord(p);
             self.area.insert(p, closest);
         }

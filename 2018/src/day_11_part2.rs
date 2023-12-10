@@ -11,11 +11,11 @@
     What is the X,Y,size identifier of the square with the largest total power?
 */
 
-use crate::common::Point;
+use common::Point2;
 use std::collections::HashMap;
 
 struct Grid {
-    power: HashMap<(Point, u32), i32>, // Power level for each Point / size combination
+    power: HashMap<(Point2, u32), i32>, // Power level for each Point2 / size combination
     size: u32,
 }
 
@@ -27,7 +27,7 @@ impl Grid {
         }
     }
 
-    fn power_level(p: Point, serial: i32) -> i32 {
+    fn power_level(p: Point2, serial: i32) -> i32 {
         let rack_id = p.x + 10;
         let mut power = rack_id * p.y;
         power += serial;
@@ -40,7 +40,7 @@ impl Grid {
     fn fuel_grid(&mut self, serial: i32) {
         for x in 0..self.size {
             for y in 0..self.size {
-                let p = Point {
+                let p = Point2 {
                     x: x as i32,
                     y: y as i32,
                 };
@@ -50,7 +50,7 @@ impl Grid {
         }
     }
 
-    fn total_power(&mut self, point: Point, size: u32) -> i32 {
+    fn total_power(&mut self, point: Point2, size: u32) -> i32 {
         // Memoize
         if let Some(&power) = self.power.get(&(point, size)) {
             return power;
@@ -65,7 +65,7 @@ impl Grid {
             let subsquare = size / 2;
             for x in 0..2 {
                 for y in 0..2 {
-                    let p = Point {
+                    let p = Point2 {
                         x: point.x + x * subsquare as i32,
                         y: point.y + y * subsquare as i32,
                     };
@@ -80,14 +80,14 @@ impl Grid {
 
             // Many small squares. Bottom row, then right row, being careful of the point that is in both.
             for x in 0..size {
-                let p = Point {
+                let p = Point2 {
                     x: point.x + x as i32,
                     y: point.y + size as i32 - 1,
                 };
                 total_power += self.total_power(p, 1);
             }
             for y in 0..(size - 1) {
-                let p = Point {
+                let p = Point2 {
                     x: point.x + size as i32 - 1,
                     y: point.y + y as i32,
                 };
@@ -99,7 +99,7 @@ impl Grid {
         total_power
     }
 
-    fn max_power_point(&mut self) -> (Point, u32) {
+    fn max_power_point(&mut self) -> (Point2, u32) {
         let mut max_power = None;
         let mut max_point = None;
         let mut max_size = None;
@@ -107,7 +107,7 @@ impl Grid {
             //println!("Size: {}", size);
             for x in 0..(self.size - size) {
                 for y in 0..(self.size - size) {
-                    let p = Point {
+                    let p = Point2 {
                         x: x as i32,
                         y: y as i32,
                     };
@@ -136,7 +136,7 @@ pub fn solve(input: &str) -> String {
         "Largest total power: {}, {}",
         max_power_point, max_power_size
     );
-    assert_eq!(max_power_point, Point { x: 236, y: 252 });
+    assert_eq!(max_power_point, Point2 { x: 236, y: 252 });
     assert_eq!(max_power_size, 12);
 
     use std::fmt::Write;
@@ -151,22 +151,22 @@ mod test {
 
     #[test]
     fn test_power_level() {
-        let point = Point { x: 3, y: 5 };
+        let point = Point2 { x: 3, y: 5 };
         let serial = 8;
         let power = Grid::power_level(point, serial);
         assert_eq!(power, 4);
 
-        let point = Point { x: 122, y: 79 };
+        let point = Point2 { x: 122, y: 79 };
         let serial = 57;
         let power = Grid::power_level(point, serial);
         assert_eq!(power, -5);
 
-        let point = Point { x: 217, y: 196 };
+        let point = Point2 { x: 217, y: 196 };
         let serial = 39;
         let power = Grid::power_level(point, serial);
         assert_eq!(power, 0);
 
-        let point = Point { x: 101, y: 153 };
+        let point = Point2 { x: 101, y: 153 };
         let serial = 71;
         let power = Grid::power_level(point, serial);
         assert_eq!(power, 4);

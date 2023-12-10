@@ -7,7 +7,7 @@
     What is the ID of the only claim that doesn't overlap?
 */
 
-use crate::common::Point;
+use common::Point2;
 use nom::{
     character::complete::{char, digit1, space1},
     combinator::map_res,
@@ -18,7 +18,7 @@ use std::collections::HashMap;
 
 struct Claim {
     id: u32,
-    location: Point,
+    location: Point2,
     size: (u32, u32),
 }
 
@@ -33,7 +33,7 @@ impl Claim {
             map_res(digit1, |id: &str| id.parse::<u32>()),
             space1,
             char('@'),
-            Point::parser,
+            Point2::parser,
             char(':'),
             preceded(
                 space1,
@@ -50,7 +50,7 @@ impl Claim {
 }
 
 struct Fabric {
-    area: HashMap<Point, u32>,
+    area: HashMap<Point2, u32>,
 }
 
 impl Fabric {
@@ -60,7 +60,7 @@ impl Fabric {
         for claim in claims {
             for y in 0..claim.size.1 as i32 {
                 for x in 0..claim.size.0 as i32 {
-                    let location = claim.location + Point { x, y };
+                    let location = claim.location + Point2 { x, y };
                     let count = area.entry(location).or_insert(0);
                     *count += 1;
                 }
@@ -77,7 +77,7 @@ impl Fabric {
     fn is_claim_intact(&self, claim: &Claim) -> bool {
         for y in 0..claim.size.1 as i32 {
             for x in 0..claim.size.0 as i32 {
-                let location = claim.location + Point { x, y };
+                let location = claim.location + Point2 { x, y };
                 if self.area[&location] != 1 {
                     return false;
                 }

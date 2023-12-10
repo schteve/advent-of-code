@@ -9,7 +9,7 @@
     How many recipes appear on the scoreboard to the left of the score sequence in your puzzle input?
 */
 
-use crate::common::modulo;
+use common::modulo;
 
 fn recipes_before_target(target: &str) -> usize {
     let mut recipes: Vec<u8> = vec![3, 7];

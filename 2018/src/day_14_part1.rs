@@ -39,7 +39,7 @@
     What are the scores of the ten recipes immediately after the number of recipes in your puzzle input?
 */
 
-use crate::common::modulo;
+use common::modulo;
 
 fn score_after_target(target: usize) -> u64 {
     let mut recipes: Vec<u8> = vec![3, 7];

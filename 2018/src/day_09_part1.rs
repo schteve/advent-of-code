@@ -50,7 +50,7 @@
     What is the winning Elf's score?
 */
 
-use crate::common::modulo;
+use common::modulo;
 use nom::{
     bytes::complete::tag,
     character::complete::digit1,

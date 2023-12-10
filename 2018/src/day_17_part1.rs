@@ -145,8 +145,7 @@
     How many tiles can the water reach within the range of y values in your scan?
 */
 
-use crate::common::Cardinal;
-use crate::common::Point;
+use common::{Cardinal, Point2, Range2};
 use nom::{
     branch::alt,
     bytes::complete::tag,
@@ -181,29 +180,27 @@ impl Tile {
 }
 
 struct GeologicMap {
-    tiles: HashMap<Point, Tile>,
-    x_range: (i32, i32),
-    y_range: (i32, i32),
-    spring: Point,
+    tiles: HashMap<Point2, Tile>,
+    range: Range2,
+    spring: Point2,
 }
 
 impl GeologicMap {
     fn from_string(input: &str) -> Self {
         let mut tiles = Self::parser(input).unwrap().1;
-        let range = Point::get_range(tiles.keys()).unwrap(); // Must not include the spring so we do this first
+        let range = Point2::get_range(tiles.keys()).unwrap(); // Must not include the spring so we do this first
 
-        let spring = Point { x: 500, y: 0 };
+        let spring = Point2 { x: 500, y: 0 };
         tiles.insert(spring, Tile::Spring);
 
         Self {
             tiles,
-            x_range: range.0,
-            y_range: range.1,
+            range,
             spring,
         }
     }
 
-    fn parser(input: &str) -> IResult<&str, HashMap<Point, Tile>> {
+    fn parser(input: &str) -> IResult<&str, HashMap<Point2, Tile>> {
         let (input, values) = many1(alt((
             tuple((
                 success(true),
@@ -230,12 +227,12 @@ impl GeologicMap {
             if x_first == true {
                 let x = a;
                 for y in b0..=b1 {
-                    tiles.insert(Point { x, y }, Tile::Clay);
+                    tiles.insert(Point2 { x, y }, Tile::Clay);
                 }
             } else {
                 let y = a;
                 for x in b0..=b1 {
-                    tiles.insert(Point { x, y }, Tile::Clay);
+                    tiles.insert(Point2 { x, y }, Tile::Clay);
                 }
             }
         }
@@ -243,12 +240,12 @@ impl GeologicMap {
         Ok((input, tiles))
     }
 
-    fn fill_path(&mut self, points: &[Point], tile: Tile) {
+    fn fill_path(&mut self, points: &[Point2], tile: Tile) {
         let k_v_iter = points.iter().cloned().map(|point| (point, tile));
         self.tiles.extend(k_v_iter);
     }
 
-    fn is_blocked(&self, point: &Point) -> bool {
+    fn is_blocked(&self, point: &Point2) -> bool {
         match self.tiles.get(point) {
             Some(Tile::Sand) | Some(Tile::DriedSand) | None => false,
             Some(Tile::Clay) | Some(Tile::Water) => true,
@@ -256,9 +253,9 @@ impl GeologicMap {
         }
     }
 
-    fn ray_cast(&self, start: &Point, direction: Cardinal) -> (bool, Vec<Point>) {
+    fn ray_cast(&self, start: &Point2, direction: Cardinal) -> (bool, Vec<Point2>) {
         let mut next = *start;
-        let mut path: Vec<Point> = Vec::new();
+        let mut path: Vec<Point2> = Vec::new();
         loop {
             next = next.step(direction, 1);
             if self.is_blocked(&next) == true {
@@ -277,9 +274,9 @@ impl GeologicMap {
         }
     }
 
-    fn source_flow(&mut self, source: &Point) -> Vec<Point> {
-        let mut path: Vec<Point> = vec![source.step(Cardinal::South, 1)]; // Water starts flowing one tile below the source
-        let mut new_sources: Vec<Point> = Vec::new();
+    fn source_flow(&mut self, source: &Point2) -> Vec<Point2> {
+        let mut path: Vec<Point2> = vec![source.step(Cardinal::South, 1)]; // Water starts flowing one tile below the source
+        let mut new_sources: Vec<Point2> = Vec::new();
 
         // If we can move down, do that.
         // If we can't move down, move sideways in both directions.
@@ -288,7 +285,7 @@ impl GeologicMap {
         while path.is_empty() == false {
             let head = path[path.len() - 1];
             let point_below = head.step(Cardinal::South, 1);
-            if point_below.y > self.y_range.1 {
+            if point_below.y > self.range.y.1 {
                 // Ran off the bottom of the map. Commit this path - turn it to DriedSand.
                 self.fill_path(&path, Tile::DriedSand);
                 break; // Done processing this path
@@ -336,7 +333,7 @@ impl GeologicMap {
     }
 
     fn water_flow(&mut self) {
-        let mut sources: Vec<Point> = vec![self.spring];
+        let mut sources: Vec<Point2> = vec![self.spring];
         let mut snapshot = self.to_string();
         loop {
             for source in std::mem::take(&mut sources) {
@@ -361,7 +358,7 @@ impl GeologicMap {
     fn count_water_can_touch(&self) -> u32 {
         self.tiles
             .iter()
-            .filter(|&(point, _tile)| point.y >= self.y_range.0 && point.y <= self.y_range.1)
+            .filter(|&(point, _tile)| point.y >= self.range.y.0 && point.y <= self.range.y.1)
             .filter(|&(_point, tile)| tile == &Tile::Water || tile == &Tile::DriedSand)
             .count() as u32
     }
@@ -369,11 +366,11 @@ impl GeologicMap {
 
 impl fmt::Display for GeologicMap {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let (x_range, y_range) = Point::get_range(self.tiles.keys()).unwrap(); // Don't use self range because it won't include any water that flowed out of bounds left or right
-        for y in y_range.0..=y_range.1 {
+        let range = Point2::get_range(self.tiles.keys()).unwrap(); // Don't use self range because it won't include any water that flowed out of bounds left or right
+        for y in range.y.0..=range.y.1 {
             //write!(f, "{:4} ", y)?;
-            for x in x_range.0..=x_range.1 {
-                if let Some(tile) = self.tiles.get(&Point { x, y }) {
+            for x in range.x.0..=range.x.1 {
+                if let Some(tile) = self.tiles.get(&Point2 { x, y }) {
                     write!(f, "{}", tile.to_char())?;
                 } else {
                     write!(f, ".")?;
