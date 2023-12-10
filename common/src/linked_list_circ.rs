@@ -88,6 +88,7 @@ pub struct LinkedListCirc<T> {
     data: Vec<LlNode<T>>,
     head: Option<usize>,
     free_list: Option<usize>,
+    last_op_idx: Option<usize>,
 }
 
 impl<T: Default> LinkedListCirc<T> {
@@ -96,6 +97,7 @@ impl<T: Default> LinkedListCirc<T> {
             data: Vec::new(),
             head: None,
             free_list: None,
+            last_op_idx: None,
         }
     }
 
@@ -153,7 +155,26 @@ impl<T: Default> LinkedListCirc<T> {
         }
     }
 
-    pub fn insert(&mut self, value: T, offset: i32) {
+    fn get_offset_from_idx(&self, start: usize, offset: i32) -> usize {
+        let mut idx = start;
+        match offset.cmp(&0) {
+            Ordering::Greater => {
+                for _ in 0..offset {
+                    idx = self.data[idx].next;
+                }
+            }
+            Ordering::Less => {
+                for _ in offset..0 {
+                    idx = self.data[idx].prev;
+                }
+            }
+            Ordering::Equal => (),
+        }
+        idx
+    }
+
+    // NOTE: the input is a raw index so you better know that it's on the list!
+    fn insert_at_idx(&mut self, value: T, idx: Option<usize>) {
         // Special case - list is empty
         if self.head.is_none() {
             let new_node_idx = self.allocate_node();
@@ -163,60 +184,44 @@ impl<T: Default> LinkedListCirc<T> {
             self.data[new_node_idx].value = value;
 
             self.head = Some(new_node_idx);
-            return;
+            self.last_op_idx = Some(new_node_idx);
+        } else {
+            // Move to the target node's index - here we use the "after" node as the target
+            let target_idx = idx.unwrap();
+
+            // Create the new node, then fixup the previous and next nodes
+            let before_idx = self.data[target_idx].prev;
+            let after_idx = target_idx;
+            let new_node_idx = self.allocate_node();
+
+            self.data[new_node_idx].prev = before_idx;
+            self.data[new_node_idx].next = after_idx;
+            self.data[new_node_idx].value = value;
+
+            self.data[before_idx].next = new_node_idx;
+            self.data[after_idx].prev = new_node_idx;
+
+            self.last_op_idx = Some(new_node_idx);
         }
-
-        // Move to the target node's index - here we use the "after" node as the target
-        let mut target_idx = self.head.unwrap();
-        match offset.cmp(&0) {
-            Ordering::Greater => {
-                for _ in 0..offset {
-                    target_idx = self.data[target_idx].next;
-                }
-            }
-            Ordering::Less => {
-                for _ in offset..0 {
-                    target_idx = self.data[target_idx].prev;
-                }
-            }
-            Ordering::Equal => (),
-        }
-
-        // Create the new node, then fixup the previous and next nodes
-        let before_idx = self.data[target_idx].prev;
-        let after_idx = target_idx;
-        let new_node_idx = self.allocate_node();
-
-        self.data[new_node_idx].prev = before_idx;
-        self.data[new_node_idx].next = after_idx;
-        self.data[new_node_idx].value = value;
-
-        self.data[before_idx].next = new_node_idx;
-        self.data[after_idx].prev = new_node_idx;
     }
 
-    pub fn remove(&mut self, offset: i32) -> T {
-        assert!(self.head.is_some(), "Tried to remove from empty list"); // Special case - list is empty
+    pub fn insert(&mut self, value: T, offset: i32) {
+        let target_idx = self.head.map(|idx| self.get_offset_from_idx(idx, offset));
+        self.insert_at_idx(value, target_idx);
+    }
 
-        // Move to the target node's index
-        let mut target_idx = self.head.unwrap();
-        match offset.cmp(&0) {
-            Ordering::Greater => {
-                for _ in 0..offset {
-                    target_idx = self.data[target_idx].next;
-                }
-            }
-            Ordering::Less => {
-                for _ in offset..0 {
-                    target_idx = self.data[target_idx].prev;
-                }
-            }
-            Ordering::Equal => (),
-        }
+    pub fn insert_from_last_op(&mut self, value: T, offset: i32) {
+        let target_idx = self
+            .last_op_idx
+            .map(|idx| self.get_offset_from_idx(idx, offset));
+        self.insert_at_idx(value, target_idx);
+    }
 
+    // NOTE: the input is a raw index so you better know that it's on the list!
+    fn remove_at_idx(&mut self, idx: usize) -> T {
         // Adjust head (if needed) before modifying the list
-        let head_idx = self.head.unwrap();
-        if head_idx == target_idx {
+        let head_idx = self.head.expect("Tried to remove from empty list");
+        if head_idx == idx {
             // Only need to adjust head if we are removing the head node
             if self.data[head_idx].next == head_idx {
                 // List only had one node
@@ -228,16 +233,39 @@ impl<T: Default> LinkedListCirc<T> {
         }
 
         // Free the node, then fixup the previous and next nodes
-        let before_idx = self.data[target_idx].prev;
-        let after_idx = self.data[target_idx].next;
+        let before_idx = self.data[idx].prev;
+        let after_idx = self.data[idx].next;
 
-        let existing_value = mem::take(&mut self.data[target_idx].value);
-        self.free_node(target_idx);
+        let existing_value = mem::take(&mut self.data[idx].value);
+        self.free_node(idx);
 
-        self.data[before_idx].next = after_idx;
-        self.data[after_idx].prev = before_idx;
+        // If we are removing the last node
+        if self.head.is_none() {
+            self.last_op_idx = None;
+        } else {
+            self.data[before_idx].next = after_idx;
+            self.data[after_idx].prev = before_idx;
+
+            self.last_op_idx = Some(after_idx);
+        }
 
         existing_value
+    }
+
+    pub fn remove(&mut self, offset: i32) -> T {
+        let target_idx = self
+            .head
+            .map(|idx| self.get_offset_from_idx(idx, offset))
+            .expect("Tried to remove from empty list");
+        self.remove_at_idx(target_idx)
+    }
+
+    pub fn remove_from_last_op(&mut self, offset: i32) -> T {
+        let target_idx = self
+            .last_op_idx
+            .map(|idx| self.get_offset_from_idx(idx, offset))
+            .expect("Last op must exist");
+        self.remove_at_idx(target_idx)
     }
 
     pub fn iter(&self) -> LlIter<T> {
@@ -352,5 +380,82 @@ mod test {
         assert_eq!(item, 4);
         assert_eq!(list.to_vec(), vec![]);
         assert_eq!(list.head, None);
+    }
+
+    #[test]
+    fn test_insert_remove_from_last_op() {
+        let mut list = LinkedListCirc::new();
+        list.insert_from_last_op(0, 0);
+        assert_eq!(list.head, Some(0));
+        assert_eq!(list.last_op_idx, Some(0));
+
+        list.remove_from_last_op(0);
+        assert_eq!(list.head, None);
+        assert_eq!(list.last_op_idx, None);
+
+        for i in 0..10 {
+            list.insert_from_last_op(i, 1);
+        }
+        assert_eq!(list.to_vec(), vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+
+        let mut list = LinkedListCirc::new();
+        list.insert_from_last_op(0, 0);
+        list.insert_from_last_op(1, 0);
+        assert_eq!(list.to_vec(), vec![0, 1]);
+        assert_eq!(list.head, Some(0));
+        assert_eq!(list.last_op_idx, Some(1));
+
+        list.insert_from_last_op(2, 0);
+        assert_eq!(list.to_vec(), vec![0, 2, 1]);
+        assert_eq!(list.last_op_idx, Some(2));
+
+        list.insert_from_last_op(3, -1);
+        assert_eq!(list.to_vec(), vec![0, 2, 1, 3]);
+        assert_eq!(list.last_op_idx, Some(3));
+
+        list.insert_from_last_op(4, -10);
+        assert_eq!(list.to_vec(), vec![0, 4, 2, 1, 3]);
+        assert_eq!(list.last_op_idx, Some(4));
+
+        let item = list.remove_from_last_op(1);
+        assert_eq!(item, 2);
+        assert_eq!(list.to_vec(), vec![0, 4, 1, 3]);
+        assert_eq!(list.head, Some(0));
+        assert_eq!(list.last_op_idx, Some(1));
+
+        let item = list.remove_from_last_op(-2);
+        assert_eq!(item, 0);
+        assert_eq!(list.to_vec(), vec![4, 1, 3]);
+        assert_eq!(list.head, Some(4));
+        assert_eq!(list.last_op_idx, Some(4));
+
+        let item = list.remove_from_last_op(1);
+        assert_eq!(item, 1);
+        assert_eq!(list.to_vec(), vec![4, 3]);
+        assert_eq!(list.head, Some(4));
+        assert_eq!(list.last_op_idx, Some(3));
+
+        list.insert_from_last_op(5, 1);
+        assert_eq!(list.to_vec(), vec![4, 3, 5]);
+        assert_eq!(list.head, Some(4));
+        assert_eq!(list.last_op_idx, Some(2)); // Node indexes should be reallocated in the order they were removed
+
+        let item = list.remove_from_last_op(0);
+        assert_eq!(item, 5);
+        assert_eq!(list.to_vec(), vec![4, 3]);
+        assert_eq!(list.head, Some(4));
+        assert_eq!(list.last_op_idx, Some(4));
+
+        let item = list.remove_from_last_op(7);
+        assert_eq!(item, 3);
+        assert_eq!(list.to_vec(), vec![4]);
+        assert_eq!(list.head, Some(4));
+        assert_eq!(list.last_op_idx, Some(4));
+
+        let item = list.remove_from_last_op(0);
+        assert_eq!(item, 4);
+        assert_eq!(list.to_vec(), vec![]);
+        assert_eq!(list.head, None);
+        assert_eq!(list.last_op_idx, None);
     }
 }
