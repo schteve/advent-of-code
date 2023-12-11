@@ -1,0 +1,52 @@
+#!/bin/sh
+if [ "$BRANCH_NAME" != '(no branch)' ]
+then
+    cd 2023
+    cargo fmt -- --check || exit 1
+    cargo build || exit 1
+    cargo test --release || exit 1
+    cargo clippy -- -Dwarnings || exit 1
+    cd ..
+
+    cd 2022
+    cargo fmt -- --check || exit 1
+    cargo build || exit 1
+    cargo test --release || exit 1
+    cargo clippy -- -Dwarnings || exit 1
+    cd ..
+
+    cd 2021
+    cargo fmt -- --check || exit 1
+    cargo build || exit 1
+    cargo test --release || exit 1
+    cargo clippy -- -Dwarnings || exit 1
+    cd ..
+
+    cd 2020
+    cargo fmt -- --check || exit 1
+    cargo build || exit 1
+    cargo test --release || exit 1
+    cargo clippy -- -Dwarnings || exit 1
+    cd ..
+
+    cd 2019
+    cargo fmt -- --check || exit 1
+    cargo build || exit 1
+    cargo test --release || exit 1
+    cargo clippy -- -Dwarnings || exit 1
+    cd ..
+
+    # cd 2018
+    # cargo fmt -- --check || exit 1
+    # cargo build || exit 1
+    # cargo test --release || exit 1
+    # cargo clippy -- -Dwarnings || exit 1
+    # cd ..
+
+    cd common
+    cargo fmt -- --check || exit 1
+    cargo build || exit 1
+    cargo test --release || exit 1
+    cargo clippy -- -Dwarnings || exit 1
+    cd ..
+fi
