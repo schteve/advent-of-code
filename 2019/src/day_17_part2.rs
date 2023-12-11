@@ -578,12 +578,13 @@ impl Camera {
         let main_routine_str: String = main_routine
             .iter()
             .map(|x| match x {
-                0 => 'A',
-                1 => 'B',
-                2 => 'C',
-                _ => 'X',
+                0 => "A",
+                1 => "B",
+                2 => "C",
+                _ => "X",
             })
-            .collect();
+            .collect::<Vec<&str>>()
+            .join(",");
         //println!("Main routine: {}", main_routine_str);
 
         self.give_string(&main_routine_str);
