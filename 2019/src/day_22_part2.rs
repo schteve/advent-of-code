@@ -516,12 +516,12 @@ mod test {
         }
     }
 
-    fn both_ways_reduce(techniques: &Vec<Technique>, deck_size: i64) -> (Deck, Deck) {
+    fn both_ways_reduce(techniques: &[Technique], deck_size: i64) -> (Deck, Deck) {
         let mut deck1 = Deck::new(deck_size as usize);
-        deck1.shuffle_many(&techniques);
+        deck1.shuffle_many(techniques);
 
         let mut deck2 = Deck::new(deck_size as usize);
-        let result = reduce(&techniques, deck_size);
+        let result = reduce(techniques, deck_size);
         deck2.shuffle_many(&result);
 
         (deck1, deck2)

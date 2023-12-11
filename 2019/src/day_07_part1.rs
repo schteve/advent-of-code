@@ -260,7 +260,7 @@ impl Program {
 fn check_signal(code: &[i32], phase: &[i32]) -> i32 {
     let mut amp_programs: Vec<Program> = phase
         .iter()
-        .map(|&i| Program::new(&code, &[i])) // Set initial input to phase settings
+        .map(|&i| Program::new(code, &[i])) // Set initial input to phase settings
         .collect();
     let mut next_input = Some(0);
     let mut last_output = 0;
@@ -299,7 +299,7 @@ fn max_thruster_signal(code: &[i32], phases: &[i32]) -> u32 {
 
     let max_signal = phase_permutations
         .iter()
-        .map(|p| check_signal(&code, &p))
+        .map(|p| check_signal(code, p))
         .fold(0, cmp::max);
     max_signal as u32
 }

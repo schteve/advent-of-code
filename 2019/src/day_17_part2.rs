@@ -517,7 +517,7 @@ impl Camera {
             }
         }
 
-        if starting_coord == None || starting_dir == None {
+        if starting_coord.is_none() || starting_dir.is_none() {
             panic!("Error: could not find starting point");
         }
 
@@ -537,7 +537,7 @@ impl Camera {
                 }
             }
 
-            if next_turn == None {
+            if next_turn.is_none() {
                 // No more segments to follow
                 break;
             }
@@ -597,7 +597,7 @@ impl Camera {
             let mut sub_routine_vec: Vec<String> = Vec::new();
             let mut tmp_vec: Vec<char> = Vec::new();
             for c in routine.chars() {
-                let complete = expect_alpha == c.is_digit(10);
+                let complete = expect_alpha == c.is_ascii_digit();
                 if complete == true {
                     let value_string = tmp_vec.iter().collect::<String>();
                     tmp_vec.clear();

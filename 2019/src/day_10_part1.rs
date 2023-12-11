@@ -174,7 +174,7 @@ impl AsteroidMap {
 
 #[aoc(day10, part1)]
 pub fn solve(input: &str) -> usize {
-    let asteroids = AsteroidMap::from_string(&input);
+    let asteroids = AsteroidMap::from_string(input);
     // println!("{:?}", asteroids.data);
 
     let best_station = asteroids.best_station();
@@ -204,70 +204,70 @@ mod test {
 ..........
 ..........
 ";
-        let asteroids = AsteroidMap::from_string(&input_str);
-        assert_eq!(asteroids.is_visible((0, 0), (3, 1)), true); // A
-        assert_eq!(asteroids.is_visible((0, 0), (3, 2)), true); // B
-        assert_eq!(asteroids.is_visible((0, 0), (3, 3)), true); // C
-        assert_eq!(asteroids.is_visible((0, 0), (2, 3)), true); // D
-        assert_eq!(asteroids.is_visible((0, 0), (1, 3)), true); // E
-        assert_eq!(asteroids.is_visible((0, 0), (2, 4)), true); // F
-        assert_eq!(asteroids.is_visible((0, 0), (4, 3)), true); // G
+        let asteroids = AsteroidMap::from_string(input_str);
+        assert!(asteroids.is_visible((0, 0), (3, 1))); // A
+        assert!(asteroids.is_visible((0, 0), (3, 2))); // B
+        assert!(asteroids.is_visible((0, 0), (3, 3))); // C
+        assert!(asteroids.is_visible((0, 0), (2, 3))); // D
+        assert!(asteroids.is_visible((0, 0), (1, 3))); // E
+        assert!(asteroids.is_visible((0, 0), (2, 4))); // F
+        assert!(asteroids.is_visible((0, 0), (4, 3))); // G
 
-        assert_eq!(asteroids.is_visible((0, 0), (6, 2)), false); // a
-        assert_eq!(asteroids.is_visible((0, 0), (9, 3)), false); // a
+        assert!(!asteroids.is_visible((0, 0), (6, 2))); // a
+        assert!(!asteroids.is_visible((0, 0), (9, 3))); // a
 
-        assert_eq!(asteroids.is_visible((0, 0), (6, 4)), false); // b
-        assert_eq!(asteroids.is_visible((0, 0), (9, 6)), false); // b
+        assert!(!asteroids.is_visible((0, 0), (6, 4))); // b
+        assert!(!asteroids.is_visible((0, 0), (9, 6))); // b
 
-        assert_eq!(asteroids.is_visible((0, 0), (4, 4)), false); // c
-        assert_eq!(asteroids.is_visible((0, 0), (5, 5)), false); // c
-        assert_eq!(asteroids.is_visible((0, 0), (6, 6)), false); // c
-        assert_eq!(asteroids.is_visible((0, 0), (7, 7)), false); // c
-        assert_eq!(asteroids.is_visible((0, 0), (8, 8)), false); // c
-        assert_eq!(asteroids.is_visible((0, 0), (9, 9)), false); // c
+        assert!(!asteroids.is_visible((0, 0), (4, 4))); // c
+        assert!(!asteroids.is_visible((0, 0), (5, 5))); // c
+        assert!(!asteroids.is_visible((0, 0), (6, 6))); // c
+        assert!(!asteroids.is_visible((0, 0), (7, 7))); // c
+        assert!(!asteroids.is_visible((0, 0), (8, 8))); // c
+        assert!(!asteroids.is_visible((0, 0), (9, 9))); // c
 
-        assert_eq!(asteroids.is_visible((0, 0), (4, 6)), false); // d
-        assert_eq!(asteroids.is_visible((0, 0), (6, 9)), false); // d
+        assert!(!asteroids.is_visible((0, 0), (4, 6))); // d
+        assert!(!asteroids.is_visible((0, 0), (6, 9))); // d
 
-        assert_eq!(asteroids.is_visible((0, 0), (2, 6)), false); // e
-        assert_eq!(asteroids.is_visible((0, 0), (3, 9)), false); // e
+        assert!(!asteroids.is_visible((0, 0), (2, 6))); // e
+        assert!(!asteroids.is_visible((0, 0), (3, 9))); // e
 
-        assert_eq!(asteroids.is_visible((0, 0), (3, 6)), false); // f
-        assert_eq!(asteroids.is_visible((0, 0), (4, 8)), false); // f
+        assert!(!asteroids.is_visible((0, 0), (3, 6))); // f
+        assert!(!asteroids.is_visible((0, 0), (4, 8))); // f
 
-        assert_eq!(asteroids.is_visible((0, 0), (8, 6)), false); // g
+        assert!(!asteroids.is_visible((0, 0), (8, 6))); // g
 
-        assert_eq!(asteroids.is_visible((3, 1), (0, 0)), true); // A
-        assert_eq!(asteroids.is_visible((3, 2), (0, 0)), true); // B
-        assert_eq!(asteroids.is_visible((3, 3), (0, 0)), true); // C
-        assert_eq!(asteroids.is_visible((2, 3), (0, 0)), true); // D
-        assert_eq!(asteroids.is_visible((1, 3), (0, 0)), true); // E
-        assert_eq!(asteroids.is_visible((2, 4), (0, 0)), true); // F
-        assert_eq!(asteroids.is_visible((4, 3), (0, 0)), true); // G
+        assert!(asteroids.is_visible((3, 1), (0, 0))); // A
+        assert!(asteroids.is_visible((3, 2), (0, 0))); // B
+        assert!(asteroids.is_visible((3, 3), (0, 0))); // C
+        assert!(asteroids.is_visible((2, 3), (0, 0))); // D
+        assert!(asteroids.is_visible((1, 3), (0, 0))); // E
+        assert!(asteroids.is_visible((2, 4), (0, 0))); // F
+        assert!(asteroids.is_visible((4, 3), (0, 0))); // G
 
-        assert_eq!(asteroids.is_visible((6, 2), (0, 0)), false); // a
-        assert_eq!(asteroids.is_visible((9, 3), (0, 0)), false); // a
+        assert!(!asteroids.is_visible((6, 2), (0, 0))); // a
+        assert!(!asteroids.is_visible((9, 3), (0, 0))); // a
 
-        assert_eq!(asteroids.is_visible((6, 4), (0, 0)), false); // b
-        assert_eq!(asteroids.is_visible((9, 6), (0, 0)), false); // b
+        assert!(!asteroids.is_visible((6, 4), (0, 0))); // b
+        assert!(!asteroids.is_visible((9, 6), (0, 0))); // b
 
-        assert_eq!(asteroids.is_visible((4, 4), (0, 0)), false); // c
-        assert_eq!(asteroids.is_visible((5, 5), (0, 0)), false); // c
-        assert_eq!(asteroids.is_visible((6, 6), (0, 0)), false); // c
-        assert_eq!(asteroids.is_visible((7, 7), (0, 0)), false); // c
-        assert_eq!(asteroids.is_visible((8, 8), (0, 0)), false); // c
-        assert_eq!(asteroids.is_visible((9, 9), (0, 0)), false); // c
+        assert!(!asteroids.is_visible((4, 4), (0, 0))); // c
+        assert!(!asteroids.is_visible((5, 5), (0, 0))); // c
+        assert!(!asteroids.is_visible((6, 6), (0, 0))); // c
+        assert!(!asteroids.is_visible((7, 7), (0, 0))); // c
+        assert!(!asteroids.is_visible((8, 8), (0, 0))); // c
+        assert!(!asteroids.is_visible((9, 9), (0, 0))); // c
 
-        assert_eq!(asteroids.is_visible((4, 6), (0, 0)), false); // d
-        assert_eq!(asteroids.is_visible((6, 9), (0, 0)), false); // d
+        assert!(!asteroids.is_visible((4, 6), (0, 0))); // d
+        assert!(!asteroids.is_visible((6, 9), (0, 0))); // d
 
-        assert_eq!(asteroids.is_visible((2, 6), (0, 0)), false); // e
-        assert_eq!(asteroids.is_visible((3, 9), (0, 0)), false); // e
+        assert!(!asteroids.is_visible((2, 6), (0, 0))); // e
+        assert!(!asteroids.is_visible((3, 9), (0, 0))); // e
 
-        assert_eq!(asteroids.is_visible((3, 6), (0, 0)), false); // f
-        assert_eq!(asteroids.is_visible((4, 8), (0, 0)), false); // f
+        assert!(!asteroids.is_visible((3, 6), (0, 0))); // f
+        assert!(!asteroids.is_visible((4, 8), (0, 0))); // f
 
-        assert_eq!(asteroids.is_visible((8, 6), (0, 0)), false); // g
+        assert!(!asteroids.is_visible((8, 6), (0, 0))); // g
     }
 
     #[test]
@@ -284,7 +284,7 @@ mod test {
 ....#...#.
 ...#..#..#
 ";
-        let asteroids = AsteroidMap::from_string(&input_str);
+        let asteroids = AsteroidMap::from_string(input_str);
         let visible_list = asteroids.get_visible((0, 0));
         let test_list = vec![
             (3, 1), // A
@@ -296,10 +296,10 @@ mod test {
             (4, 3), // G
         ];
         for item in &visible_list {
-            assert!(test_list.contains(&item));
+            assert!(test_list.contains(item));
         }
         for item in &test_list {
-            assert!(visible_list.contains(&item));
+            assert!(visible_list.contains(item));
         }
     }
 
@@ -312,7 +312,7 @@ mod test {
 ....#
 ...##
 ";
-        let asteroids = AsteroidMap::from_string(&input_str);
+        let asteroids = AsteroidMap::from_string(input_str);
         assert_eq!(asteroids.count_visible((1, 0)), 7);
         assert_eq!(asteroids.count_visible((4, 0)), 7);
         assert_eq!(asteroids.count_visible((0, 2)), 6);
@@ -334,7 +334,7 @@ mod test {
 ....#
 ...##
 ";
-        let asteroids = AsteroidMap::from_string(&input_str);
+        let asteroids = AsteroidMap::from_string(input_str);
         let best_station = asteroids.best_station();
         assert_eq!(best_station, (3, 4));
         assert_eq!(asteroids.count_visible(best_station), 8);
@@ -351,7 +351,7 @@ mod test {
 ##...#..#.
 .#....####
 ";
-        let asteroids = AsteroidMap::from_string(&input_str);
+        let asteroids = AsteroidMap::from_string(input_str);
         let best_station = asteroids.best_station();
         assert_eq!(best_station, (5, 8));
         assert_eq!(asteroids.count_visible(best_station), 33);
@@ -368,7 +368,7 @@ mod test {
 ......#...
 .####.###.
 ";
-        let asteroids = AsteroidMap::from_string(&input_str);
+        let asteroids = AsteroidMap::from_string(input_str);
         let best_station = asteroids.best_station();
         assert_eq!(best_station, (1, 2));
         assert_eq!(asteroids.count_visible(best_station), 35);
@@ -385,7 +385,7 @@ mod test {
 .##...##.#
 .....#.#..
 ";
-        let asteroids = AsteroidMap::from_string(&input_str);
+        let asteroids = AsteroidMap::from_string(input_str);
         let best_station = asteroids.best_station();
         assert_eq!(best_station, (6, 3));
         assert_eq!(asteroids.count_visible(best_station), 41);
@@ -412,7 +412,7 @@ mod test {
 #.#.#.#####.####.###
 ###.##.####.##.#..##
 ";
-        let asteroids = AsteroidMap::from_string(&input_str);
+        let asteroids = AsteroidMap::from_string(input_str);
         let best_station = asteroids.best_station();
         assert_eq!(best_station, (11, 13));
         assert_eq!(asteroids.count_visible(best_station), 210);

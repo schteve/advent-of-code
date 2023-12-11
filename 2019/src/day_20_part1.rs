@@ -317,7 +317,7 @@ impl Map {
         let mut steps = 0;
         loop {
             steps += 1;
-            for location in frontier.drain(..).collect::<Vec<Point>>() {
+            for location in std::mem::take(&mut frontier) {
                 let candidates = [
                     Cardinal::North,
                     Cardinal::South,
@@ -327,7 +327,7 @@ impl Map {
                 for direction in candidates.iter() {
                     let step_in_direction = direction.step_from(location);
                     //println!("Step: {:?}", step_in_direction);
-                    if walked.get(&step_in_direction) == None {
+                    if walked.get(&step_in_direction).is_none() {
                         // Step into any adjacent empty space
                         if self.area.get(&step_in_direction) == Some(&Space::Empty) {
                             // If this is the goal space, return now
@@ -348,7 +348,7 @@ impl Map {
                 if let Some(&portal) = self.portals.get(&location) {
                     // Find matching portal
                     for (&k, &v) in self.portals.iter() {
-                        if k != location && v.value == portal.value && walked.get(&k) == None {
+                        if k != location && v.value == portal.value && walked.get(&k).is_none() {
                             frontier.push(k);
                             walked.insert(k);
                         }
@@ -368,7 +368,7 @@ impl Map {
 
 #[aoc(day20, part1)]
 pub fn solve(input: &str) -> u32 {
-    let map = Map::from_string(&input);
+    let map = Map::from_string(input);
     //map.display();
 
     let steps = map.a_to_z();
@@ -403,7 +403,7 @@ FG..#########.....#
              Z
              Z
 ";
-        let map = Map::from_string(&input);
+        let map = Map::from_string(input);
         let steps = map.a_to_z();
         assert_eq!(steps, 23);
 
@@ -446,7 +446,7 @@ YN......#               VT..#....QG
            B   J   C
            U   P   P
 ";
-        let map = Map::from_string(&input);
+        let map = Map::from_string(input);
         let steps = map.a_to_z();
         assert_eq!(steps, 58);
     }

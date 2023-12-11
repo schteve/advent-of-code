@@ -422,7 +422,7 @@ impl Map {
         let mut steps = 0;
         loop {
             steps += 1;
-            for location in frontier.drain(..).collect::<Vec<Node>>() {
+            for location in std::mem::take(&mut frontier) {
                 let candidates = [
                     Cardinal::North,
                     Cardinal::South,
@@ -436,7 +436,7 @@ impl Map {
                         point: step_in_direction,
                         depth: location.depth,
                     };
-                    if walked.get(&step_node) == None {
+                    if walked.get(&step_node).is_none() {
                         // Step into any adjacent empty space
                         if self.area.get(&step_in_direction) == Some(&Space::Empty) {
                             // If this is the goal space, return now
@@ -466,7 +466,7 @@ impl Map {
                             };
                             if k != location.point
                                 && v.value == portal.value
-                                && walked.get(&portal_node) == None
+                                && walked.get(&portal_node).is_none()
                             {
                                 frontier.push(portal_node);
                                 walked.insert(portal_node);
@@ -488,7 +488,7 @@ impl Map {
 
 #[aoc(day20, part2)]
 pub fn solve(input: &str) -> u32 {
-    let map = Map::from_string(&input);
+    let map = Map::from_string(input);
     //map.display();
 
     let steps = map.a_to_z();
@@ -523,7 +523,7 @@ FG..#########.....#
              Z
              Z
 ";
-        let map = Map::from_string(&input);
+        let map = Map::from_string(input);
         let steps = map.a_to_z();
         assert_eq!(steps, 26);
 
@@ -566,7 +566,7 @@ RE....#.#                           #......RF
                A O F   N
                A A D   M
 ";
-        let map = Map::from_string(&input);
+        let map = Map::from_string(input);
         let steps = map.a_to_z();
         assert_eq!(steps, 396);
     }

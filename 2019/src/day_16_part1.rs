@@ -125,7 +125,7 @@ fn parse_string(s: &str) -> Vec<i32> {
 
 #[aoc(day16, part1)]
 pub fn solve(input: &str) -> String {
-    let list = parse_string(&input);
+    let list = parse_string(input);
     let fft_result = fft(list, 100);
     let fft_result_str: String = fft_result[..8].iter().map(|i| i.to_string()).collect();
     println!("First 8 digits of FFT: {}", fft_result_str);

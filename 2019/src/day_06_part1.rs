@@ -125,7 +125,7 @@ fn count_orbits(graph: &[SpaceObject]) -> u32 {
 
 #[aoc(day6, part1)]
 pub fn solve(input: &str) -> u32 {
-    let graph = build_graph(&input);
+    let graph = build_graph(input);
     let orbits = count_orbits(&graph);
     println!("Orbits: {}", orbits);
     orbits
@@ -149,7 +149,7 @@ D)I
 E)J
 J)K
 K)L";
-        let graph = build_graph(&input);
+        let graph = build_graph(input);
         assert_eq!(count_orbits(&graph), 42);
     }
 }

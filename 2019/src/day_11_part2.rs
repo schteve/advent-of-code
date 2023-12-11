@@ -448,7 +448,7 @@ fn run_program_with_robot(program: &mut Program, robot: &mut Robot) {
 
         if program.input_needed == true {
             let current_color = robot.get_color_curr();
-            program.input.push(current_color.value() as i64);
+            program.input.push(current_color.value());
         } else if program.output.len() >= 2 {
             let color_value = program.output.remove(0);
             let color = Color::from_value(color_value);

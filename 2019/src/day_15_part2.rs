@@ -492,7 +492,7 @@ impl Drone {
     }
 
     fn movement(&mut self, direction: Direction) -> bool {
-        self.controller.input.push(direction.value() as i64);
+        self.controller.input.push(direction.value());
         self.controller.run_with_pause();
 
         if self.controller.output.is_empty() == false {

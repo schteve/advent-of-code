@@ -72,7 +72,7 @@ fn get_offset(list: &[i32]) -> i32 {
 
 #[aoc(day16, part2)]
 pub fn solve(input: &str) -> String {
-    let mut list = parse_string_x1000(&input);
+    let mut list = parse_string_x1000(input);
     let offset = get_offset(&list);
 
     list.drain(0..(offset as usize)); // Don't care about anything before the offset

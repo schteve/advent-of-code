@@ -81,9 +81,9 @@ mod test {
 
     #[test]
     fn test_is_password_valid() {
-        assert_eq!(is_password_valid(112233), true);
-        assert_eq!(is_password_valid(123444), false);
-        assert_eq!(is_password_valid(111122), true);
+        assert!(is_password_valid(112233));
+        assert!(!is_password_valid(123444));
+        assert!(is_password_valid(111122));
     }
 
     #[test]

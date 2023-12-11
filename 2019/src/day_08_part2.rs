@@ -66,7 +66,7 @@ impl Layer {
 impl fmt::Display for Layer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f)?;
-        for row in self.data.chunks(self.width as usize) {
+        for row in self.data.chunks(self.width) {
             writeln!(
                 f,
                 "{}",

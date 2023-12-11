@@ -42,7 +42,7 @@ impl Layer {
     }
 
     fn display(&self) {
-        for row in self.data.chunks(self.width as usize) {
+        for row in self.data.chunks(self.width) {
             println!("{}", row.iter().map(|i| i.to_string()).collect::<String>());
         }
         println!();

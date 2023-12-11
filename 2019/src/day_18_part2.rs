@@ -344,7 +344,7 @@ impl Map {
         let mut counter = 0;
         loop {
             counter += 1;
-            for location in frontier.drain(..).collect::<Vec<Point>>() {
+            for location in std::mem::take(&mut frontier) {
                 let candidates = [
                     Cardinal::North,
                     Cardinal::South,
@@ -354,7 +354,7 @@ impl Map {
                 for direction in candidates.iter() {
                     let step_in_direction = direction.step_from(location);
                     //println!("Step: {:?}", step_in_direction);
-                    if walked.get(&step_in_direction) == None {
+                    if walked.get(&step_in_direction).is_none() {
                         match self.area.get(&step_in_direction) {
                             Some(Space::Empty) | Some(Space::Entrance) => {
                                 frontier.push(step_in_direction);
@@ -427,7 +427,7 @@ impl Map {
         let mut frontier: Vec<usize> = vec![0]; // Visit the starting vertex first
 
         loop {
-            for frontier_id in frontier.drain(..).collect::<Vec<usize>>() {
+            for frontier_id in std::mem::take(&mut frontier) {
                 for node_idx in 0..graph.vertices[frontier_id].nodes.len() {
                     let connected_nodes =
                         self.find_keys(&graph.vertices[frontier_id].nodes[node_idx]);
@@ -570,7 +570,7 @@ impl Graph {
             // Skip any vertices we've already visited.
             let mut temp: Vec<(usize, u32, Option<usize>)> = Vec::new();
             for e in self.vertices[current_vertex_id].connected.iter() {
-                if visited.get(&e.vertex_id) != None {
+                if visited.get(&e.vertex_id).is_some() {
                     continue;
                 }
 
@@ -635,7 +635,7 @@ impl Graph {
 
 #[aoc(day18, part2)]
 pub fn solve(input: &str) -> u32 {
-    let mut map = Map::from_string(&input);
+    let mut map = Map::from_string(input);
     // Replace the entrance with a specific pattern. This is a requirement for part 2.
     let entrance = map.get_entrance();
     map.split_entrance(&entrance);
@@ -695,7 +695,7 @@ mod test {
 #cB#Ab#
 #######
 ";
-        let mut map = Map::from_string(&input);
+        let mut map = Map::from_string(input);
         let entrance = map.get_entrance();
         map.split_entrance(&entrance);
         let mut graph = map.build_graph();
@@ -747,7 +747,7 @@ mod test {
 #b.....#.....c#
 ###############
 ";
-        let mut map = Map::from_string(&input);
+        let mut map = Map::from_string(input);
         let entrance = map.get_entrance();
         map.split_entrance(&entrance);
         let mut graph = map.build_graph();
@@ -765,7 +765,7 @@ mod test {
 #fEbA.#.FgHi#
 #############
 ";
-        let mut map = Map::from_string(&input);
+        let mut map = Map::from_string(input);
         let entrance = map.get_entrance();
         map.split_entrance(&entrance);
         let mut graph = map.build_graph();
@@ -867,7 +867,7 @@ mod test {
 #o#m..#i#jk.#
 #############
 ";
-        let mut map = Map::from_string(&input);
+        let mut map = Map::from_string(input);
         let entrance = map.get_entrance();
         map.split_entrance(&entrance);
         let mut graph = map.build_graph();

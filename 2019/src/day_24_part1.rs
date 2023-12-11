@@ -172,7 +172,7 @@ impl BugSim {
 
 #[aoc(day24, part1)]
 pub fn solve(input: &str) -> i32 {
-    let mut sim = BugSim::from_string(&input);
+    let mut sim = BugSim::from_string(input);
     sim.run_until_repeat();
     //sim.display();
     let biodiversity = sim.biodiversity();
@@ -193,7 +193,7 @@ mod test {
 ..#..
 #....
 ";
-        let mut sim = BugSim::from_string(&input);
+        let mut sim = BugSim::from_string(input);
 
         let input = "
 #..#.
@@ -202,7 +202,7 @@ mod test {
 ##.##
 .##..
 ";
-        let sim_check = BugSim::from_string(&input);
+        let sim_check = BugSim::from_string(input);
         sim.step();
         assert_eq!(sim, sim_check);
 
@@ -213,7 +213,7 @@ mod test {
 ...#.
 #.###
 ";
-        let sim_check = BugSim::from_string(&input);
+        let sim_check = BugSim::from_string(input);
         sim.step();
         assert_eq!(sim, sim_check);
 
@@ -224,7 +224,7 @@ mod test {
 #.##.
 .##.#
 ";
-        let sim_check = BugSim::from_string(&input);
+        let sim_check = BugSim::from_string(input);
         sim.step();
         assert_eq!(sim, sim_check);
 
@@ -235,7 +235,7 @@ mod test {
 .....
 ##...
 ";
-        let sim_check = BugSim::from_string(&input);
+        let sim_check = BugSim::from_string(input);
         sim.step();
         assert_eq!(sim, sim_check);
     }
@@ -249,7 +249,7 @@ mod test {
 ..#..
 #....
 ";
-        let mut sim = BugSim::from_string(&input);
+        let mut sim = BugSim::from_string(input);
         let input = "
 .....
 .....
@@ -257,7 +257,7 @@ mod test {
 #....
 .#...
 ";
-        let sim_check = BugSim::from_string(&input);
+        let sim_check = BugSim::from_string(input);
         sim.run_until_repeat();
         assert_eq!(sim, sim_check);
     }
@@ -271,7 +271,7 @@ mod test {
 #....
 .#...
 ";
-        let sim = BugSim::from_string(&input);
+        let sim = BugSim::from_string(input);
         assert_eq!(sim.biodiversity(), 2129920);
     }
 }

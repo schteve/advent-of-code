@@ -263,7 +263,7 @@ impl Map {
         let mut counter = 0;
         loop {
             counter += 1;
-            for location in frontier.drain(..).collect::<Vec<Point>>() {
+            for location in std::mem::take(&mut frontier) {
                 let candidates = [
                     Cardinal::North,
                     Cardinal::South,
@@ -273,7 +273,7 @@ impl Map {
                 for direction in candidates.iter() {
                     let step_in_direction = direction.step_from(location);
                     //println!("Step: {:?}", step_in_direction);
-                    if walked.get(&step_in_direction) == None {
+                    if walked.get(&step_in_direction).is_none() {
                         match self.area.get(&step_in_direction) {
                             Some(Space::Empty) | Some(Space::Entrance) => {
                                 frontier.push(step_in_direction);
@@ -343,7 +343,7 @@ impl Map {
         let mut frontier: Vec<usize> = vec![0]; // Visit the starting vertex first
 
         loop {
-            for frontier_id in frontier.drain(..).collect::<Vec<usize>>() {
+            for frontier_id in std::mem::take(&mut frontier) {
                 let connected_nodes = self.find_keys(&graph.vertices[frontier_id].node);
                 /*println!("Nodes:");
                 for (node, distance) in &connected_nodes {
@@ -475,7 +475,7 @@ impl Graph {
             // Skip any vertices we've already visited.
             let mut temp: Vec<(usize, u32, Option<usize>)> = Vec::new();
             for e in self.vertices[current_vertex_id].connected.iter() {
-                if visited.get(&e.vertex_id) != None {
+                if visited.get(&e.vertex_id).is_some() {
                     continue;
                 }
 
@@ -530,7 +530,7 @@ impl Graph {
 
 #[aoc(day18, part1)]
 pub fn solve(input: &str) -> u32 {
-    let map = Map::from_string(&input);
+    let map = Map::from_string(input);
     map.display();
 
     let mut graph = map.build_graph();
@@ -571,7 +571,7 @@ mod test {
 #b.A.@.a#
 #########
 ";
-        let map = Map::from_string(&input);
+        let map = Map::from_string(input);
         let mut graph = map.build_graph();
         graph.dijkstra(0);
         let (distance, path) = graph.get_shortest_path();
@@ -585,7 +585,7 @@ mod test {
 #d.....................#
 ########################
 ";
-        let map = Map::from_string(&input);
+        let map = Map::from_string(input);
         let mut graph = map.build_graph();
         graph.dijkstra(0);
         let (distance, path) = graph.get_shortest_path();
@@ -610,7 +610,7 @@ mod test {
 #.....@.a.B.c.d.A.e.F.g#
 ########################
 ";
-        let map = Map::from_string(&input);
+        let map = Map::from_string(input);
         let mut graph = map.build_graph();
         graph.dijkstra(0);
         let (distance, path) = graph.get_shortest_path();
@@ -640,7 +640,7 @@ mod test {
 #l.F..d...h..C.m#
 #################
 ";
-        let map = Map::from_string(&input);
+        let map = Map::from_string(input);
         let mut graph = map.build_graph();
         graph.dijkstra(0);
         let (distance, _path) = graph.get_shortest_path();
@@ -655,7 +655,7 @@ mod test {
 ###g#h#i################
 ########################
 ";
-        let map = Map::from_string(&input);
+        let map = Map::from_string(input);
         let mut graph = map.build_graph();
         graph.dijkstra(0);
         let (distance, _path) = graph.get_shortest_path();

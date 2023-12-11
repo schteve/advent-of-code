@@ -155,7 +155,7 @@ fn count_orbital_transfers(graph: &[SpaceObject], src_name: &str, dst_name: &str
 
 #[aoc(day6, part2)]
 pub fn solve(input: &str) -> u32 {
-    let graph = build_graph(&input);
+    let graph = build_graph(input);
     let transfers = count_orbital_transfers(&graph, "YOU", "SAN");
     println!("Transfers: {}", transfers);
     transfers
@@ -181,7 +181,7 @@ J)K
 K)L
 K)YOU
 I)SAN";
-        let graph = build_graph(&input);
+        let graph = build_graph(input);
         assert_eq!(count_orbital_transfers(&graph, "YOU", "SAN"), 4);
     }
 }

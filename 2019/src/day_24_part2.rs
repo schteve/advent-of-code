@@ -381,7 +381,7 @@ impl BugSim {
 
 #[aoc(day24, part2)]
 pub fn solve(input: &str) -> i32 {
-    let mut sim = BugSim::from_string(&input);
+    let mut sim = BugSim::from_string(input);
     sim.step(200);
     //sim.display();
     let total_bugs = sim.count_bugs();
@@ -402,7 +402,7 @@ mod test {
 ..#..
 #....
 ";
-        let mut sim = BugSim::from_string(&input);
+        let mut sim = BugSim::from_string(input);
 
         // Depth -5
         let input = "
@@ -412,7 +412,7 @@ mod test {
 .#.#.
 ..#..
 ";
-        let sim_check_n5 = BugSim::from_string(&input);
+        let sim_check_n5 = BugSim::from_string(input);
 
         // Depth -4
         let input = "
@@ -422,7 +422,7 @@ mod test {
 ...##
 ...#.
 ";
-        let sim_check_n4 = BugSim::from_string(&input);
+        let sim_check_n4 = BugSim::from_string(input);
 
         // Depth -3
         let input = "
@@ -432,7 +432,7 @@ mod test {
 .#...
 #.#..
 ";
-        let sim_check_n3 = BugSim::from_string(&input);
+        let sim_check_n3 = BugSim::from_string(input);
 
         // Depth -2
         let input = "
@@ -442,7 +442,7 @@ mod test {
 ...##
 .###.
 ";
-        let sim_check_n2 = BugSim::from_string(&input);
+        let sim_check_n2 = BugSim::from_string(input);
 
         // Depth -1
         let input = "
@@ -452,7 +452,7 @@ mod test {
 ...#.
 .####
 ";
-        let sim_check_n1 = BugSim::from_string(&input);
+        let sim_check_n1 = BugSim::from_string(input);
 
         // Depth 0
         let input = "
@@ -462,7 +462,7 @@ mod test {
 .....
 .....
 ";
-        let sim_check_0 = BugSim::from_string(&input);
+        let sim_check_0 = BugSim::from_string(input);
 
         // Depth 1
         let input = "
@@ -472,7 +472,7 @@ mod test {
 ##.##
 #####
 ";
-        let sim_check_1 = BugSim::from_string(&input);
+        let sim_check_1 = BugSim::from_string(input);
 
         // Depth 2
         let input = "
@@ -482,7 +482,7 @@ mod test {
 .#.##
 #.#..
 ";
-        let sim_check_2 = BugSim::from_string(&input);
+        let sim_check_2 = BugSim::from_string(input);
 
         // Depth 3
         let input = "
@@ -492,7 +492,7 @@ mod test {
 #....
 #...#
 ";
-        let sim_check_3 = BugSim::from_string(&input);
+        let sim_check_3 = BugSim::from_string(input);
 
         // Depth -4
         let input = "
@@ -502,7 +502,7 @@ mod test {
 ##.#.
 .....
 ";
-        let sim_check_4 = BugSim::from_string(&input);
+        let sim_check_4 = BugSim::from_string(input);
 
         // Depth 5
         let input = "
@@ -512,7 +512,7 @@ mod test {
 ####.
 .....
 ";
-        let sim_check_5 = BugSim::from_string(&input);
+        let sim_check_5 = BugSim::from_string(input);
 
         let mut sim_check = BugSim {
             state: HashMap::new(),
@@ -547,7 +547,7 @@ mod test {
 ..#..
 #....
 ";
-        let mut sim = BugSim::from_string(&input);
+        let mut sim = BugSim::from_string(input);
         sim.step(10);
         assert_eq!(sim.count_bugs(), 99);
     }
