@@ -125,6 +125,20 @@ impl ConditionRecord {
             None => 0,
         }
     }
+
+    fn mega(self) -> Self {
+        let mut springs = Vec::with_capacity(self.springs.len() * 5 + 4);
+        let mut groups = Vec::with_capacity(self.groups.len() * 5);
+
+        springs.extend(&self.springs);
+        groups.extend(&self.groups);
+        for _ in 0..4 {
+            springs.push(OkOrNo::Unknown);
+            springs.extend(&self.springs);
+            groups.extend(&self.groups);
+        }
+        Self { springs, groups }
+    }
 }
 
 impl From<&str> for ConditionRecord {
@@ -150,16 +164,17 @@ pub fn input_generator(input: &str) -> Vec<ConditionRecord> {
 pub fn part1(input: &[ConditionRecord]) -> u64 {
     let records = input.to_vec();
     let value = all_ways(records);
-    assert_eq!(value, 123);
+    assert_eq!(value, 7361);
     value
 }
 
-/*#[aoc(day12, part2)]
+#[aoc(day12, part2)]
 pub fn part2(input: &[ConditionRecord]) -> u64 {
-    let value = x(input);
+    let records = input.iter().cloned().map(|cr| cr.mega()).collect();
+    let value = all_ways(records);
     assert_eq!(value, 456);
     value
-}*/
+}
 
 #[cfg(test)]
 mod test {
@@ -178,5 +193,13 @@ mod test {
         let input = input_generator(EXAMPLE_INPUT);
         let value = all_ways(input);
         assert_eq!(value, 21);
+    }
+
+    #[test]
+    fn test_mega_ways() {
+        let input = input_generator(EXAMPLE_INPUT);
+        let mega_input: Vec<ConditionRecord> = input.into_iter().map(|cr| cr.mega()).collect();
+        let value = all_ways(mega_input);
+        assert_eq!(value, 525152);
     }
 }
