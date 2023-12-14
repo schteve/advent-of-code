@@ -36,96 +36,6 @@ pub struct ConditionRecord {
 }
 
 impl ConditionRecord {
-    // Some(true): completely valid
-    // Some(false): valid at least up to the first unknown
-    // None: not valid
-    fn validate(&self) -> Option<bool> {
-        enum State {
-            Idle,
-            Tracking,
-            Break,
-            AllMatched,
-        }
-        let mut grp_idx = 0;
-        let mut curr_count = 0;
-        let mut state = State::Idle;
-        for spring in &self.springs {
-            match (&state, &spring) {
-                (State::Idle, OkOrNo::Operational) => (),
-                (State::Idle, OkOrNo::Damaged) => {
-                    curr_count = self.groups[grp_idx] - 1;
-                    if curr_count == 0 {
-                        grp_idx += 1;
-                        if grp_idx >= self.groups.len() {
-                            state = State::AllMatched;
-                        } else {
-                            state = State::Break;
-                        }
-                    } else {
-                        state = State::Tracking;
-                    }
-                }
-                (State::Idle, OkOrNo::Unknown) => return Some(false),
-                (State::Tracking, OkOrNo::Operational) => return None,
-                (State::Tracking, OkOrNo::Damaged) => {
-                    curr_count -= 1;
-                    if curr_count == 0 {
-                        grp_idx += 1;
-                        if grp_idx >= self.groups.len() {
-                            state = State::AllMatched;
-                        } else {
-                            state = State::Break;
-                        }
-                    }
-                }
-                (State::Tracking, OkOrNo::Unknown) => return Some(false),
-                (State::Break, OkOrNo::Operational) => {
-                    state = State::Idle;
-                }
-                (State::Break, OkOrNo::Damaged) => return None,
-                (State::Break, OkOrNo::Unknown) => return Some(false),
-                (State::AllMatched, OkOrNo::Operational) => (),
-                (State::AllMatched, OkOrNo::Damaged) => return None,
-                (State::AllMatched, OkOrNo::Unknown) => return Some(false),
-            }
-        }
-
-        if matches!(state, State::AllMatched) {
-            Some(true)
-        } else {
-            None
-        }
-    }
-
-    fn ways(&mut self) -> u64 {
-        let valid = self.validate();
-        match valid {
-            Some(true) => 1,
-            Some(false) => {
-                let first_unk_idx = self
-                    .springs
-                    .iter()
-                    .position(|spring| matches!(spring, OkOrNo::Unknown))
-                    .unwrap();
-
-                let mut child_ways = 0;
-                self.springs[first_unk_idx] = OkOrNo::Operational;
-                if self.validate().is_some() {
-                    child_ways += self.ways();
-                }
-
-                self.springs[first_unk_idx] = OkOrNo::Damaged;
-                if self.validate().is_some() {
-                    child_ways += self.ways();
-                }
-                self.springs[first_unk_idx] = OkOrNo::Unknown;
-
-                child_ways
-            }
-            None => 0,
-        }
-    }
-
     fn mega(self) -> Self {
         let mut springs = Vec::with_capacity(self.springs.len() * 5 + 4);
         let mut groups = Vec::with_capacity(self.groups.len() * 5);
@@ -148,6 +58,46 @@ impl From<&str> for ConditionRecord {
         let groups = right.split(',').map(|s| s.parse().unwrap()).collect();
 
         Self { springs, groups }
+    }
+}
+
+fn ways(springs: &[OkOrNo], groups: &[u32]) -> u64 {
+    let mut count = None;
+    for (i, spring) in springs.iter().enumerate() {
+        match spring {
+            OkOrNo::Damaged | OkOrNo::Unknown => {
+                if count.is_none() {
+                    if groups.is_empty() {
+                        return 0;
+                    } else {
+                        count = Some(groups[0]);
+                    }
+                }
+
+                if count == Some(0) {
+                    return 0;
+                } else {
+                    count = count.map(|x| x - 1);
+                }
+            }
+            OkOrNo::Operational => match count {
+                Some(0) => return ways(&springs[i + 1..], &groups[1..]),
+                Some(x) => return 0,
+                None => (),
+            },
+        }
+    }
+
+    // We handle the cases where unknowns are filled in as damaged
+    // how do we handle when they're filled in as operational?
+    // maybe save first unknown location and do that after, or do it immediately?
+    // somewhere have to add the two cases together.
+    // is what i'm doing here fundamentally any different than what i did before?
+
+    if groups.is_empty() {
+        1
+    } else {
+        0
     }
 }
 
