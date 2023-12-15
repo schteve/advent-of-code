@@ -2,7 +2,9 @@
 
 */
 
-#[derive(Clone, Copy)]
+use std::collections::HashMap;
+
+#[derive(Clone, Copy, Eq, Hash, PartialEq)]
 enum OkOrNo {
     Operational,
     Damaged,
@@ -61,45 +63,124 @@ impl From<&str> for ConditionRecord {
     }
 }
 
-fn ways(springs: &[OkOrNo], groups: &[u32]) -> u64 {
-    let mut count = None;
-    for (i, spring) in springs.iter().enumerate() {
-        if matches!(spring, OkOrNo::Damaged) {
-            if count.is_none() {
-                if groups.is_empty() {
-                    return 0;
-                } else {
-                    count = Some(groups[0]);
+fn ways<'a, 'b>(
+    cache: &mut HashMap<(&'a [OkOrNo], &'b [u32], Option<u32>), u64>,
+    springs: &'a [OkOrNo],
+    groups: &'b [u32],
+    count: Option<u32>,
+    indent: usize,
+) -> u64 {
+    /*println!(
+        "{}{} {:?} {count:?}",
+        " ".chars().cycle().take(indent).collect::<String>(),
+        springs
+            .iter()
+            .map(|spring| spring.to_char())
+            .collect::<String>(),
+        groups
+    );*/
+
+    if let Some(cached) = cache.get(&(springs, groups, count)) {
+        return *cached;
+    }
+
+    let mut retval = 0;
+    if springs.is_empty() {
+        if groups.is_empty() {
+            // Successfully placed all groups
+            retval = 1;
+        } else {
+            // We ran out of springs and still had groups to deal with
+            retval = 0;
+        }
+    } else {
+        let mut err = false;
+        let spring = springs[0];
+
+        if matches!(spring, OkOrNo::Operational | OkOrNo::Unknown) {
+            if count.is_some() && count.unwrap() > 0 {
+                if matches!(spring, OkOrNo::Operational) {
+                    // Interrupted a run of damaged springs
+                    //println!("Interrupted");
+                    err = true;
+                }
+            } else {
+                // Either we aren't tracking a run of damaged springs, or this is the operational separator after one
+                retval += ways(cache, &springs[1..], groups, None, indent + 1);
+            }
+        }
+
+        if matches!(spring, OkOrNo::Damaged | OkOrNo::Unknown) && err == false {
+            match count {
+                None => {
+                    if groups.is_empty() {
+                        if matches!(spring, OkOrNo::Damaged) {
+                            // Too many runs
+                            //println!("Too many runs");
+                            err = true;
+                        }
+                    } else {
+                        // Start a new run
+                        retval += ways(
+                            cache,
+                            &springs[1..],
+                            &groups[1..],
+                            Some(groups[0] - 1),
+                            indent + 1,
+                        );
+                    }
+                }
+                Some(0) => {
+                    if matches!(spring, OkOrNo::Damaged) {
+                        // Overran
+                        //println!("Overran");
+                        err = true;
+                    }
+                }
+                Some(x) => {
+                    // Continue the run
+                    retval += ways(cache, &springs[1..], groups, Some(x - 1), indent + 1);
                 }
             }
         }
 
-        if matches!(spring, OkOrNo::Damaged | OkOrNo::Unknown) {
-            if count == Some(0) {
-                return 0;
-            } else {
-                count = count.map(|x| x - 1);
-            }
-        }
-
-        if matches!(spring, OkOrNo::Operational | OkOrNo::Unknown) {
-            match count {
-                Some(0) => return ways(&springs[i + 1..], &groups[1..]),
-                Some(x) => return 0,
-                None => (),
-            }
+        if err == true {
+            retval = 0;
         }
     }
 
-    if groups.is_empty() {
-        1
-    } else {
-        0
-    }
+    /*println!(
+        "{}{} {:?} {count:?} -> {retval}",
+        " ".chars().cycle().take(indent).collect::<String>(),
+        springs
+            .iter()
+            .map(|spring| spring.to_char())
+            .collect::<String>(),
+        groups
+    );*/
+
+    cache.insert((springs, groups, count), retval);
+    return retval;
 }
 
 fn all_ways(records: Vec<ConditionRecord>) -> u64 {
-    records.into_iter().map(|mut cr| cr.ways()).sum()
+    records
+        .into_iter()
+        .map(|cr| {
+            let mut cache = HashMap::new();
+            let w = ways(&mut cache, &cr.springs, &cr.groups, None, 0);
+            println!(
+                "{} {:?} {}",
+                cr.springs
+                    .iter()
+                    .map(|spring| spring.to_char())
+                    .collect::<String>(),
+                cr.groups,
+                w
+            );
+            w
+        })
+        .sum()
 }
 
 #[aoc_generator(day12)]
