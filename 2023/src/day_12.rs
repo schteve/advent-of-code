@@ -64,35 +64,32 @@ impl From<&str> for ConditionRecord {
 fn ways(springs: &[OkOrNo], groups: &[u32]) -> u64 {
     let mut count = None;
     for (i, spring) in springs.iter().enumerate() {
-        match spring {
-            OkOrNo::Damaged | OkOrNo::Unknown => {
-                if count.is_none() {
-                    if groups.is_empty() {
-                        return 0;
-                    } else {
-                        count = Some(groups[0]);
-                    }
-                }
-
-                if count == Some(0) {
+        if matches!(spring, OkOrNo::Damaged) {
+            if count.is_none() {
+                if groups.is_empty() {
                     return 0;
                 } else {
-                    count = count.map(|x| x - 1);
+                    count = Some(groups[0]);
                 }
             }
-            OkOrNo::Operational => match count {
+        }
+
+        if matches!(spring, OkOrNo::Damaged | OkOrNo::Unknown) {
+            if count == Some(0) {
+                return 0;
+            } else {
+                count = count.map(|x| x - 1);
+            }
+        }
+
+        if matches!(spring, OkOrNo::Operational | OkOrNo::Unknown) {
+            match count {
                 Some(0) => return ways(&springs[i + 1..], &groups[1..]),
                 Some(x) => return 0,
                 None => (),
-            },
+            }
         }
     }
-
-    // We handle the cases where unknowns are filled in as damaged
-    // how do we handle when they're filled in as operational?
-    // maybe save first unknown location and do that after, or do it immediately?
-    // somewhere have to add the two cases together.
-    // is what i'm doing here fundamentally any different than what i did before?
 
     if groups.is_empty() {
         1
