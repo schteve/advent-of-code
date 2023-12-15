@@ -63,30 +63,21 @@ impl From<&str> for ConditionRecord {
     }
 }
 
+type WaysCache<'a, 'b> = HashMap<(&'a [OkOrNo], &'b [u32], Option<u32>), u64>;
+
 fn ways<'a, 'b>(
-    cache: &mut HashMap<(&'a [OkOrNo], &'b [u32], Option<u32>), u64>,
+    cache: &mut WaysCache<'a, 'b>,
     springs: &'a [OkOrNo],
     groups: &'b [u32],
     count: Option<u32>,
-    indent: usize,
 ) -> u64 {
-    /*println!(
-        "{}{} {:?} {count:?}",
-        " ".chars().cycle().take(indent).collect::<String>(),
-        springs
-            .iter()
-            .map(|spring| spring.to_char())
-            .collect::<String>(),
-        groups
-    );*/
-
     if let Some(cached) = cache.get(&(springs, groups, count)) {
         return *cached;
     }
 
     let mut retval = 0;
     if springs.is_empty() {
-        if groups.is_empty() {
+        if groups.is_empty() && (count.is_none() || count == Some(0)) {
             // Successfully placed all groups
             retval = 1;
         } else {
@@ -101,66 +92,47 @@ fn ways<'a, 'b>(
             if count.is_some() && count.unwrap() > 0 {
                 if matches!(spring, OkOrNo::Operational) {
                     // Interrupted a run of damaged springs
-                    //println!("Interrupted");
                     err = true;
                 }
             } else {
                 // Either we aren't tracking a run of damaged springs, or this is the operational separator after one
-                retval += ways(cache, &springs[1..], groups, None, indent + 1);
+                retval += ways(cache, &springs[1..], groups, None);
             }
         }
 
-        if matches!(spring, OkOrNo::Damaged | OkOrNo::Unknown) && err == false {
+        if matches!(spring, OkOrNo::Damaged | OkOrNo::Unknown) && !err {
             match count {
                 None => {
                     if groups.is_empty() {
                         if matches!(spring, OkOrNo::Damaged) {
                             // Too many runs
-                            //println!("Too many runs");
                             err = true;
                         }
                     } else {
                         // Start a new run
-                        retval += ways(
-                            cache,
-                            &springs[1..],
-                            &groups[1..],
-                            Some(groups[0] - 1),
-                            indent + 1,
-                        );
+                        retval += ways(cache, &springs[1..], &groups[1..], Some(groups[0] - 1));
                     }
                 }
                 Some(0) => {
                     if matches!(spring, OkOrNo::Damaged) {
                         // Overran
-                        //println!("Overran");
                         err = true;
                     }
                 }
                 Some(x) => {
                     // Continue the run
-                    retval += ways(cache, &springs[1..], groups, Some(x - 1), indent + 1);
+                    retval += ways(cache, &springs[1..], groups, Some(x - 1));
                 }
             }
         }
 
-        if err == true {
+        if err {
             retval = 0;
         }
     }
 
-    /*println!(
-        "{}{} {:?} {count:?} -> {retval}",
-        " ".chars().cycle().take(indent).collect::<String>(),
-        springs
-            .iter()
-            .map(|spring| spring.to_char())
-            .collect::<String>(),
-        groups
-    );*/
-
     cache.insert((springs, groups, count), retval);
-    return retval;
+    retval
 }
 
 fn all_ways(records: Vec<ConditionRecord>) -> u64 {
@@ -168,17 +140,7 @@ fn all_ways(records: Vec<ConditionRecord>) -> u64 {
         .into_iter()
         .map(|cr| {
             let mut cache = HashMap::new();
-            let w = ways(&mut cache, &cr.springs, &cr.groups, None, 0);
-            println!(
-                "{} {:?} {}",
-                cr.springs
-                    .iter()
-                    .map(|spring| spring.to_char())
-                    .collect::<String>(),
-                cr.groups,
-                w
-            );
-            w
+            ways(&mut cache, &cr.springs, &cr.groups, None)
         })
         .sum()
 }
@@ -200,7 +162,7 @@ pub fn part1(input: &[ConditionRecord]) -> u64 {
 pub fn part2(input: &[ConditionRecord]) -> u64 {
     let records = input.iter().cloned().map(|cr| cr.mega()).collect();
     let value = all_ways(records);
-    assert_eq!(value, 456);
+    assert_eq!(value, 83317216247365);
     value
 }
 
