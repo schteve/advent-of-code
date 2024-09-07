@@ -115,7 +115,7 @@ impl OkOrNo {
         }
     }
 
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     fn to_char(self) -> char {
         match self {
             OkOrNo::Operational => '.',

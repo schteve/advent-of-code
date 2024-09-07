@@ -111,7 +111,7 @@ impl Network {
         unreachable!("Loops forever");
     }
 
-    #[allow(dead_code)]
+    #[expect(dead_code)]
     fn inspect_ghostly(&self) {
         let currs: Vec<&str> = self
             .nodes

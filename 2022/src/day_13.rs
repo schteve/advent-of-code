@@ -218,7 +218,7 @@ impl fmt::Display for Packet {
             Self::Int(i) => write!(f, "{i}")?,
             Self::List(list) => {
                 write!(f, "[")?;
-                #[allow(unstable_name_collisions)]
+                #[expect(unstable_name_collisions)]
                 write!(
                     f,
                     "{}",

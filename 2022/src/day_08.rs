@@ -90,7 +90,7 @@ impl Trees {
         let mut is_vis: Vec<Vec<bool>> = vec![vec![false; self.data[0].len()]; self.data.len()];
         let mut biggest;
 
-        #[allow(clippy::needless_range_loop)]
+        #[expect(clippy::needless_range_loop)]
         // False alarm, we really are using this to index multiple structures
         for row in 0..self.data.len() {
             // Left to right
@@ -110,7 +110,7 @@ impl Trees {
             }
         }
 
-        #[allow(clippy::needless_range_loop)]
+        #[expect(clippy::needless_range_loop)]
         // False alarm, we really are using this to index multiple structures
         for col in 0..self.data[0].len() {
             // Left to right

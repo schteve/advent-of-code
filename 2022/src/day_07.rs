@@ -146,7 +146,7 @@ impl FromStr for Command {
     }
 }
 
-#[allow(dead_code)]
+#[expect(dead_code)]
 #[derive(Clone, Debug)]
 pub enum Entry {
     Dir(String),

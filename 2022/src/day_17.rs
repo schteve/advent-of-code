@@ -354,12 +354,10 @@ use itertools::Itertools;
 struct Shape(u32);
 
 impl Shape {
-    #[allow(clippy::unusual_byte_groupings)]
     fn is_on_right(self) -> bool {
         (self.0 & 0b00000001_00000001_00000001_00000001) != 0
     }
 
-    #[allow(clippy::unusual_byte_groupings)]
     fn is_on_left(self) -> bool {
         (self.0 & 0b01000000_01000000_01000000_01000000) != 0
     }
@@ -422,7 +420,7 @@ fn print_row(row: u8) -> String {
     0 0000000
     0 0011110
 */
-#[allow(clippy::unusual_byte_groupings)]
+#[expect(clippy::unusual_byte_groupings)]
 const HORIZ: Shape = Shape(0b0_0000000_0_0000000_0_0000000_0_0011110);
 
 /*
@@ -431,7 +429,7 @@ const HORIZ: Shape = Shape(0b0_0000000_0_0000000_0_0000000_0_0011110);
     0 0011100
     0 0001000
 */
-#[allow(clippy::unusual_byte_groupings)]
+#[expect(clippy::unusual_byte_groupings)]
 const PLUS: Shape = Shape(0b0_0000000_0_0001000_0_0011100_0_0001000);
 
 /*
@@ -440,7 +438,7 @@ const PLUS: Shape = Shape(0b0_0000000_0_0001000_0_0011100_0_0001000);
     0 0000100
     0 0011100
 */
-#[allow(clippy::unusual_byte_groupings)]
+#[expect(clippy::unusual_byte_groupings)]
 const CORNER: Shape = Shape(0b0_0000000_0_0000100_0_0000100_0_0011100);
 
 /*
@@ -449,7 +447,7 @@ const CORNER: Shape = Shape(0b0_0000000_0_0000100_0_0000100_0_0011100);
     0 0010000
     0 0010000
 */
-#[allow(clippy::unusual_byte_groupings)]
+#[expect(clippy::unusual_byte_groupings)]
 const VERT: Shape = Shape(0b0_0010000_0_0010000_0_0010000_0_0010000);
 
 /*
@@ -458,7 +456,7 @@ const VERT: Shape = Shape(0b0_0010000_0_0010000_0_0010000_0_0010000);
     0 0011000
     0 0011000
 */
-#[allow(clippy::unusual_byte_groupings)]
+#[expect(clippy::unusual_byte_groupings)]
 const SQUARE: Shape = Shape(0b0_0000000_0_0000000_0_0011000_0_0011000);
 
 const SHAPES: [Shape; 5] = [HORIZ, PLUS, CORNER, VERT, SQUARE];

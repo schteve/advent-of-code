@@ -1,3 +1,5 @@
+#![deny(clippy::allow_attributes)]
+
 mod cardinal;
 mod linked_list_circ;
 mod mode;

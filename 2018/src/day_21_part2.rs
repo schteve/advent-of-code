@@ -402,7 +402,7 @@ pub fn solve(input: &str) -> u64 {
 
 #[cfg(test)]
 mod test {
-    #[allow(unused_imports)] // No tests for this module
+    #[expect(unused_imports)] // No tests for this module
     use super::*;
 
     #[test]

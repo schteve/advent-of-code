@@ -59,7 +59,7 @@ fn modulo_div(x: i64, n: i64, modulus: i64) -> i64 {
     modulo_mult(inv_x, n, modulus)
 }
 
-#[allow(clippy::many_single_char_names)]
+#[expect(clippy::many_single_char_names)]
 fn gcd_extended(a: i64, b: i64) -> i64 {
     let mut s = 0;
     let mut old_s = 1;

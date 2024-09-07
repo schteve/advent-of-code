@@ -124,7 +124,7 @@ impl Supplies {
     fn rearrange2(&mut self) {
         for procedure in &self.procedures {
             let start = self.stacks[procedure.from - 1].len() - procedure.num;
-            #[allow(clippy::needless_collect)] // Borrow checker forbids it
+            #[expect(clippy::needless_collect)] // Borrow checker forbids it
             let tmp: Vec<char> = self.stacks[procedure.from - 1].drain(start..).collect();
             self.stacks[procedure.to - 1].extend(tmp.into_iter());
         }

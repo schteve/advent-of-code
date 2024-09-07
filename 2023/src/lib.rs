@@ -1,3 +1,4 @@
+#![deny(clippy::allow_attributes)]
 #![forbid(unsafe_code)]
 
 #[macro_use]
