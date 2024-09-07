@@ -273,7 +273,7 @@ impl Map {
                 for direction in candidates.iter() {
                     let step_in_direction = direction.step_from(location);
                     //println!("Step: {:?}", step_in_direction);
-                    if walked.get(&step_in_direction).is_none() {
+                    if !walked.contains(&step_in_direction) {
                         match self.area.get(&step_in_direction) {
                             Some(Space::Empty) | Some(Space::Entrance) => {
                                 frontier.push(step_in_direction);
@@ -364,7 +364,7 @@ impl Map {
                         let v = Vertex {
                             id,
                             node,
-                            distance: u32::max_value(),
+                            distance: u32::MAX,
                             pi: Some(graph.vertices[frontier_id].id),
                             connected: Vec::new(),
                         };
@@ -447,7 +447,7 @@ impl Graph {
         //  - set all distances to infinity except the starting vertex which is set to 0
         //  - set the starting vertex as the first vertex to process
         for vertex in self.vertices.iter_mut() {
-            vertex.distance = u32::max_value();
+            vertex.distance = u32::MAX;
         }
         self.vertices[start_vertex].distance = 0;
 
@@ -459,7 +459,7 @@ impl Graph {
             // Find the next vertex with minimum distance. Mark it as visited
             // (we're visiting it now) and remove it from the 'next' list.
             let mut min_id = 0;
-            let mut min_value = u32::max_value();
+            let mut min_value = u32::MAX;
             for &vertex_id in next.iter() {
                 if self.vertices[vertex_id].distance < min_value {
                     min_value = self.vertices[vertex_id].distance;
@@ -475,7 +475,7 @@ impl Graph {
             // Skip any vertices we've already visited.
             let mut temp: Vec<(usize, u32, Option<usize>)> = Vec::new();
             for e in self.vertices[current_vertex_id].connected.iter() {
-                if visited.get(&e.vertex_id).is_some() {
+                if visited.contains(&e.vertex_id) {
                     continue;
                 }
 
@@ -497,13 +497,13 @@ impl Graph {
 
     fn get_shortest_path(&self) -> (u32, Vec<Space>) {
         let mut longest_inventory = 0;
-        let mut shortest_distance = u32::max_value();
+        let mut shortest_distance = u32::MAX;
         let mut shortest_end_vertex_id = 0;
         for vertex in self.vertices.iter() {
             let current_inventory = vertex.node.inventory;
             if current_inventory > longest_inventory {
                 longest_inventory = current_inventory;
-                shortest_distance = u32::max_value();
+                shortest_distance = u32::MAX;
                 shortest_end_vertex_id = 0;
             }
 

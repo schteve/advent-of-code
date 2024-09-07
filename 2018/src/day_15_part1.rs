@@ -470,7 +470,7 @@ impl BattleMap {
                     let next: Vec<Point2> = self
                         .identify_adjacent_empty(&frontier_point)
                         .into_iter()
-                        .filter(|point| visited.get(point).is_none())
+                        .filter(|point| !visited.contains(point))
                         .collect();
                     for &n in &next {
                         if frontier.contains(&n) == false {

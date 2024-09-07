@@ -261,7 +261,7 @@ impl Image {
 
     fn value(&self, p: &Point2) -> bool {
         if self.range.contains(*p) == true {
-            self.data.get(p).is_some()
+            self.data.contains(p)
         } else if self.infinity_is_lit == true {
             true
         } else {

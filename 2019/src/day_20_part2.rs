@@ -436,7 +436,7 @@ impl Map {
                         point: step_in_direction,
                         depth: location.depth,
                     };
-                    if walked.get(&step_node).is_none() {
+                    if !walked.contains(&step_node) {
                         // Step into any adjacent empty space
                         if self.area.get(&step_in_direction) == Some(&Space::Empty) {
                             // If this is the goal space, return now
@@ -466,7 +466,7 @@ impl Map {
                             };
                             if k != location.point
                                 && v.value == portal.value
-                                && walked.get(&portal_node).is_none()
+                                && !walked.contains(&portal_node)
                             {
                                 frontier.push(portal_node);
                                 walked.insert(portal_node);

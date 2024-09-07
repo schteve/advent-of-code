@@ -540,7 +540,9 @@ impl Drone {
         ];
         for direction in candidates {
             let step_in_direction = direction.step_from(self.location);
-            if self.area.get(&step_in_direction).is_none() && self.movement(direction) == true {
+            if self.area.contains_key(&step_in_direction) == false
+                && self.movement(direction) == true
+            {
                 self.search();
                 self.movement(direction.undo());
             }

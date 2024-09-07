@@ -563,7 +563,9 @@ impl Drone {
         ];
         for direction in candidates {
             let step_in_direction = direction.step_from(self.location);
-            if self.area.get(&step_in_direction).is_none() && self.movement(direction) == true {
+            if self.area.contains_key(&step_in_direction) == false
+                && self.movement(direction) == true
+            {
                 // If we are on top of the oxygen after moving, the goal has been found.
                 if let Some(Space::Oxygen) = self.area.get(&self.location) {
                     return Some(depth + 1);

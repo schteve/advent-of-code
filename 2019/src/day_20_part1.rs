@@ -327,7 +327,7 @@ impl Map {
                 for direction in candidates.iter() {
                     let step_in_direction = direction.step_from(location);
                     //println!("Step: {:?}", step_in_direction);
-                    if walked.get(&step_in_direction).is_none() {
+                    if !walked.contains(&step_in_direction) {
                         // Step into any adjacent empty space
                         if self.area.get(&step_in_direction) == Some(&Space::Empty) {
                             // If this is the goal space, return now
@@ -348,7 +348,7 @@ impl Map {
                 if let Some(&portal) = self.portals.get(&location) {
                     // Find matching portal
                     for (&k, &v) in self.portals.iter() {
-                        if k != location && v.value == portal.value && walked.get(&k).is_none() {
+                        if k != location && v.value == portal.value && !walked.contains(&k) {
                             frontier.push(k);
                             walked.insert(k);
                         }

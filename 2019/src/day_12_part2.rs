@@ -97,7 +97,7 @@ impl Sim {
         }
     }
 
-    fn single_step_component(objects_n: &mut Vec<Component>) {
+    fn single_step_component(objects_n: &mut [Component]) {
         for i in 0..objects_n.len() {
             for j in 0..objects_n.len() {
                 let gravity = Sim::get_gravity(objects_n[i].position, objects_n[j].position);

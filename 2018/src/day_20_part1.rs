@@ -269,25 +269,25 @@ impl Map {
                     .expect("Visited room does not exist!");
                 if room.door_north == true {
                     let next_location = location.step(Cardinal::North, 1);
-                    if visited_steps.get(&next_location).is_none() {
+                    if !visited_steps.contains_key(&next_location) {
                         frontier.push(next_location);
                     }
                 }
                 if room.door_south == true {
                     let next_location = location.step(Cardinal::South, 1);
-                    if visited_steps.get(&next_location).is_none() {
+                    if !visited_steps.contains_key(&next_location) {
                         frontier.push(next_location);
                     }
                 }
                 if room.door_east == true {
                     let next_location = location.step(Cardinal::East, 1);
-                    if visited_steps.get(&next_location).is_none() {
+                    if !visited_steps.contains_key(&next_location) {
                         frontier.push(next_location);
                     }
                 }
                 if room.door_west == true {
                     let next_location = location.step(Cardinal::West, 1);
-                    if visited_steps.get(&next_location).is_none() {
+                    if !visited_steps.contains_key(&next_location) {
                         frontier.push(next_location);
                     }
                 }
