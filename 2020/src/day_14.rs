@@ -197,7 +197,7 @@ struct MaskAddrIterator<'a> {
     count: u64,
 }
 
-impl<'a> Iterator for MaskAddrIterator<'a> {
+impl Iterator for MaskAddrIterator<'_> {
     type Item = usize;
     fn next(&mut self) -> Option<usize> {
         let mut addr = self.addr | self.mask.set as usize;

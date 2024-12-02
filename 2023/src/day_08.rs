@@ -63,9 +63,13 @@
     Simultaneously start on every node that ends with A. How many steps does it take before you're only on nodes that end with Z?
 */
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+#[cfg(test)]
+use std::collections::HashSet;
 
+#[cfg(test)]
 use hashbag::HashBag;
+
 use num::integer::lcm;
 
 use common::Turn;
@@ -111,7 +115,7 @@ impl Network {
         unreachable!("Loops forever");
     }
 
-    #[expect(dead_code)]
+    #[cfg(test)]
     fn inspect_ghostly(&self) {
         let currs: Vec<&str> = self
             .nodes

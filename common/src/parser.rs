@@ -32,7 +32,7 @@ pub fn one_line(mut input: &str) -> IResult<&str, &str> {
         (input, _) = opt(line_ending)(input)?;
     }
 
-    let line = line.trim_end_matches(&['\r', '\n']);
+    let line = line.trim_end_matches(['\r', '\n']);
     Ok((input, line))
 }
 

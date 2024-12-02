@@ -185,7 +185,7 @@ struct LensBox<'a> {
     lenses: Vec<Lens<'a>>,
 }
 
-impl<'a> LensBox<'a> {
+impl LensBox<'_> {
     fn new() -> Self {
         Self { lenses: Vec::new() }
     }
